@@ -1,0 +1,271 @@
+{
+  "questions": [
+    {
+      "id": "deviation_from_mechanical_axis",
+      "type": "binary",
+      "question": "Are you willing to deviate from mechanical axis (0° HKA)?",
+      "options": [
+        {
+          "value": "yes",
+          "label": "Yes",
+          "scores": {
+            "mechanical": 0,
+            "adjusted": 2,
+            "restrictive": 3,
+            "kinematic": 4
+          }
+        },
+        {
+          "value": "no",
+          "label": "No",
+          "scores": {
+            "mechanical": 4,
+            "adjusted": 1,
+            "restrictive": 0,
+            "kinematic": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "gap_balancing_priority",
+      "type": "single_choice",
+      "question": "What is your primary focus when balancing gaps?",
+      "options": [
+        {
+          "value": "equal_gaps",
+          "label": "Equal flexion and extension gaps",
+          "scores": {
+            "mechanical": 4,
+            "adjusted": 3,
+            "restrictive": 2,
+            "kinematic": 1
+          }
+        },
+        {
+          "value": "natural_motion",
+          "label": "Restoring natural knee motion",
+          "scores": {
+            "mechanical": 1,
+            "adjusted": 2,
+            "restrictive": 3,
+            "kinematic": 4
+          }
+        },
+        {
+          "value": "stability_first",
+          "label": "Maximizing stability",
+          "scores": {
+            "mechanical": 3,
+            "adjusted": 4,
+            "restrictive": 4,
+            "kinematic": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "bone_resection_approach",
+      "type": "single_choice",
+      "question": "How do you approach bone resection?",
+      "options": [
+        {
+          "value": "measured_resection",
+          "label": "Measured resection with standard angles",
+          "scores": {
+            "mechanical": 4,
+            "adjusted": 3,
+            "restrictive": 2,
+            "kinematic": 1
+          }
+        },
+        {
+          "value": "gap_balancing",
+          "label": "Gap balancing technique",
+          "scores": {
+            "mechanical": 2,
+            "adjusted": 4,
+            "restrictive": 3,
+            "kinematic": 2
+          }
+        },
+        {
+          "value": "anatomical_reference",
+          "label": "Following anatomical references",
+          "scores": {
+            "mechanical": 1,
+            "adjusted": 2,
+            "restrictive": 3,
+            "kinematic": 4
+          }
+        }
+      ]
+    },
+    {
+      "id": "acceptable_hka_range",
+      "type": "single_choice",
+      "question": "What HKA range do you consider acceptable?",
+      "options": [
+        {
+          "value": "zero_degrees",
+          "label": "0° ± 2°",
+          "scores": {
+            "mechanical": 4,
+            "adjusted": 2,
+            "restrictive": 1,
+            "kinematic": 0
+          }
+        },
+        {
+          "value": "narrow_range",
+          "label": "0° ± 3°",
+          "scores": {
+            "mechanical": 3,
+            "adjusted": 4,
+            "restrictive": 3,
+            "kinematic": 1
+          }
+        },
+        {
+          "value": "moderate_range",
+          "label": "0° ± 5°",
+          "scores": {
+            "mechanical": 2,
+            "adjusted": 3,
+            "restrictive": 4,
+            "kinematic": 2
+          }
+        },
+        {
+          "value": "wide_range",
+          "label": "Patient-specific range",
+          "scores": {
+            "mechanical": 1,
+            "adjusted": 2,
+            "restrictive": 2,
+            "kinematic": 4
+          }
+        }
+      ]
+    },
+    {
+      "id": "soft_tissue_releases",
+      "type": "single_choice",
+      "question": "How do you approach soft tissue releases?",
+      "options": [
+        {
+          "value": "aggressive_release",
+          "label": "Aggressive releases to achieve neutral alignment",
+          "scores": {
+            "mechanical": 4,
+            "adjusted": 3,
+            "restrictive": 1,
+            "kinematic": 0
+          }
+        },
+        {
+          "value": "minimal_release",
+          "label": "Minimal releases, preserving natural tension",
+          "scores": {
+            "mechanical": 1,
+            "adjusted": 2,
+            "restrictive": 3,
+            "kinematic": 4
+          }
+        },
+        {
+          "value": "balanced_approach",
+          "label": "Balanced approach based on individual needs",
+          "scores": {
+            "mechanical": 2,
+            "adjusted": 4,
+            "restrictive": 4,
+            "kinematic": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "outlier_acceptance",
+      "type": "binary",
+      "question": "Are you comfortable with outlier alignments if they match patient anatomy?",
+      "options": [
+        {
+          "value": "yes",
+          "label": "Yes, I prioritize anatomical restoration",
+          "scores": {
+            "mechanical": 0,
+            "adjusted": 2,
+            "restrictive": 3,
+            "kinematic": 4
+          }
+        },
+        {
+          "value": "no",
+          "label": "No, I prefer consistent alignment targets",
+          "scores": {
+            "mechanical": 4,
+            "adjusted": 3,
+            "restrictive": 2,
+            "kinematic": 1
+          }
+        }
+      ]
+    }
+  ],
+  "alignmentTypes": {
+    "mechanical": {
+      "name": "Mechanical Alignment",
+      "description": "Standard mechanical alignment that aims for a neutral HKA (0°). The femur position is then adjusted to balance flexion and extension gaps. The tibia proximal resection depths are then adjusted if needed. This technique prioritizes minimizing femur and tibia deviation from neutral.",
+      "characteristics": [
+        "Targets 0° HKA angle",
+        "Standardized bone cuts",
+        "Emphasis on implant longevity",
+        "Consistent surgical technique"
+      ],
+      "color": "jj.blue.300"
+    },
+    "adjusted": {
+      "name": "Adjusted Mechanical Alignment",
+      "description": "A modification of mechanical alignment that allows for some deviation from neutral to improve gap balancing and soft tissue preservation while maintaining overall mechanical principles.",
+      "characteristics": [
+        "Allows modest HKA deviation",
+        "Gap balancing priority",
+        "Soft tissue preservation",
+        "Individualized approach"
+      ],
+      "color": "jj.green.300"
+    },
+    "restrictive": {
+      "name": "Restrictive Kinematic Alignment",
+      "description": "A controlled approach to kinematic alignment that respects anatomical references but maintains restrictions on extreme outliers to balance natural motion with implant safety.",
+      "characteristics": [
+        "Anatomical reference priority",
+        "Controlled outlier acceptance",
+        "Natural motion preservation",
+        "Safety boundaries maintained"
+      ],
+      "color": "jj.orange.300"
+    },
+    "kinematic": {
+      "name": "Kinematic Restoration",
+      "description": "Patient-specific alignment that prioritizes restoring the natural kinematic motion of the knee by following anatomical references and preserving the patient's constitutional alignment.",
+      "characteristics": [
+        "Patient-specific alignment",
+        "Natural anatomy preservation",
+        "Kinematic motion priority",
+        "Individualized outcomes"
+      ],
+      "color": "jj.red"
+    }
+  },
+  "scoringRules": {
+    "description": "Each question contributes points to different alignment philosophies. The highest total score indicates the most compatible approach.",
+    "maxScore": 24,
+    "recommendations": {
+      "strongMatch": "Score ≥ 18 points",
+      "moderateMatch": "Score 12-17 points",
+      "weakMatch": "Score ≤ 11 points"
+    }
+  }
+}
