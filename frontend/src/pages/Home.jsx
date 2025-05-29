@@ -13,8 +13,8 @@ import {
   Flex,
   Icon,
   useBreakpointValue,
+  Image,
 } from '@chakra-ui/react'
-import { AddIcon, CalendarIcon, EditIcon, ViewIcon } from '@chakra-ui/icons'
 import { useAuth } from '../contexts/AuthContext'
 import ConversationModal from '../components/ConversationModal'
 import LoadConversationModal from '../components/LoadConversationModal'
@@ -26,7 +26,6 @@ const Home = () => {
   const { isOpen, onOpen, onClose } = useDisclosure()
   
   const isMobile = useBreakpointValue({ base: true, md: false })
-  const cardDirection = useBreakpointValue({ base: 'column', md: 'row' })
 
   const handleCreateConversation = () => {
     setModalType('create')
@@ -53,179 +52,292 @@ const Home = () => {
     handleModalClose()
   }
 
+  const handleReviewContent = () => {
+    navigate('/review-content')
+  }
+
+  const handleComparePhilosophies = () => {
+    navigate('/compare-philosophies')
+  }
+
   return (
-    <Container maxW="container.lg" py={8}>
-      <VStack spacing={8} align="stretch">
-        {/* Header */}
-        <Box textAlign="center">
-          <Text fontSize={{ base: '2xl', md: '3xl' }} fontWeight="bold" color="jj.red" mb={2}>
-            Pathfinder Conversation Guide
-          </Text>
-          <Text fontSize={{ base: 'md', md: 'lg' }} color="jj.gray.600" maxW="2xl" mx="auto">
-            Help identify alignment philosophy in Total Knee Arthroplasty (TKA) through guided conversations.
-          </Text>
-        </Box>
+    <Box bg="gray.50" minH="100vh" pt="80px" pb="100px">
+      <Container maxW="container.md" py={8}>
+        <VStack spacing={8} align="stretch">
+          {/* Header */}
+          <Box textAlign="center" px={4}>
+            <Text 
+              fontSize={{ base: '24px', md: '32px' }} 
+              fontFamily="heading" 
+              fontWeight="medium" 
+              color="gray.700" 
+              mb={4}
+              lineHeight="1.2"
+            >
+              Kinematic Restoration Conversion Guide
+            </Text>
+            <Text 
+              fontSize={{ base: '16px', md: '18px' }} 
+              fontFamily="body" 
+              color="gray.600" 
+              maxW="600px" 
+              mx="auto"
+              lineHeight="1.4"
+            >
+              The Pathfinder Conversation Guide will help identify your customers alignment philosophy in Total Knee Arthroplasty (TKA).
+            </Text>
+          </Box>
 
-        {/* User Info */}
-        {user && (
-          <Card>
-            <CardBody>
-              <HStack spacing={4}>
-                <Icon as={user.role === 'sales_rep' ? EditIcon : ViewIcon} color="jj.blue.300" />
-                <Box>
-                  <Text fontWeight="medium">
-                    Welcome, {user.name || `${user.role.replace('_', ' ')} user`}
-                  </Text>
-                  <Text fontSize="sm" color="jj.gray.600">
-                    {user.role === 'sales_rep' ? 'Sales Representative' : 'Surgeon Access'}
-                  </Text>
-                </Box>
-              </HStack>
-            </CardBody>
-          </Card>
-        )}
+          {/* Role Selection Header */}
+          <Box textAlign="center" mb={4}>
+            <Text 
+              fontSize={{ base: '18px', md: '20px' }} 
+              fontFamily="body" 
+              fontWeight="medium" 
+              color="gray.700" 
+              mb={2}
+            >
+              Choose your role:
+            </Text>
+            <HStack spacing={4} justify="center" flexWrap="wrap">
+              <Text 
+                fontSize="16px" 
+                fontFamily="body" 
+                color={user?.role === 'sales_rep' ? 'jj.red' : 'gray.600'}
+                textDecor={user?.role === 'sales_rep' ? 'underline' : 'none'}
+                cursor="pointer"
+              >
+                J & J Sales Rep
+              </Text>
+              <Text fontSize="16px" color="gray.400">|</Text>
+              <Text 
+                fontSize="16px" 
+                fontFamily="body" 
+                color={user?.role !== 'sales_rep' ? 'jj.red' : 'gray.600'}
+                textDecor={user?.role !== 'sales_rep' ? 'underline' : 'none'}
+                cursor="pointer"
+              >
+                Surgeon
+              </Text>
+            </HStack>
+          </Box>
 
-        {/* Action Cards */}
-        <VStack spacing={6} align="stretch">
-          {user?.role === 'sales_rep' ? (
-            // Sales Rep Options
-            <>
-              <Card _hover={{ shadow: 'lg' }} transition="all 0.2s">
-                <CardBody>
-                  <Flex 
-                    direction={cardDirection} 
-                    align="center" 
-                    justify="space-between"
-                    gap={4}
-                  >
-                    <HStack spacing={4} flex={1}>
-                      <Icon as={AddIcon} color="jj.green.300" boxSize={6} />
-                      <Box>
-                        <Text fontSize="lg" fontWeight="semibold" color="jj.gray.700">
-                          Start New Conversation
-                        </Text>
-                        <Text fontSize="sm" color="jj.gray.600">
-                          Create a new conversation with a surgeon
-                        </Text>
-                      </Box>
-                    </HStack>
-                    <Button
-                      variant="primary"
-                      onClick={handleCreateConversation}
-                      size={isMobile ? 'sm' : 'md'}
-                      minW={isMobile ? 'full' : 'auto'}
-                    >
-                      Create New
-                    </Button>
-                  </Flex>
-                </CardBody>
-              </Card>
-
-              <Card _hover={{ shadow: 'lg' }} transition="all 0.2s">
-                <CardBody>
-                  <Flex 
-                    direction={cardDirection} 
-                    align="center" 
-                    justify="space-between"
-                    gap={4}
-                  >
-                    <HStack spacing={4} flex={1}>
-                      <Icon as={CalendarIcon} color="jj.blue.300" boxSize={6} />
-                      <Box>
-                        <Text fontSize="lg" fontWeight="semibold" color="jj.gray.700">
-                          Load Existing Conversation
-                        </Text>
-                        <Text fontSize="sm" color="jj.gray.600">
-                          Continue a previously started conversation
-                        </Text>
-                      </Box>
-                    </HStack>
-                    <Button
-                      variant="secondary"
-                      onClick={handleLoadConversation}
-                      size={isMobile ? 'sm' : 'md'}
-                      minW={isMobile ? 'full' : 'auto'}
-                    >
-                      Load Existing
-                    </Button>
-                  </Flex>
-                </CardBody>
-              </Card>
-            </>
-          ) : (
-            // Surgeon/Unauthenticated Options
-            <Card _hover={{ shadow: 'lg' }} transition="all 0.2s">
-              <CardBody>
-                <Flex 
-                  direction={cardDirection} 
-                  align="center" 
-                  justify="space-between"
-                  gap={4}
+          {/* Main Action Cards */}
+          <VStack spacing={4} align="stretch">
+            {user?.role === 'sales_rep' ? (
+              // Sales Rep Options
+              <>
+                <Button
+                  h="60px"
+                  bg="white"
+                  border="2px solid"
+                  borderColor="gray.200"
+                  borderRadius="md"
+                  _hover={{ 
+                    borderColor: 'jj.red',
+                    shadow: 'md'
+                  }}
+                  onClick={handleCreateConversation}
+                  justifyContent="flex-start"
+                  px={6}
                 >
-                  <HStack spacing={4} flex={1}>
-                    <Icon as={ViewIcon} color="jj.red" boxSize={6} />
-                    <Box>
-                      <Text fontSize="lg" fontWeight="semibold" color="jj.gray.700">
-                        Take Assessment
-                      </Text>
-                      <Text fontSize="sm" color="jj.gray.600">
-                        Discover your alignment philosophy through guided questions
-                      </Text>
-                    </Box>
-                  </HStack>
-                  <Button
-                    variant="primary"
-                    onClick={handleStartSurgeonConversation}
-                    size={isMobile ? 'sm' : 'md'}
-                    minW={isMobile ? 'full' : 'auto'}
+                  <Text 
+                    fontSize="18px" 
+                    fontFamily="body" 
+                    fontWeight="medium" 
+                    color="gray.700"
+                    textAlign="left"
                   >
-                    Start Assessment
-                  </Button>
-                </Flex>
-              </CardBody>
-            </Card>
-          )}
+                    Start New Conversation
+                  </Text>
+                </Button>
+
+                <Button
+                  h="60px"
+                  bg="white"
+                  border="2px solid"
+                  borderColor="gray.200"
+                  borderRadius="md"
+                  _hover={{ 
+                    borderColor: 'jj.red',
+                    shadow: 'md'
+                  }}
+                  onClick={handleLoadConversation}
+                  justifyContent="flex-start"
+                  px={6}
+                >
+                  <Text 
+                    fontSize="18px" 
+                    fontFamily="body" 
+                    fontWeight="medium" 
+                    color="gray.700"
+                    textAlign="left"
+                  >
+                    Load Existing Conversation
+                  </Text>
+                </Button>
+
+                <Button
+                  h="60px"
+                  bg="white"
+                  border="2px solid"
+                  borderColor="gray.200"
+                  borderRadius="md"
+                  _hover={{ 
+                    borderColor: 'jj.red',
+                    shadow: 'md'
+                  }}
+                  onClick={handleReviewContent}
+                  justifyContent="flex-start"
+                  px={6}
+                >
+                  <Text 
+                    fontSize="18px" 
+                    fontFamily="body" 
+                    fontWeight="medium" 
+                    color="gray.700"
+                    textAlign="left"
+                  >
+                    Review Content
+                  </Text>
+                </Button>
+
+                <Button
+                  h="60px"
+                  bg="white"
+                  border="2px solid"
+                  borderColor="gray.200"
+                  borderRadius="md"
+                  _hover={{ 
+                    borderColor: 'jj.red',
+                    shadow: 'md'
+                  }}
+                  onClick={handleComparePhilosophies}
+                  justifyContent="space-between"
+                  px={6}
+                >
+                  <Text 
+                    fontSize="18px" 
+                    fontFamily="body" 
+                    fontWeight="medium" 
+                    color="gray.700"
+                    textAlign="left"
+                  >
+                    Compare Philosophies Tool
+                  </Text>
+                  <Text 
+                    fontSize="14px" 
+                    fontFamily="body" 
+                    color="gray.500"
+                  >
+                    [Sales reps only] →
+                  </Text>
+                </Button>
+              </>
+            ) : (
+              // Surgeon Options
+              <>
+                <Button
+                  h="60px"
+                  bg="white"
+                  border="2px solid"
+                  borderColor="gray.200"
+                  borderRadius="md"
+                  _hover={{ 
+                    borderColor: 'jj.red',
+                    shadow: 'md'
+                  }}
+                  onClick={handleStartSurgeonConversation}
+                  justifyContent="flex-start"
+                  px={6}
+                >
+                  <Text 
+                    fontSize="18px" 
+                    fontFamily="body" 
+                    fontWeight="medium" 
+                    color="gray.700"
+                    textAlign="left"
+                  >
+                    Start New Conversation
+                  </Text>
+                </Button>
+
+                <Button
+                  h="60px"
+                  bg="white"
+                  border="2px solid"
+                  borderColor="gray.200"
+                  borderRadius="md"
+                  _hover={{ 
+                    borderColor: 'jj.red',
+                    shadow: 'md'
+                  }}
+                  onClick={handleReviewContent}
+                  justifyContent="flex-start"
+                  px={6}
+                >
+                  <Text 
+                    fontSize="18px" 
+                    fontFamily="body" 
+                    fontWeight="medium" 
+                    color="gray.700"
+                    textAlign="left"
+                  >
+                    Review Content
+                  </Text>
+                </Button>
+
+                <Button
+                  h="60px"
+                  bg="gray.200"
+                  border="2px solid"
+                  borderColor="gray.300"
+                  borderRadius="md"
+                  cursor="not-allowed"
+                  justifyContent="space-between"
+                  px={6}
+                  _hover={{}}
+                >
+                  <Text 
+                    fontSize="18px" 
+                    fontFamily="body" 
+                    fontWeight="medium" 
+                    color="gray.500"
+                    textAlign="left"
+                  >
+                    Compare Philosophies Tool
+                  </Text>
+                  <Text 
+                    fontSize="14px" 
+                    fontFamily="body" 
+                    color="gray.400"
+                  >
+                    [Sales reps only] →
+                  </Text>
+                </Button>
+              </>
+            )}
+          </VStack>
         </VStack>
 
-        {/* Additional Options */}
-        <Card bg="jj.gray.50">
-          <CardBody>
-            <VStack spacing={4} align="stretch">
-              <Text fontSize="md" fontWeight="semibold" color="jj.gray.700">
-                Additional Resources
-              </Text>
-              <VStack spacing={2} align="start">
-                <Button variant="ghost" size="sm" leftIcon={<ViewIcon />}>
-                  Review Content
-                </Button>
-                {user?.role === 'sales_rep' && (
-                  <Button variant="ghost" size="sm" leftIcon={<EditIcon />}>
-                    Compare Philosophies Tool
-                  </Button>
-                )}
-              </VStack>
-            </VStack>
-          </CardBody>
-        </Card>
-      </VStack>
-
-      {/* Modals */}
-      {modalType === 'create' && (
-        <ConversationModal
-          isOpen={isOpen}
-          onClose={handleModalClose}
-          onConversationCreated={handleConversationSelect}
-        />
-      )}
-      
-      {modalType === 'load' && (
-        <LoadConversationModal
-          isOpen={isOpen}
-          onClose={handleModalClose}
-          onConversationSelect={handleConversationSelect}
-        />
-      )}
-    </Container>
+        {/* Modals */}
+        {modalType === 'create' && (
+          <ConversationModal
+            isOpen={isOpen}
+            onClose={handleModalClose}
+            onConversationCreated={handleConversationSelect}
+          />
+        )}
+        
+        {modalType === 'load' && (
+          <LoadConversationModal
+            isOpen={isOpen}
+            onClose={handleModalClose}
+            onConversationSelect={handleConversationSelect}
+          />
+        )}
+      </Container>
+    </Box>
   )
 }
 

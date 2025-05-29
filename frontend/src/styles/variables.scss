@@ -1,0 +1,56 @@
+// variables.scss
+// Place this file in: frontend/src/styles/variables.scss
+
+// J&J Color Palette
+$jj-red: #eb1700;
+$white: #ffffff;
+$black: #000000;
+
+// Grays
+$gray-01: #f1efed;
+$gray-02: #e8e6e3;
+$gray-03: #d5cfc9;
+$gray-04: #cbc4bc;
+$gray-05: #a39992;
+$gray-06: #81766f;
+$gray-07: #6e6259;
+$gray-08: #312c2a;
+
+// Colors
+$yellow-01: #fbe058;
+$orange-03: #ff6017;
+$maroon-05: #9e0000;
+
+// Violets
+$violet-01: #b19beb;
+$violet-03: #8c3bbb;
+$violet-05: #541981;
+
+// Blues
+$blue-01: #69d0ff;
+$blue-03: #0f68b2;
+$blue-05: #004685;
+
+// Greens
+$green-01: #53ce76;
+$green-03: #328714;
+$green-05: #3b5a0d;
+
+// Typography
+$font-display: 'Johnson Display', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+$font-text: 'Johnson Text', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+// Font weights
+$font-weight-regular: 400;
+$font-weight-medium: 500;
+
+// Breakpoints for responsive design
+$breakpoint-mobile: 480px;
+$breakpoint-tablet: 768px;
+$breakpoint-desktop: 1024px;
+
+// Z-index layers
+$z-modal: 1000;
+$z-overlay: 999;
+$z-header: 100;
+$z-content: 1;

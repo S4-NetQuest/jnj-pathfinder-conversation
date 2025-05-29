@@ -1,0 +1,134 @@
+// main.scss
+// Place this file in: frontend/src/styles/main.scss
+// This replaces your current index.css
+
+@import './variables';
+@import './fonts';
+
+// Global styles
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: $font-text;
+  font-weight: $font-weight-regular;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: $gray-01;
+  color: $gray-08;
+}
+
+#root {
+  height: 100%;
+  min-height: 100vh;
+}
+
+// Typography mixins
+@mixin heading-display {
+  font-family: $font-display;
+  font-weight: $font-weight-medium;
+}
+
+@mixin heading-text {
+  font-family: $font-text;
+  font-weight: $font-weight-medium;
+}
+
+@mixin body-text {
+  font-family: $font-text;
+  font-weight: $font-weight-regular;
+}
+
+// Responsive mixins
+@mixin mobile {
+  @media (max-width: $breakpoint-mobile) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media (min-width: #{$breakpoint-mobile + 1px}) and (max-width: $breakpoint-tablet) {
+    @content;
+  }
+}
+
+@mixin tablet-and-up {
+  @media (min-width: #{$breakpoint-mobile + 1px}) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media (min-width: #{$breakpoint-tablet + 1px}) {
+    @content;
+  }
+}
+
+// Utility classes
+.font-display {
+  @include heading-display;
+}
+
+.font-text {
+  @include body-text;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-jj-red {
+  color: $jj-red;
+}
+
+// Custom Chakra UI overrides
+.chakra-button {
+  &.primary {
+    background-color: $jj-red;
+    color: $white;
+    
+    &:hover {
+      background-color: darken($jj-red, 10%);
+    }
+  }
+  
+  &.secondary {
+    background-color: $blue-03;
+    color: $white;
+    
+    &:hover {
+      background-color: darken($blue-03, 10%);
+    }
+  }
+}
+
+// Loading states
+.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+// Animation utilities
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInFromBottom {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.slide-in-bottom {
+  animation: slideInFromBottom 0.3s ease-out;
+}
