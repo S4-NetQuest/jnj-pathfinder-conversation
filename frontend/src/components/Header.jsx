@@ -8,13 +8,14 @@ import {
   HStack,
   useBreakpointValue,
   Image,
+  Icon,
 } from '@chakra-ui/react'
-// No icons needed from @chakra-ui/icons since we're using custom ones
+import { QuestionIcon } from '@chakra-ui/icons'
 import { useAuth } from '../contexts/AuthContext'
 import GlossaryModal from './GlossaryModal'
 
-// Custom Glossary Icon Component (since we need a custom one)
-const GlossaryIcon = (props) => (
+// Custom Home Icon Component (fallback if SVG doesn't load)
+const HomeIcon = (props) => (
   <svg
     width="20"
     height="20"
@@ -22,7 +23,20 @@ const GlossaryIcon = (props) => (
     fill="currentColor"
     {...props}
   >
-    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
+    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+  </svg>
+)
+
+// Custom User Profile Icon Component (fallback if SVG doesn't load)
+const UserIcon = (props) => (
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    {...props}
+  >
+    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
   </svg>
 )
 
@@ -86,14 +100,14 @@ const Header = () => {
             {/* Glossary Icon */}
             <IconButton
               aria-label="Open glossary"
-              icon={<GlossaryIcon />}
+              icon={<Icon as={QuestionIcon} />}
               variant="ghost"
-              color="gray.600"
+              color="white"
               size="lg"
               onClick={() => setShowGlossary(true)}
               _hover={{
-                bg: 'gray.100',
-                color: 'jj.red'
+                bg: 'whiteAlpha.200',
+                color: 'white'
               }}
             />
 
@@ -106,16 +120,20 @@ const Header = () => {
                   alt="Home"
                   w="20px"
                   h="20px"
-                  filter={isHomePage ? 'none' : 'grayscale(100%)'}
+                  fallback={<Icon as={HomeIcon} color="white" />}
+                  onError={(e) => {
+                    console.log('Home icon failed to load:', e);
+                    e.target.style.display = 'none';
+                  }}
                 />
               }
               variant="ghost"
               size="lg"
               onClick={handleHomeClick}
-              bg={isHomePage ? 'jj.red' : 'transparent'}
-              color={isHomePage ? 'white' : 'gray.600'}
+              bg={isHomePage ? 'whiteAlpha.300' : 'transparent'}
+              color="white"
               _hover={{
-                bg: isHomePage ? 'jj.red' : 'gray.100'
+                bg: 'whiteAlpha.200'
               }}
             />
 
@@ -129,15 +147,19 @@ const Header = () => {
                     alt="Profile"
                     w="20px"
                     h="20px"
+                    fallback={<Icon as={UserIcon} color="white" />}
+                    onError={(e) => {
+                      console.log('Profile icon failed to load:', e);
+                      e.target.style.display = 'none';
+                    }}
                   />
                 }
                 variant="ghost"
-                color="gray.600"
+                color="white"
                 size="lg"
                 onClick={handleProfileClick}
                 _hover={{
-                  bg: 'gray.100',
-                  color: 'jj.red'
+                  bg: 'whiteAlpha.200'
                 }}
               />
             )}
