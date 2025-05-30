@@ -37,6 +37,7 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
 
   const [hospitals, setHospitals] = useState([])
   const [loading, setLoading] = useState(false)
+  const [hospitalsLoading, setHospitalsLoading] = useState(false)
   const [errors, setErrors] = useState({})
 
   useEffect(() => {
@@ -54,11 +55,28 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
   }, [isOpen])
 
   const fetchHospitals = async () => {
+    setHospitalsLoading(true)
     try {
       const response = await api.get('/users/hospitals')
-      setHospitals(response.data)
+      // Ensure we always set an array
+      setHospitals(Array.isArray(response.data) ? response.data : [])
     } catch (error) {
       console.error('Error fetching hospitals:', error)
+      // Set empty array on error
+      setHospitals([])
+      
+      // Only show error if it's not a 401/403 (authentication issue)
+      if (error.response?.status !== 401 && error.response?.status !== 403) {
+        toast({
+          title: 'Warning',
+          description: 'Could not load hospitals list. You can still enter hospital information manually.',
+          status: 'warning',
+          duration: 4000,
+          isClosable: true,
+        })
+      }
+    } finally {
+      setHospitalsLoading(false)
     }
   }
 
@@ -160,10 +178,10 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
     >
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader bg="jj.gray.50" borderBottom="1px solid" borderColor="jj.gray.200">
+        <ModalHeader bg="gray.50" borderBottom="1px solid" borderColor="gray.200">
           <HStack spacing={3}>
-            <Icon as={AddIcon} color="jj.green.300" />
-            <Text color="jj.red" fontSize="lg" fontWeight="bold">
+            <Icon as={AddIcon} color="green.500" />
+            <Text color="red.500" fontSize="lg" fontWeight="bold">
               Create New Conversation
             </Text>
           </HStack>
@@ -172,7 +190,7 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
 
         <ModalBody py={6}>
           <VStack spacing={5} align="stretch">
-            {!user && (
+            {(!user || user.role !== 'sales_rep') && (
               <Alert status="warning" borderRadius="md">
                 <AlertIcon />
                 <Text fontSize="sm">
@@ -182,14 +200,14 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
             )}
 
             <FormControl isInvalid={errors.surgeonName} isRequired>
-              <FormLabel fontSize="sm" fontWeight="medium" color="jj.gray.700">
+              <FormLabel fontSize="sm" fontWeight="medium" color="gray.700">
                 Surgeon Name
               </FormLabel>
               <Input
                 placeholder="Enter surgeon's full name"
                 value={formData.surgeonName}
                 onChange={(e) => handleInputChange('surgeonName', e.target.value)}
-                focusBorderColor="jj.red"
+                focusBorderColor="red.500"
                 isDisabled={loading}
               />
               {errors.surgeonName && (
@@ -200,33 +218,38 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
             </FormControl>
 
             <FormControl>
-              <FormLabel fontSize="sm" fontWeight="medium" color="jj.gray.700">
+              <FormLabel fontSize="sm" fontWeight="medium" color="gray.700">
                 Select Hospital
               </FormLabel>
               <Select
-                placeholder="Choose from existing hospitals or select 'Other'"
+                placeholder={hospitalsLoading ? "Loading hospitals..." : "Choose from existing hospitals or select 'Other'"}
                 onChange={(e) => handleHospitalSelect(e.target.value)}
-                focusBorderColor="jj.red"
-                isDisabled={loading}
+                focusBorderColor="red.500"
+                isDisabled={loading || hospitalsLoading}
               >
-                {hospitals.map(hospital => (
+                {Array.isArray(hospitals) && hospitals.map(hospital => (
                   <option key={hospital.id} value={hospital.id}>
                     {hospital.name} {hospital.city && `- ${hospital.city}, ${hospital.state}`}
                   </option>
                 ))}
                 <option value="custom">Other (Enter manually)</option>
               </Select>
+              {hospitalsLoading && (
+                <Text fontSize="xs" color="gray.500" mt={1}>
+                  Loading hospital list...
+                </Text>
+              )}
             </FormControl>
 
             <FormControl isInvalid={errors.hospitalName} isRequired>
-              <FormLabel fontSize="sm" fontWeight="medium" color="jj.gray.700">
+              <FormLabel fontSize="sm" fontWeight="medium" color="gray.700">
                 Hospital Name
               </FormLabel>
               <Input
                 placeholder="Enter hospital name"
                 value={formData.hospitalName}
                 onChange={(e) => handleInputChange('hospitalName', e.target.value)}
-                focusBorderColor="jj.red"
+                focusBorderColor="red.500"
                 isDisabled={loading}
               />
               {errors.hospitalName && (
@@ -237,14 +260,14 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
             </FormControl>
 
             <FormControl>
-              <FormLabel fontSize="sm" fontWeight="medium" color="jj.gray.700">
+              <FormLabel fontSize="sm" fontWeight="medium" color="gray.700">
                 Hospital Size
               </FormLabel>
               <Select
                 placeholder="Select hospital size category"
                 value={formData.hospitalSize}
                 onChange={(e) => handleInputChange('hospitalSize', e.target.value)}
-                focusBorderColor="jj.red"
+                focusBorderColor="red.500"
                 isDisabled={loading}
               >
                 <option value="small">Small (&lt; 100 beds)</option>
@@ -254,7 +277,7 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
             </FormControl>
 
             <FormControl isInvalid={errors.conversationDate} isRequired>
-              <FormLabel fontSize="sm" fontWeight="medium" color="jj.gray.700">
+              <FormLabel fontSize="sm" fontWeight="medium" color="gray.700">
                 <HStack spacing={2}>
                   <Icon as={CalendarIcon} boxSize={4} />
                   <Text>Conversation Date</Text>
@@ -264,7 +287,7 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
                 type="date"
                 value={formData.conversationDate}
                 onChange={(e) => handleInputChange('conversationDate', e.target.value)}
-                focusBorderColor="jj.red"
+                focusBorderColor="red.500"
                 isDisabled={loading}
               />
               {errors.conversationDate && (
@@ -276,7 +299,7 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
           </VStack>
         </ModalBody>
 
-        <ModalFooter borderTop="1px solid" borderColor="jj.gray.200">
+        <ModalFooter borderTop="1px solid" borderColor="gray.200">
           <Button
             variant="outline"
             mr={3}
@@ -286,7 +309,7 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
             Cancel
           </Button>
           <Button
-            variant="primary"
+            colorScheme="red"
             onClick={handleSubmit}
             isLoading={loading}
             loadingText="Creating..."

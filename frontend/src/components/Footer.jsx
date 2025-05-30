@@ -7,6 +7,9 @@ import {
   useBreakpointValue,
 } from '@chakra-ui/react'
 
+// Import logo
+import JNJLogo from '../assets/logos/JNJ_MT_Logo_Shorthand_SingleLine_White_RGB.svg'
+
 const Footer = () => {
   const isMobile = useBreakpointValue({ base: true, md: false })
 
@@ -30,11 +33,16 @@ const Footer = () => {
       >
         {/* J&J MedTech Logo */}
         <Flex align="center">
-          <Image 
-            src="/assets/logos/JNJ_MT_Logo_Shorthand_SingleLine_White_RGB.svg"
+          <Image
+            src={JNJLogo}
             alt="Johnson & Johnson MedTech"
-            h="30px"
+            h="18px"
             w="auto"
+            fallback={
+              <Text color="white" fontSize="sm" fontWeight="medium">
+                Johnson & Johnson MedTech
+              </Text>
+            }
           />
         </Flex>
 

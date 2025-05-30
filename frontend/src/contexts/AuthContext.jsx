@@ -24,22 +24,22 @@ export const AuthProvider = ({ children }) => {
   // For development - simulate different user types
   useEffect(() => {
     // Uncomment one of these for testing:
-    
+
     // Simulate sales rep login
-    // setUser({ 
-    //   id: 1, 
-    //   name: 'John Doe', 
-    //   email: 'john@jnj.com', 
-    //   role: 'sales_rep' 
-    // })
-    
+     setUser({
+       id: 1,
+       name: 'John Doe',
+       email: 'john@jnj.com',
+       role: 'sales_rep'
+     })
+
     // Simulate surgeon (unauthenticated but identified)
-    // setUser({ 
-    //   id: null, 
-    //   name: 'Dr. Smith', 
-    //   role: 'surgeon' 
+    // setUser({
+    //   id: null,
+    //   name: 'Dr. Smith',
+    //   role: 'surgeon'
     // })
-    
+
     // Or leave commented for completely unauthenticated access
   }, [])
 
@@ -49,7 +49,7 @@ export const AuthProvider = ({ children }) => {
       // const response = await fetch('/api/auth/status', {
       //   credentials: 'include'
       // })
-      
+
       // if (response.ok) {
       //   const userData = await response.json()
       //   setUser(userData)

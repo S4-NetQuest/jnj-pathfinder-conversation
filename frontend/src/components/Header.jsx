@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import {
@@ -9,10 +10,22 @@ import {
   useBreakpointValue,
   Image,
   Icon,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  MenuDivider,
+  Button,
+  useToast,
 } from '@chakra-ui/react'
-import { QuestionIcon } from '@chakra-ui/icons'
+import { ChevronDownIcon } from '@chakra-ui/icons'
+import { LuBookA } from "react-icons/lu";
 import { useAuth } from '../contexts/AuthContext'
 import GlossaryModal from './GlossaryModal'
+
+// Import SVG assets
+import HomeIconSVG from '../assets/icons/JJ_Icon_Home_RGB.svg'
+import ProfileIconSVG from '../assets/icons/JJ_Icon_Web_Profile_RGB.svg'
 
 // Custom Home Icon Component (fallback if SVG doesn't load)
 const HomeIcon = (props) => (
@@ -41,20 +54,45 @@ const UserIcon = (props) => (
 )
 
 const Header = () => {
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [showGlossary, setShowGlossary] = useState(false)
+  const toast = useToast()
   const isMobile = useBreakpointValue({ base: true, md: false })
 
   const handleHomeClick = () => {
     navigate('/')
   }
 
-  const handleProfileClick = () => {
-    if (user?.role === 'sales_rep') {
-      navigate('/profile')
+  const handleLogout = async () => {
+    try {
+      await logout()
+      toast({
+        title: 'Logged Out',
+        description: 'You have been successfully logged out.',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      })
+      navigate('/')
+    } catch (error) {
+      console.error('Logout error:', error)
+      toast({
+        title: 'Logout Error',
+        description: 'There was an issue logging out. Please try again.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      })
     }
+  }
+
+  const getUserDisplayName = () => {
+    if (!user) return 'User'
+    if (user.name) return user.name
+    if (user.email) return user.email
+    return 'User'
   }
 
   const isHomePage = location.pathname === '/'
@@ -66,7 +104,7 @@ const Header = () => {
         top={0}
         left={0}
         right={0}
-        bg="jj.red"
+        bg="red.500"
         borderBottom="1px solid"
         borderColor="gray.200"
         zIndex={1000}
@@ -100,7 +138,7 @@ const Header = () => {
             {/* Glossary Icon */}
             <IconButton
               aria-label="Open glossary"
-              icon={<Icon as={QuestionIcon} />}
+              icon={<Icon as={LuBookA} />}
               variant="ghost"
               color="white"
               size="lg"
@@ -116,52 +154,91 @@ const Header = () => {
               aria-label="Home"
               icon={
                 <Image
-                  src="/assets/icons/JJ_Icon_Home_RGB.svg"
+                  src={HomeIconSVG}
                   alt="Home"
                   w="20px"
                   h="20px"
                   fallback={<Icon as={HomeIcon} color="white" />}
-                  onError={(e) => {
-                    console.log('Home icon failed to load:', e);
-                    e.target.style.display = 'none';
-                  }}
                 />
               }
               variant="ghost"
               size="lg"
               onClick={handleHomeClick}
-              bg={isHomePage ? 'whiteAlpha.300' : 'transparent'}
+              bg="transparent"
               color="white"
               _hover={{
                 bg: 'whiteAlpha.200'
               }}
             />
 
-            {/* User Profile Icon - Only for Sales Reps */}
+            {/* User Profile Menu - Only for Sales Reps */}
             {user?.role === 'sales_rep' && (
-              <IconButton
-                aria-label="User Profile"
-                icon={
-                  <Image
-                    src="/assets/icons/JJ_Icon_Web_Profile_RGB.svg"
-                    alt="Profile"
-                    w="20px"
-                    h="20px"
-                    fallback={<Icon as={UserIcon} color="white" />}
-                    onError={(e) => {
-                      console.log('Profile icon failed to load:', e);
-                      e.target.style.display = 'none';
-                    }}
-                  />
-                }
-                variant="ghost"
-                color="white"
-                size="lg"
-                onClick={handleProfileClick}
-                _hover={{
-                  bg: 'whiteAlpha.200'
-                }}
-              />
+              <Menu>
+                <MenuButton
+                  as={Button}
+                  variant="ghost"
+                  color="white"
+                  size="sm"
+                  rightIcon={<ChevronDownIcon />}
+                  _hover={{
+                    bg: 'whiteAlpha.200'
+                  }}
+                  _active={{
+                    bg: 'whiteAlpha.300'
+                  }}
+                  px={2}
+                >
+                  <HStack spacing={2}>
+                    <Image
+                      src={ProfileIconSVG}
+                      alt="Profile"
+                      w="20px"
+                      h="20px"
+                      fallback={<Icon as={UserIcon} color="white" />}
+                    />
+                    {!isMobile && (
+                      <Text fontSize="sm" fontWeight="medium" color="white">
+                        {getUserDisplayName()}
+                      </Text>
+                    )}
+                  </HStack>
+                </MenuButton>
+                <MenuList
+                  bg="white"
+                  borderColor="gray.200"
+                  boxShadow="lg"
+                  minW="180px"
+                >
+                  <MenuItem
+                    fontSize="sm"
+                    fontWeight="semibold"
+                    color="gray.700"
+                    _hover={{ bg: 'transparent' }}
+                    cursor="default"
+                  >
+                    {getUserDisplayName()}
+                  </MenuItem>
+
+                  <MenuDivider />
+
+                  <MenuItem
+                    onClick={handleLogout}
+                    fontSize="sm"
+                    color="red.600"
+                    _hover={{ bg: 'red.50' }}
+                  >
+                    <HStack spacing={2}>
+                      <Icon viewBox="0 0 24 24" boxSize={4}>
+                        <path
+                          fill="currentColor"
+                          d="M16 17v-3H9v-4h7V7l5 5-5 5M14 2a2 2 0 0 1 2 2v2h-2V4H3v16h11v-2h2v2a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h11Z"
+                        />
+                      </Icon>
+                      <Text>Logout</Text>
+                    </HStack>
+                  </MenuItem>
+                </MenuList>
+              </Menu>
             )}
           </HStack>
         </Flex>
