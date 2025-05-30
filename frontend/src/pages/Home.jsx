@@ -24,7 +24,7 @@ const Home = () => {
   const navigate = useNavigate()
   const [modalType, setModalType] = useState(null)
   const { isOpen, onOpen, onClose } = useDisclosure()
-  
+
   const isMobile = useBreakpointValue({ base: true, md: false })
 
   const handleCreateConversation = () => {
@@ -66,21 +66,21 @@ const Home = () => {
         <VStack spacing={8} align="stretch">
           {/* Header */}
           <Box textAlign="center" px={4}>
-            <Text 
-              fontSize={{ base: '24px', md: '32px' }} 
-              fontFamily="heading" 
-              fontWeight="medium" 
-              color="gray.700" 
+            <Text
+              fontSize={{ base: '24px', md: '32px' }}
+              fontFamily="heading"
+              fontWeight="medium"
+              color="gray.700"
               mb={4}
               lineHeight="1.2"
             >
               Kinematic Restoration Conversion Guide
             </Text>
-            <Text 
-              fontSize={{ base: '16px', md: '18px' }} 
-              fontFamily="body" 
-              color="gray.600" 
-              maxW="600px" 
+            <Text
+              fontSize={{ base: '16px', md: '18px' }}
+              fontFamily="body"
+              color="gray.600"
+              maxW="600px"
               mx="auto"
               lineHeight="1.4"
             >
@@ -90,29 +90,29 @@ const Home = () => {
 
           {/* Role Selection Header */}
           <Box textAlign="center" mb={4}>
-            <Text 
-              fontSize={{ base: '18px', md: '20px' }} 
-              fontFamily="body" 
-              fontWeight="medium" 
-              color="gray.700" 
+            <Text
+              fontSize={{ base: '18px', md: '20px' }}
+              fontFamily="body"
+              fontWeight="medium"
+              color="gray.700"
               mb={2}
             >
               Choose your role:
             </Text>
             <HStack spacing={4} justify="center" flexWrap="wrap">
-              <Text 
-                fontSize="16px" 
-                fontFamily="body" 
-                color={user?.role === 'sales_rep' ? 'jj.red' : 'gray.600'}
-                textDecor={user?.role === 'sales_rep' ? 'underline' : 'none'}
+              <Text
+                fontSize="16px"
+                fontFamily="body"
+                color="jj.red"
+                textDecor="underline"
                 cursor="pointer"
               >
                 J & J Sales Rep
               </Text>
               <Text fontSize="16px" color="gray.400">|</Text>
-              <Text 
-                fontSize="16px" 
-                fontFamily="body" 
+              <Text
+                fontSize="16px"
+                fontFamily="body"
                 color={user?.role !== 'sales_rep' ? 'jj.red' : 'gray.600'}
                 textDecor={user?.role !== 'sales_rep' ? 'underline' : 'none'}
                 cursor="pointer"
@@ -133,7 +133,7 @@ const Home = () => {
                   border="2px solid"
                   borderColor="gray.200"
                   borderRadius="md"
-                  _hover={{ 
+                  _hover={{
                     borderColor: 'jj.red',
                     shadow: 'md'
                   }}
@@ -141,10 +141,10 @@ const Home = () => {
                   justifyContent="flex-start"
                   px={6}
                 >
-                  <Text 
-                    fontSize="18px" 
-                    fontFamily="body" 
-                    fontWeight="medium" 
+                  <Text
+                    fontSize="18px"
+                    fontFamily="body"
+                    fontWeight="medium"
                     color="gray.700"
                     textAlign="left"
                   >
@@ -158,7 +158,7 @@ const Home = () => {
                   border="2px solid"
                   borderColor="gray.200"
                   borderRadius="md"
-                  _hover={{ 
+                  _hover={{
                     borderColor: 'jj.red',
                     shadow: 'md'
                   }}
@@ -166,10 +166,10 @@ const Home = () => {
                   justifyContent="flex-start"
                   px={6}
                 >
-                  <Text 
-                    fontSize="18px" 
-                    fontFamily="body" 
-                    fontWeight="medium" 
+                  <Text
+                    fontSize="18px"
+                    fontFamily="body"
+                    fontWeight="medium"
                     color="gray.700"
                     textAlign="left"
                   >
@@ -183,7 +183,7 @@ const Home = () => {
                   border="2px solid"
                   borderColor="gray.200"
                   borderRadius="md"
-                  _hover={{ 
+                  _hover={{
                     borderColor: 'jj.red',
                     shadow: 'md'
                   }}
@@ -191,10 +191,10 @@ const Home = () => {
                   justifyContent="flex-start"
                   px={6}
                 >
-                  <Text 
-                    fontSize="18px" 
-                    fontFamily="body" 
-                    fontWeight="medium" 
+                  <Text
+                    fontSize="18px"
+                    fontFamily="body"
+                    fontWeight="medium"
                     color="gray.700"
                     textAlign="left"
                   >
@@ -208,7 +208,7 @@ const Home = () => {
                   border="2px solid"
                   borderColor="gray.200"
                   borderRadius="md"
-                  _hover={{ 
+                  _hover={{
                     borderColor: 'jj.red',
                     shadow: 'md'
                   }}
@@ -216,18 +216,18 @@ const Home = () => {
                   justifyContent="space-between"
                   px={6}
                 >
-                  <Text 
-                    fontSize="18px" 
-                    fontFamily="body" 
-                    fontWeight="medium" 
+                  <Text
+                    fontSize="18px"
+                    fontFamily="body"
+                    fontWeight="medium"
                     color="gray.700"
                     textAlign="left"
                   >
                     Compare Philosophies Tool
                   </Text>
-                  <Text 
-                    fontSize="14px" 
-                    fontFamily="body" 
+                  <Text
+                    fontSize="14px"
+                    fontFamily="body"
                     color="gray.500"
                   >
                     [Sales reps only] →
@@ -243,7 +243,7 @@ const Home = () => {
                   border="2px solid"
                   borderColor="gray.200"
                   borderRadius="md"
-                  _hover={{ 
+                  _hover={{
                     borderColor: 'jj.red',
                     shadow: 'md'
                   }}
@@ -251,10 +251,10 @@ const Home = () => {
                   justifyContent="flex-start"
                   px={6}
                 >
-                  <Text 
-                    fontSize="18px" 
-                    fontFamily="body" 
-                    fontWeight="medium" 
+                  <Text
+                    fontSize="18px"
+                    fontFamily="body"
+                    fontWeight="medium"
                     color="gray.700"
                     textAlign="left"
                   >
@@ -268,7 +268,7 @@ const Home = () => {
                   border="2px solid"
                   borderColor="gray.200"
                   borderRadius="md"
-                  _hover={{ 
+                  _hover={{
                     borderColor: 'jj.red',
                     shadow: 'md'
                   }}
@@ -276,10 +276,10 @@ const Home = () => {
                   justifyContent="flex-start"
                   px={6}
                 >
-                  <Text 
-                    fontSize="18px" 
-                    fontFamily="body" 
-                    fontWeight="medium" 
+                  <Text
+                    fontSize="18px"
+                    fontFamily="body"
+                    fontWeight="medium"
                     color="gray.700"
                     textAlign="left"
                   >
@@ -298,18 +298,18 @@ const Home = () => {
                   px={6}
                   _hover={{}}
                 >
-                  <Text 
-                    fontSize="18px" 
-                    fontFamily="body" 
-                    fontWeight="medium" 
+                  <Text
+                    fontSize="18px"
+                    fontFamily="body"
+                    fontWeight="medium"
                     color="gray.500"
                     textAlign="left"
                   >
                     Compare Philosophies Tool
                   </Text>
-                  <Text 
-                    fontSize="14px" 
-                    fontFamily="body" 
+                  <Text
+                    fontSize="14px"
+                    fontFamily="body"
                     color="gray.400"
                   >
                     [Sales reps only] →
@@ -328,7 +328,7 @@ const Home = () => {
             onConversationCreated={handleConversationSelect}
           />
         )}
-        
+
         {modalType === 'load' && (
           <LoadConversationModal
             isOpen={isOpen}
