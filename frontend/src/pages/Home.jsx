@@ -12,6 +12,7 @@ import {
   AlertIcon,
   Flex,
   Spacer,
+  useToast,
 } from '@chakra-ui/react'
 import { AddIcon, SearchIcon } from '@chakra-ui/icons'
 import { useNavigate } from 'react-router-dom'
@@ -23,6 +24,7 @@ import DevLogin from '../components/DevLogin'
 const Home = () => {
   const { user, logout, isSalesRep, isSurgeon } = useAuth()
   const navigate = useNavigate()
+  const toast = useToast()
   const {
     isOpen: isCreateOpen,
     onOpen: onCreateOpen,
@@ -37,13 +39,27 @@ const Home = () => {
 
   const handleConversationCreated = (conversationId) => {
     onCreateClose()
-    // Navigate to conversation or show success message
+    toast({
+      title: 'Conversation Created',
+      description: `Successfully created conversation with ID: ${conversationId}`,
+      status: 'success',
+      duration: 3000,
+      isClosable: true,
+    })
+    // TODO: Navigate to conversation page when conversation component is built
     console.log('Created conversation:', conversationId)
   }
 
   const handleConversationSelected = (conversationId) => {
     onLoadClose()
-    // Navigate to conversation
+    toast({
+      title: 'Conversation Loaded',
+      description: `Loading conversation with ID: ${conversationId}`,
+      status: 'info',
+      duration: 3000,
+      isClosable: true,
+    })
+    // TODO: Navigate to conversation page when conversation component is built
     console.log('Selected conversation:', conversationId)
   }
 
@@ -92,6 +108,18 @@ const Home = () => {
               Kinematic Restoration Conversion Guide
             </Text>
           </Box>
+          <Spacer />
+          <VStack align="end" spacing={2}>
+            <Text fontSize="sm" color="gray.600">
+              Welcome, {user.name}
+            </Text>
+            <Text fontSize="xs" color="gray.500">
+              Role: {user.role.replace('_', ' ')}
+            </Text>
+            <Button size="sm" variant="outline" onClick={logout}>
+              Logout
+            </Button>
+          </VStack>
         </Flex>
 
         {/* Welcome Message */}
@@ -159,19 +187,38 @@ const Home = () => {
           )}
         </VStack>
 
-        {/* Role-specific Info */}
+        {/* Role-specific Information */}
         {isSurgeon && (
           <Alert status="info" borderRadius="md">
             <AlertIcon />
-            <Text fontSize="sm">
-              As a surgeon, you can create and participate in your own alignment assessments. Notes functionality is available only for sales representatives.
-            </Text>
+            <VStack align="start" spacing={1}>
+              <Text fontSize="sm" fontWeight="medium">
+                Surgeon Access
+              </Text>
+              <Text fontSize="sm">
+                As a surgeon, you can create and participate in your own alignment assessments. Notes functionality is available only for sales representatives.
+              </Text>
+            </VStack>
+          </Alert>
+        )}
+
+        {isSalesRep && (
+          <Alert status="success" borderRadius="md">
+            <AlertIcon />
+            <VStack align="start" spacing={1}>
+              <Text fontSize="sm" fontWeight="medium">
+                Sales Representative Access
+              </Text>
+              <Text fontSize="sm">
+                You can create and manage conversations with surgeons, add notes, and access the comparison tools.
+              </Text>
+            </VStack>
           </Alert>
         )}
 
         {/* Development Info */}
         {process.env.NODE_ENV !== 'production' && (
-          <Alert status="info" borderRadius="md">
+          <Alert status="warning" borderRadius="md">
             <AlertIcon />
             <Text fontSize="sm">
               <strong>Development Mode:</strong> You are logged in as {user.role.replace('_', ' ')} using development authentication.
