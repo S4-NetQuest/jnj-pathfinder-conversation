@@ -1,343 +1,180 @@
-import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+
+// frontend/src/pages/Home.jsx (updated to include dev login)
+import React, { useState, useEffect } from 'react'
 import {
+  Box,
   Container,
-  VStack,
-  HStack,
+  Heading,
   Text,
   Button,
-  Box,
-  Card,
-  CardBody,
+  VStack,
+  HStack,
   useDisclosure,
+  Alert,
+  AlertIcon,
   Flex,
-  Icon,
-  useBreakpointValue,
-  Image,
+  Spacer,
 } from '@chakra-ui/react'
+import { AddIcon, SearchIcon } from '@chakra-ui/icons'
 import { useAuth } from '../contexts/AuthContext'
 import ConversationModal from '../components/ConversationModal'
 import LoadConversationModal from '../components/LoadConversationModal'
+import ComparePhilosophiesModal from '../components/ComparePhilosophiesModal'
+import DevLogin from '../components/DevLogin'
 
 const Home = () => {
-  const { user } = useAuth()
-  const navigate = useNavigate()
-  const [modalType, setModalType] = useState(null)
-  const { isOpen, onOpen, onClose } = useDisclosure()
+  const { user, logout, isSalesRep } = useAuth()
 
-  const isMobile = useBreakpointValue({ base: true, md: false })
+  const {
+    isOpen: isCreateOpen,
+    onOpen: onCreateOpen,
+    onClose: onCreateClose
+  } = useDisclosure()
 
-  const handleCreateConversation = () => {
-    setModalType('create')
-    onOpen()
+  const {
+    isOpen: isLoadOpen,
+    onOpen: onLoadOpen,
+    onClose: onLoadClose
+  } = useDisclosure()
+
+  const {
+    isOpen: isCompareOpen,
+    onOpen: onCompareOpen,
+    onClose: onCompareClose
+  } = useDisclosure()
+
+  const {
+    isOpen: isQuestionsOpen,
+    onOpen: onQuestionsOpen,
+    onClose: onQuestionsClose
+  } = useDisclosure()
+
+  const handleConversationCreated = (conversationId) => {
+    onCreateClose()
+    // Navigate to conversation or show success message
+    console.log('Created conversation:', conversationId)
   }
 
-  const handleLoadConversation = () => {
-    setModalType('load')
-    onOpen()
+  const handleConversationSelected = (conversationId) => {
+    onLoadClose()
+    // Navigate to conversation
+    console.log('Selected conversation:', conversationId)
   }
 
-  const handleStartSurgeonConversation = () => {
-    // For surgeons, start conversation directly without creating a record
-    navigate('/conversation')
-  }
+  // Show dev login if not authenticated
+  if (!user) {
+    return (
+      <Container maxW="container.md" py={8}>
+        <VStack spacing={8}>
+          <Box textAlign="center">
+            <Heading color="red.500" mb={4}>
+              Pathfinder Conversation Guide
+            </Heading>
+            <Text color="gray.600">
+              Kinematic Restoration Conversion Guide
+            </Text>
+          </Box>
 
-  const handleModalClose = () => {
-    setModalType(null)
-    onClose()
-  }
-
-  const handleConversationSelect = (conversationId) => {
-    navigate(`/conversation/${conversationId}`)
-    handleModalClose()
-  }
-
-  const handleReviewContent = () => {
-    navigate('/review-content')
-  }
-
-  const handleComparePhilosophies = () => {
-    navigate('/compare-philosophies')
+          <DevLogin />
+        </VStack>
+      </Container>
+    )
   }
 
   return (
-    <Box bg="gray.50" minH="100vh" pt="80px" pb="100px">
-      <Container maxW="container.md" py={8}>
-        <VStack spacing={8} align="stretch">
-          {/* Header */}
-          <Box textAlign="center" px={4}>
-            <Text
-              fontSize={{ base: '24px', md: '32px' }}
-              fontFamily="heading"
-              fontWeight="medium"
-              color="gray.700"
-              mb={4}
-              lineHeight="1.2"
-            >
+    <Container maxW="container.lg" py={8}>
+      <VStack spacing={8} align="stretch">
+        {/* Header */}
+        <Flex align="center">
+          <Box>
+            <Heading color="red.500" fontSize="2xl">
+              Pathfinder Conversation Guide
+            </Heading>
+            <Text color="gray.600" fontSize="sm">
               Kinematic Restoration Conversion Guide
             </Text>
-            <Text
-              fontSize={{ base: '16px', md: '18px' }}
-              fontFamily="body"
-              color="gray.600"
-              maxW="600px"
-              mx="auto"
-              lineHeight="1.4"
-            >
-              The Pathfinder Conversation Guide will help identify your customers alignment philosophy in Total Knee Arthroplasty (TKA).
-            </Text>
           </Box>
+        </Flex>
 
-          {/* Role Selection Header */}
-          <Box textAlign="center" mb={4}>
-            <Text
-              fontSize={{ base: '18px', md: '20px' }}
-              fontFamily="body"
-              fontWeight="medium"
-              color="gray.700"
-              mb={2}
+        {/* Welcome Message */}
+        <Box textAlign="center" py={6}>
+          <Text fontSize="lg" color="gray.700">
+            The Pathfinder Conversation Guide will help identify your customer's alignment philosophy in Total Knee Arthroplasty (TKA).
+          </Text>
+        </Box>
+
+        {/* Action Buttons */}
+        <VStack spacing={4} align="stretch" maxW="400px" mx="auto">
+          {isSalesRep ? (
+            <>
+              <Button
+                leftIcon={<AddIcon />}
+                colorScheme="red"
+                size="lg"
+                onClick={onCreateOpen}
+              >
+                Start New Conversation
+              </Button>
+
+              <Button
+                leftIcon={<SearchIcon />}
+                colorScheme="red"
+                size="lg"
+                onClick={onLoadOpen}
+              >
+                Load Existing Conversation
+              </Button>
+            </>
+          ) : (<></>)}
+
+          <Button
+            size="lg"
+          >
+            Review Content
+          </Button>
+
+          <Button
+              colorScheme="red"
+              size="lg"
+          >
+            Compare Philosophies Tool
+          </Button>
+
+          {isSalesRep && (
+            <Button
+              colorScheme="red"
+              size="lg"
             >
-              Choose your role:
-            </Text>
-            <HStack spacing={4} justify="center" flexWrap="wrap">
-              <Text
-                fontSize="16px"
-                fontFamily="body"
-                color="jj.red"
-                textDecor="underline"
-                cursor="pointer"
-              >
-                J & J Sales Rep
-              </Text>
-              <Text fontSize="16px" color="gray.400">|</Text>
-              <Text
-                fontSize="16px"
-                fontFamily="body"
-                color={user?.role !== 'sales_rep' ? 'jj.red' : 'gray.600'}
-                textDecor={user?.role !== 'sales_rep' ? 'underline' : 'none'}
-                cursor="pointer"
-              >
-                Surgeon
-              </Text>
-            </HStack>
-          </Box>
-
-          {/* Main Action Cards */}
-          <VStack spacing={4} align="stretch">
-            {user?.role === 'sales_rep' ? (
-              // Sales Rep Options
-              <>
-                <Button
-                  h="60px"
-                  bg="white"
-                  border="2px solid"
-                  borderColor="gray.200"
-                  borderRadius="md"
-                  _hover={{
-                    borderColor: 'jj.red',
-                    shadow: 'md'
-                  }}
-                  onClick={handleCreateConversation}
-                  justifyContent="flex-start"
-                  px={6}
-                >
-                  <Text
-                    fontSize="18px"
-                    fontFamily="body"
-                    fontWeight="medium"
-                    color="gray.700"
-                    textAlign="left"
-                  >
-                    Start New Conversation
-                  </Text>
-                </Button>
-
-                <Button
-                  h="60px"
-                  bg="white"
-                  border="2px solid"
-                  borderColor="gray.200"
-                  borderRadius="md"
-                  _hover={{
-                    borderColor: 'jj.red',
-                    shadow: 'md'
-                  }}
-                  onClick={handleLoadConversation}
-                  justifyContent="flex-start"
-                  px={6}
-                >
-                  <Text
-                    fontSize="18px"
-                    fontFamily="body"
-                    fontWeight="medium"
-                    color="gray.700"
-                    textAlign="left"
-                  >
-                    Load Existing Conversation
-                  </Text>
-                </Button>
-
-                <Button
-                  h="60px"
-                  bg="white"
-                  border="2px solid"
-                  borderColor="gray.200"
-                  borderRadius="md"
-                  _hover={{
-                    borderColor: 'jj.red',
-                    shadow: 'md'
-                  }}
-                  onClick={handleReviewContent}
-                  justifyContent="flex-start"
-                  px={6}
-                >
-                  <Text
-                    fontSize="18px"
-                    fontFamily="body"
-                    fontWeight="medium"
-                    color="gray.700"
-                    textAlign="left"
-                  >
-                    Review Content
-                  </Text>
-                </Button>
-
-                <Button
-                  h="60px"
-                  bg="white"
-                  border="2px solid"
-                  borderColor="gray.200"
-                  borderRadius="md"
-                  _hover={{
-                    borderColor: 'jj.red',
-                    shadow: 'md'
-                  }}
-                  onClick={handleComparePhilosophies}
-                  justifyContent="space-between"
-                  px={6}
-                >
-                  <Text
-                    fontSize="18px"
-                    fontFamily="body"
-                    fontWeight="medium"
-                    color="gray.700"
-                    textAlign="left"
-                  >
-                    Compare Philosophies Tool
-                  </Text>
-                  <Text
-                    fontSize="14px"
-                    fontFamily="body"
-                    color="gray.500"
-                  >
-                    [Sales reps only] →
-                  </Text>
-                </Button>
-              </>
-            ) : (
-              // Surgeon Options
-              <>
-                <Button
-                  h="60px"
-                  bg="white"
-                  border="2px solid"
-                  borderColor="gray.200"
-                  borderRadius="md"
-                  _hover={{
-                    borderColor: 'jj.red',
-                    shadow: 'md'
-                  }}
-                  onClick={handleStartSurgeonConversation}
-                  justifyContent="flex-start"
-                  px={6}
-                >
-                  <Text
-                    fontSize="18px"
-                    fontFamily="body"
-                    fontWeight="medium"
-                    color="gray.700"
-                    textAlign="left"
-                  >
-                    Start New Conversation
-                  </Text>
-                </Button>
-
-                <Button
-                  h="60px"
-                  bg="white"
-                  border="2px solid"
-                  borderColor="gray.200"
-                  borderRadius="md"
-                  _hover={{
-                    borderColor: 'jj.red',
-                    shadow: 'md'
-                  }}
-                  onClick={handleReviewContent}
-                  justifyContent="flex-start"
-                  px={6}
-                >
-                  <Text
-                    fontSize="18px"
-                    fontFamily="body"
-                    fontWeight="medium"
-                    color="gray.700"
-                    textAlign="left"
-                  >
-                    Review Content
-                  </Text>
-                </Button>
-
-                <Button
-                  h="60px"
-                  bg="gray.200"
-                  border="2px solid"
-                  borderColor="gray.300"
-                  borderRadius="md"
-                  cursor="not-allowed"
-                  justifyContent="space-between"
-                  px={6}
-                  _hover={{}}
-                >
-                  <Text
-                    fontSize="18px"
-                    fontFamily="body"
-                    fontWeight="medium"
-                    color="gray.500"
-                    textAlign="left"
-                  >
-                    Compare Philosophies Tool
-                  </Text>
-                  <Text
-                    fontSize="14px"
-                    fontFamily="body"
-                    color="gray.400"
-                  >
-                    [Sales reps only] →
-                  </Text>
-                </Button>
-              </>
-            )}
-          </VStack>
+              Challenger Selling Philosophy Questions
+            </Button>
+          )}
         </VStack>
 
-        {/* Modals */}
-        {modalType === 'create' && (
-          <ConversationModal
-            isOpen={isOpen}
-            onClose={handleModalClose}
-            onConversationCreated={handleConversationSelect}
-          />
+        {/* Development Info */}
+        {process.env.NODE_ENV !== 'production' && (
+          <Alert status="info" borderRadius="md">
+            <AlertIcon />
+            <Text fontSize="sm">
+              <strong>Development Mode:</strong> You are logged in as {user.role.replace('_', ' ')} using development authentication.
+            </Text>
+          </Alert>
         )}
+      </VStack>
 
-        {modalType === 'load' && (
-          <LoadConversationModal
-            isOpen={isOpen}
-            onClose={handleModalClose}
-            onConversationSelect={handleConversationSelect}
-          />
-        )}
-      </Container>
-    </Box>
+      {/* Modals */}
+      <ConversationModal
+        isOpen={isCreateOpen}
+        onClose={onCreateClose}
+        onConversationCreated={handleConversationCreated}
+      />
+
+      <LoadConversationModal
+        isOpen={isLoadOpen}
+        onClose={onLoadClose}
+        onConversationSelected={handleConversationSelected}
+      />
+
+    </Container>
   )
 }
 

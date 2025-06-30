@@ -1,23 +1,10 @@
+// backend/routes/conversations.js (updated middleware usage)
 import express from 'express'
 import Joi from 'joi'
 import dbConfig from '../config/database.js'
+import { requireSalesRep, isAuthenticated, getCurrentUser } from '../middleware/auth.js'
 
 const router = express.Router()
-
-// Middleware to check if user is sales rep
-const requireSalesRep = (req, res, next) => {
-  // Check session-based auth first
-  if (req.session?.authenticated && req.session?.user?.role === 'sales_rep') {
-    req.user = req.session.user // Set req.user for compatibility
-    return next()
-  }
-  // Check passport auth (for future SAML)
-  else if (req.isAuthenticated() && req.user.role === 'sales_rep') {
-    return next()
-  }
-  
-  return res.status(403).json({ error: 'Sales representative access required' })
-}
 
 // Validation schemas
 const createConversationSchema = Joi.object({
@@ -49,11 +36,11 @@ router.get('/', requireSalesRep, async (req, res) => {
       WHERE c.sales_rep_id = @salesRepId
       ORDER BY c.conversation_date DESC, c.created_at DESC
     `
-    
+
     const result = await pool.request()
       .input('salesRepId', dbConfig.sql.Int, req.user.id)
       .query(query)
-    
+
     res.json(result.recordset)
   } catch (error) {
     console.error('Error fetching conversations:', error)
@@ -85,12 +72,12 @@ router.post('/', requireSalesRep, async (req, res) => {
         OUTPUT INSERTED.id
         VALUES (@hospitalName, @hospitalSize, GETDATE(), GETDATE())
       `
-      
+
       const newHospitalResult = await pool.request()
         .input('hospitalName', dbConfig.sql.VarChar, hospitalName)
         .input('hospitalSize', dbConfig.sql.VarChar, hospitalSize)
         .query(insertHospitalQuery)
-      
+
       hospitalId = newHospitalResult.recordset[0].id
     } else {
       hospitalId = hospitalResult.recordset[0].id
@@ -99,7 +86,7 @@ router.post('/', requireSalesRep, async (req, res) => {
     // Create conversation
     const insertQuery = `
       INSERT INTO conversations (
-        sales_rep_id, surgeon_name, hospital_id, hospital_name, 
+        sales_rep_id, surgeon_name, hospital_id, hospital_name,
         conversation_date, status, created_at, updated_at
       )
       OUTPUT INSERTED.*
@@ -108,7 +95,7 @@ router.post('/', requireSalesRep, async (req, res) => {
         @conversationDate, 'in_progress', GETDATE(), GETDATE()
       )
     `
-    
+
     const result = await pool.request()
       .input('salesRepId', dbConfig.sql.Int, req.user.id)
       .input('surgeonName', dbConfig.sql.VarChar, surgeonName)
@@ -133,7 +120,8 @@ router.get('/:id', async (req, res) => {
     }
 
     const pool = dbConfig.getPool()
-    
+    const currentUser = getCurrentUser(req)
+
     // Check if user has access to this conversation
     let query = `
       SELECT c.*, h.name as hospital_name, h.size_category,
@@ -143,31 +131,31 @@ router.get('/:id', async (req, res) => {
       LEFT JOIN users u ON c.sales_rep_id = u.id
       WHERE c.id = @conversationId
     `
-    
+
     // If authenticated sales rep, check ownership
-    if (req.isAuthenticated() && req.user.role === 'sales_rep') {
+    if (currentUser?.role === 'sales_rep') {
       query += ' AND c.sales_rep_id = @salesRepId'
     }
 
     const request = pool.request().input('conversationId', dbConfig.sql.Int, conversationId)
-    
-    if (req.isAuthenticated() && req.user.role === 'sales_rep') {
-      request.input('salesRepId', dbConfig.sql.Int, req.user.id)
+
+    if (currentUser?.role === 'sales_rep') {
+      request.input('salesRepId', dbConfig.sql.Int, currentUser.id)
     }
 
     const result = await request.query(query)
-    
+
     if (result.recordset.length === 0) {
       return res.status(404).json({ error: 'Conversation not found' })
     }
 
     // Get responses
     const responsesQuery = `
-      SELECT * FROM conversation_responses 
+      SELECT * FROM conversation_responses
       WHERE conversation_id = @conversationId
       ORDER BY created_at ASC
     `
-    
+
     const responsesResult = await pool.request()
       .input('conversationId', dbConfig.sql.Int, conversationId)
       .query(responsesQuery)
@@ -200,10 +188,10 @@ router.post('/:id/responses', async (req, res) => {
 
     // Check if response already exists
     const existingQuery = `
-      SELECT id FROM conversation_responses 
+      SELECT id FROM conversation_responses
       WHERE conversation_id = @conversationId AND question_id = @questionId
     `
-    
+
     const existingResult = await pool.request()
       .input('conversationId', dbConfig.sql.Int, conversationId)
       .input('questionId', dbConfig.sql.VarChar, questionId)
@@ -213,7 +201,7 @@ router.post('/:id/responses', async (req, res) => {
     if (existingResult.recordset.length > 0) {
       // Update existing response
       const updateQuery = `
-        UPDATE conversation_responses 
+        UPDATE conversation_responses
         SET response_value = @responseValue,
             score_mechanical = @scoreMechanical,
             score_adjusted = @scoreAdjusted,
@@ -223,7 +211,7 @@ router.post('/:id/responses', async (req, res) => {
         OUTPUT INSERTED.*
         WHERE conversation_id = @conversationId AND question_id = @questionId
       `
-      
+
       result = await pool.request()
         .input('conversationId', dbConfig.sql.Int, conversationId)
         .input('questionId', dbConfig.sql.VarChar, questionId)
@@ -248,7 +236,7 @@ router.post('/:id/responses', async (req, res) => {
           GETDATE(), GETDATE()
         )
       `
-      
+
       result = await pool.request()
         .input('conversationId', dbConfig.sql.Int, conversationId)
         .input('questionId', dbConfig.sql.VarChar, questionId)
@@ -262,31 +250,31 @@ router.post('/:id/responses', async (req, res) => {
 
     // Update conversation totals
     const updateTotalsQuery = `
-      UPDATE conversations 
+      UPDATE conversations
       SET alignment_score_mechanical = (
-            SELECT ISNULL(SUM(score_mechanical), 0) 
-            FROM conversation_responses 
+            SELECT ISNULL(SUM(score_mechanical), 0)
+            FROM conversation_responses
             WHERE conversation_id = @conversationId
           ),
           alignment_score_adjusted = (
-            SELECT ISNULL(SUM(score_adjusted), 0) 
-            FROM conversation_responses 
+            SELECT ISNULL(SUM(score_adjusted), 0)
+            FROM conversation_responses
             WHERE conversation_id = @conversationId
           ),
           alignment_score_restrictive = (
-            SELECT ISNULL(SUM(score_restrictive), 0) 
-            FROM conversation_responses 
+            SELECT ISNULL(SUM(score_restrictive), 0)
+            FROM conversation_responses
             WHERE conversation_id = @conversationId
           ),
           alignment_score_kinematic = (
-            SELECT ISNULL(SUM(score_kinematic), 0) 
-            FROM conversation_responses 
+            SELECT ISNULL(SUM(score_kinematic), 0)
+            FROM conversation_responses
             WHERE conversation_id = @conversationId
           ),
           updated_at = GETDATE()
       WHERE id = @conversationId
     `
-    
+
     await pool.request()
       .input('conversationId', dbConfig.sql.Int, conversationId)
       .query(updateTotalsQuery)
@@ -308,9 +296,10 @@ router.put('/:id', async (req, res) => {
 
     const { status, recommendedApproach } = req.body
     const pool = dbConfig.getPool()
+    const currentUser = getCurrentUser(req)
 
-    const updateQuery = `
-      UPDATE conversations 
+    let updateQuery = `
+      UPDATE conversations
       SET status = @status,
           recommended_approach = @recommendedApproach,
           completed_at = CASE WHEN @status = 'completed' THEN GETDATE() ELSE completed_at END,
@@ -325,13 +314,13 @@ router.put('/:id', async (req, res) => {
       .input('recommendedApproach', dbConfig.sql.VarChar, recommendedApproach)
 
     // If authenticated sales rep, check ownership
-    if (req.isAuthenticated() && req.user.role === 'sales_rep') {
+    if (currentUser?.role === 'sales_rep') {
       updateQuery += ' AND sales_rep_id = @salesRepId'
-      request = request.input('salesRepId', dbConfig.sql.Int, req.user.id)
+      request = request.input('salesRepId', dbConfig.sql.Int, currentUser.id)
     }
 
     const result = await request.query(updateQuery)
-    
+
     if (result.recordset.length === 0) {
       return res.status(404).json({ error: 'Conversation not found or access denied' })
     }
@@ -353,10 +342,10 @@ router.delete('/:id', requireSalesRep, async (req, res) => {
 
     const pool = dbConfig.getPool()
     const deleteQuery = `
-      DELETE FROM conversations 
+      DELETE FROM conversations
       WHERE id = @conversationId AND sales_rep_id = @salesRepId
     `
-    
+
     const result = await pool.request()
       .input('conversationId', dbConfig.sql.Int, conversationId)
       .input('salesRepId', dbConfig.sql.Int, req.user.id)
@@ -389,7 +378,7 @@ router.get('/:id/notes', async (req, res) => {
       WHERE cn.conversation_id = @conversationId
       ORDER BY cn.updated_at DESC
     `
-    
+
     const result = await pool.request()
       .input('conversationId', dbConfig.sql.Int, conversationId)
       .query(query)
@@ -415,13 +404,13 @@ router.post('/:id/notes', requireSalesRep, async (req, res) => {
     }
 
     const pool = dbConfig.getPool()
-    
+
     // Check if note already exists for this conversation and sales rep
     const existingQuery = `
-      SELECT id FROM conversation_notes 
+      SELECT id FROM conversation_notes
       WHERE conversation_id = @conversationId AND sales_rep_id = @salesRepId
     `
-    
+
     const existingResult = await pool.request()
       .input('conversationId', dbConfig.sql.Int, conversationId)
       .input('salesRepId', dbConfig.sql.Int, req.user.id)
@@ -431,12 +420,12 @@ router.post('/:id/notes', requireSalesRep, async (req, res) => {
     if (existingResult.recordset.length > 0) {
       // Update existing note
       const updateQuery = `
-        UPDATE conversation_notes 
+        UPDATE conversation_notes
         SET content = @content, updated_at = GETDATE()
         OUTPUT INSERTED.*
         WHERE conversation_id = @conversationId AND sales_rep_id = @salesRepId
       `
-      
+
       result = await pool.request()
         .input('conversationId', dbConfig.sql.Int, conversationId)
         .input('salesRepId', dbConfig.sql.Int, req.user.id)
@@ -449,7 +438,7 @@ router.post('/:id/notes', requireSalesRep, async (req, res) => {
         OUTPUT INSERTED.*
         VALUES (@conversationId, @salesRepId, @content, GETDATE(), GETDATE())
       `
-      
+
       result = await pool.request()
         .input('conversationId', dbConfig.sql.Int, conversationId)
         .input('salesRepId', dbConfig.sql.Int, req.user.id)

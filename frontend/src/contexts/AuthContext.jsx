@@ -1,13 +1,8 @@
+// frontend/src/contexts/AuthContext.jsx (updated)
 import React, { createContext, useContext, useState, useEffect } from 'react'
+import api from '../services/api'
 
-const AuthContext = createContext({
-  user: null,
-  isAuthenticated: false,
-  isSalesRep: false,
-  login: () => {},
-  logout: () => {},
-  loading: true
-})
+const AuthContext = createContext()
 
 export const useAuth = () => {
   const context = useContext(AuthContext)
@@ -19,78 +14,49 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(false) // Set to false initially for development
+  const [loading, setLoading] = useState(true)
 
-  // For development - simulate different user types
+  // Check if user is authenticated on app start
   useEffect(() => {
-    // Uncomment one of these for testing:
-
-    // Simulate sales rep login
-     setUser({
-       id: 1,
-       name: 'John Doe',
-       email: 'john@jnj.com',
-       role: 'sales_rep'
-     })
-
-    // Simulate surgeon (unauthenticated but identified)
-    // setUser({
-    //   id: null,
-    //   name: 'Dr. Smith',
-    //   role: 'surgeon'
-    // })
-
-    // Or leave commented for completely unauthenticated access
+    checkAuth()
   }, [])
 
-  const checkAuthStatus = async () => {
+  const checkAuth = async () => {
     try {
-      // For now, skip the API call during development
-      // const response = await fetch('/api/auth/status', {
-      //   credentials: 'include'
-      // })
-
-      // if (response.ok) {
-      //   const userData = await response.json()
-      //   setUser(userData)
-      // }
+      const response = await api.get('/auth/me')
+      if (response.data.user) {
+        setUser(response.data.user)
+      }
     } catch (error) {
-      console.error('Auth check failed:', error)
+      // User not authenticated
+      console.log('User not authenticated')
     } finally {
       setLoading(false)
     }
   }
 
-  const login = async (userData) => {
+  const login = (userData) => {
     setUser(userData)
-    setLoading(false)
   }
 
   const logout = async () => {
     try {
-      // await fetch('/api/auth/logout', {
-      //   method: 'POST',
-      //   credentials: 'include'
-      // })
+      await api.post('/auth/logout')
     } catch (error) {
-      console.error('Logout failed:', error)
+      console.error('Logout error:', error)
     } finally {
       setUser(null)
     }
   }
 
-  // Allow surgeon access (unauthenticated) or sales rep access (authenticated)
-  const allowAccess = !user || user.role === 'sales_rep' || user.role === 'surgeon'
-
   const value = {
     user,
-    isAuthenticated: !!user && user.role === 'sales_rep',
-    isSalesRep: user?.role === 'sales_rep',
-    isSurgeon: user?.role === 'surgeon',
-    allowAccess,
+    loading,
     login,
     logout,
-    loading
+    isAuthenticated: !!user,
+    isSalesRep: user?.role === 'sales_rep',
+    isSurgeon: user?.role === 'surgeon'
   }
 
   return (
@@ -99,5 +65,3 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   )
 }
-
-export default AuthContext

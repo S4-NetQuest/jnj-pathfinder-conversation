@@ -1,3 +1,4 @@
+// frontend/src/components/GlossaryModal.jsx
 import React, { useState, useEffect } from 'react'
 import {
   Modal,
@@ -8,314 +9,202 @@ import {
   ModalBody,
   ModalCloseButton,
   Button,
-  VStack,
-  FormControl,
-  FormLabel,
   Input,
-  Select,
-  Alert,
-  AlertIcon,
+  InputGroup,
+  InputLeftElement,
+  VStack,
   Text,
-  useToast,
-  HStack,
-  Icon,
+  Box,
+  Divider,
+  Badge,
+  useColorModeValue,
+  Spinner,
+  Center,
 } from '@chakra-ui/react'
-import { CalendarIcon, AddIcon } from '@chakra-ui/icons'
-import { useAuth } from '../contexts/AuthContext'
+import { SearchIcon } from '@chakra-ui/icons'
 import api from '../services/api'
 
-const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
-  const { user } = useAuth()
-  const toast = useToast()
-
-  const [formData, setFormData] = useState({
-    surgeonName: '',
-    hospitalName: '',
-    hospitalSize: '',
-    conversationDate: new Date().toISOString().split('T')[0], // Today's date
-  })
-
-  const [hospitals, setHospitals] = useState([])
+const GlossaryModal = ({ isOpen, onClose }) => {
+  const [terms, setTerms] = useState([])
+  const [filteredTerms, setFilteredTerms] = useState([])
+  const [searchQuery, setSearchQuery] = useState('')
   const [loading, setLoading] = useState(false)
-  const [hospitalsLoading, setHospitalsLoading] = useState(false)
-  const [errors, setErrors] = useState({})
+  const [error, setError] = useState(null)
+
+  const bgColor = useColorModeValue('white', 'gray.800')
+  const borderColor = useColorModeValue('gray.200', 'gray.600')
 
   useEffect(() => {
     if (isOpen) {
-      fetchHospitals()
-      // Reset form when modal opens
-      setFormData({
-        surgeonName: '',
-        hospitalName: '',
-        hospitalSize: '',
-        conversationDate: new Date().toISOString().split('T')[0],
-      })
-      setErrors({})
+      fetchTerms()
     }
   }, [isOpen])
 
-  const fetchHospitals = async () => {
-    setHospitalsLoading(true)
-    try {
-      const response = await api.get('/users/hospitals')
-      // Ensure we always set an array
-      setHospitals(Array.isArray(response.data) ? response.data : [])
-    } catch (error) {
-      console.error('Error fetching hospitals:', error)
-      // Set empty array on error
-      setHospitals([])
-      
-      // Only show error if it's not a 401/403 (authentication issue)
-      if (error.response?.status !== 401 && error.response?.status !== 403) {
-        toast({
-          title: 'Warning',
-          description: 'Could not load hospitals list. You can still enter hospital information manually.',
-          status: 'warning',
-          duration: 4000,
-          isClosable: true,
-        })
-      }
-    } finally {
-      setHospitalsLoading(false)
+  useEffect(() => {
+    if (searchQuery.trim() === '') {
+      setFilteredTerms(terms)
+    } else {
+      const filtered = terms.filter(term =>
+        term.term.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        term.definition.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (term.synonyms && term.synonyms.toLowerCase().includes(searchQuery.toLowerCase()))
+      )
+      setFilteredTerms(filtered)
     }
-  }
+  }, [searchQuery, terms])
 
-  const handleInputChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }))
-
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({
-        ...prev,
-        [field]: null
-      }))
-    }
-  }
-
-  const handleHospitalSelect = (hospitalId) => {
-    const selectedHospital = hospitals.find(h => h.id === parseInt(hospitalId))
-    if (selectedHospital) {
-      setFormData(prev => ({
-        ...prev,
-        hospitalName: selectedHospital.name,
-        hospitalSize: selectedHospital.size_category || ''
-      }))
-    } else if (hospitalId === 'custom') {
-      setFormData(prev => ({
-        ...prev,
-        hospitalName: '',
-        hospitalSize: ''
-      }))
-    }
-  }
-
-  const validateForm = () => {
-    const newErrors = {}
-
-    if (!formData.surgeonName.trim()) {
-      newErrors.surgeonName = 'Surgeon name is required'
-    }
-
-    if (!formData.hospitalName.trim()) {
-      newErrors.hospitalName = 'Hospital name is required'
-    }
-
-    if (!formData.conversationDate) {
-      newErrors.conversationDate = 'Conversation date is required'
-    }
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
-
-  const handleSubmit = async () => {
-    if (!validateForm()) {
-      return
-    }
-
+  const fetchTerms = async () => {
     setLoading(true)
+    setError(null)
     try {
-      const response = await api.post('/conversations', formData)
-
-      toast({
-        title: 'Conversation Created',
-        description: `New conversation with ${formData.surgeonName} has been created.`,
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      })
-
-      onConversationCreated(response.data.id)
+      const response = await api.get('/glossary')
+      setTerms(response.data || [])
+      setFilteredTerms(response.data || [])
     } catch (error) {
-      console.error('Error creating conversation:', error)
-      toast({
-        title: 'Error',
-        description: error.response?.data?.error || 'Failed to create conversation',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      })
+      console.error('Error fetching glossary terms:', error)
+      setError('Failed to load glossary terms. Please try again.')
     } finally {
       setLoading(false)
     }
   }
 
   const handleClose = () => {
-    if (!loading) {
-      onClose()
-    }
+    setSearchQuery('')
+    setError(null)
+    onClose()
+  }
+
+  const handleRetry = () => {
+    fetchTerms()
   }
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      size={{ base: 'full', md: 'lg' }}
-      closeOnOverlayClick={!loading}
+      size={{ base: 'full', md: 'xl' }}
+      scrollBehavior="inside"
     >
       <ModalOverlay />
-      <ModalContent>
-        <ModalHeader bg="gray.50" borderBottom="1px solid" borderColor="gray.200">
-          <HStack spacing={3}>
-            <Icon as={AddIcon} color="green.500" />
-            <Text color="red.500" fontSize="lg" fontWeight="bold">
-              Create New Conversation
-            </Text>
-          </HStack>
+      <ModalContent maxH="90vh">
+        <ModalHeader bg="gray.50" borderBottom="1px solid" borderColor={borderColor}>
+          <Text color="#eb1700" fontSize="lg" fontWeight="bold">
+            📚 Medical Glossary
+          </Text>
         </ModalHeader>
-        <ModalCloseButton isDisabled={loading} />
+        <ModalCloseButton />
 
-        <ModalBody py={6}>
-          <VStack spacing={5} align="stretch">
-            {(!user || user.role !== 'sales_rep') && (
-              <Alert status="warning" borderRadius="md">
-                <AlertIcon />
-                <Text fontSize="sm">
-                  You must be logged in as a sales representative to create conversations.
-                </Text>
-              </Alert>
-            )}
-
-            <FormControl isInvalid={errors.surgeonName} isRequired>
-              <FormLabel fontSize="sm" fontWeight="medium" color="gray.700">
-                Surgeon Name
-              </FormLabel>
+        <ModalBody p={0}>
+          <Box p={4} borderBottom="1px solid" borderColor={borderColor}>
+            <InputGroup>
+              <InputLeftElement pointerEvents="none">
+                <SearchIcon color="gray.400" />
+              </InputLeftElement>
               <Input
-                placeholder="Enter surgeon's full name"
-                value={formData.surgeonName}
-                onChange={(e) => handleInputChange('surgeonName', e.target.value)}
-                focusBorderColor="red.500"
+                placeholder="Search terms or definitions..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                focusBorderColor="#eb1700"
                 isDisabled={loading}
               />
-              {errors.surgeonName && (
-                <Text color="red.500" fontSize="sm" mt={1}>
-                  {errors.surgeonName}
-                </Text>
-              )}
-            </FormControl>
+            </InputGroup>
+          </Box>
 
-            <FormControl>
-              <FormLabel fontSize="sm" fontWeight="medium" color="gray.700">
-                Select Hospital
-              </FormLabel>
-              <Select
-                placeholder={hospitalsLoading ? "Loading hospitals..." : "Choose from existing hospitals or select 'Other'"}
-                onChange={(e) => handleHospitalSelect(e.target.value)}
-                focusBorderColor="red.500"
-                isDisabled={loading || hospitalsLoading}
-              >
-                {Array.isArray(hospitals) && hospitals.map(hospital => (
-                  <option key={hospital.id} value={hospital.id}>
-                    {hospital.name} {hospital.city && `- ${hospital.city}, ${hospital.state}`}
-                  </option>
+          <Box p={4} minH="300px">
+            {loading ? (
+              <Center py={8}>
+                <VStack spacing={3}>
+                  <Spinner size="lg" color="#eb1700" />
+                  <Text color="gray.500">Loading glossary terms...</Text>
+                </VStack>
+              </Center>
+            ) : error ? (
+              <Center py={8}>
+                <VStack spacing={4}>
+                  <Text color="red.500" textAlign="center">
+                    {error}
+                  </Text>
+                  <Button
+                    colorScheme="red"
+                    size="sm"
+                    onClick={handleRetry}
+                    bg="#eb1700"
+                    _hover={{ bg: "#9e0000" }}
+                  >
+                    Try Again
+                  </Button>
+                </VStack>
+              </Center>
+            ) : filteredTerms.length === 0 ? (
+              <Center py={8}>
+                <Text color="gray.500" textAlign="center">
+                  {searchQuery ? 'No terms found matching your search.' : 'No glossary terms available.'}
+                </Text>
+              </Center>
+            ) : (
+              <VStack align="stretch" spacing={4}>
+                {filteredTerms.map((term, index) => (
+                  <Box
+                    key={term.id || index}
+                    p={4}
+                    borderRadius="md"
+                    bg={bgColor}
+                    borderWidth="1px"
+                    borderColor={borderColor}
+                    _hover={{ borderColor: "#eb1700", boxShadow: "sm" }}
+                    transition="all 0.2s"
+                  >
+                    <VStack align="start" spacing={3}>
+                      <Box>
+                        <Text fontWeight="bold" fontSize="lg" color="#eb1700">
+                          {term.term}
+                        </Text>
+                        {term.category && (
+                          <Badge
+                            colorScheme="blue"
+                            size="sm"
+                            mt={1}
+                            bg="#69d0ff"
+                            color="#004685"
+                          >
+                            {term.category}
+                          </Badge>
+                        )}
+                      </Box>
+
+                      <Text color="gray.700" lineHeight="1.6">
+                        {term.definition}
+                      </Text>
+
+                      {term.synonyms && (
+                        <Box>
+                          <Text fontSize="sm" fontWeight="medium" color="gray.600" mb={1}>
+                            Also known as:
+                          </Text>
+                          <Text fontSize="sm" color="gray.500" fontStyle="italic">
+                            {term.synonyms}
+                          </Text>
+                        </Box>
+                      )}
+                    </VStack>
+
+                    {index < filteredTerms.length - 1 && (
+                      <Divider mt={4} borderColor={borderColor} />
+                    )}
+                  </Box>
                 ))}
-                <option value="custom">Other (Enter manually)</option>
-              </Select>
-              {hospitalsLoading && (
-                <Text fontSize="xs" color="gray.500" mt={1}>
-                  Loading hospital list...
-                </Text>
-              )}
-            </FormControl>
-
-            <FormControl isInvalid={errors.hospitalName} isRequired>
-              <FormLabel fontSize="sm" fontWeight="medium" color="gray.700">
-                Hospital Name
-              </FormLabel>
-              <Input
-                placeholder="Enter hospital name"
-                value={formData.hospitalName}
-                onChange={(e) => handleInputChange('hospitalName', e.target.value)}
-                focusBorderColor="red.500"
-                isDisabled={loading}
-              />
-              {errors.hospitalName && (
-                <Text color="red.500" fontSize="sm" mt={1}>
-                  {errors.hospitalName}
-                </Text>
-              )}
-            </FormControl>
-
-            <FormControl>
-              <FormLabel fontSize="sm" fontWeight="medium" color="gray.700">
-                Hospital Size
-              </FormLabel>
-              <Select
-                placeholder="Select hospital size category"
-                value={formData.hospitalSize}
-                onChange={(e) => handleInputChange('hospitalSize', e.target.value)}
-                focusBorderColor="red.500"
-                isDisabled={loading}
-              >
-                <option value="small">Small (&lt; 100 beds)</option>
-                <option value="medium">Medium (100-300 beds)</option>
-                <option value="large">Large (&gt; 300 beds)</option>
-              </Select>
-            </FormControl>
-
-            <FormControl isInvalid={errors.conversationDate} isRequired>
-              <FormLabel fontSize="sm" fontWeight="medium" color="gray.700">
-                <HStack spacing={2}>
-                  <Icon as={CalendarIcon} boxSize={4} />
-                  <Text>Conversation Date</Text>
-                </HStack>
-              </FormLabel>
-              <Input
-                type="date"
-                value={formData.conversationDate}
-                onChange={(e) => handleInputChange('conversationDate', e.target.value)}
-                focusBorderColor="red.500"
-                isDisabled={loading}
-              />
-              {errors.conversationDate && (
-                <Text color="red.500" fontSize="sm" mt={1}>
-                  {errors.conversationDate}
-                </Text>
-              )}
-            </FormControl>
-          </VStack>
+              </VStack>
+            )}
+          </Box>
         </ModalBody>
 
-        <ModalFooter borderTop="1px solid" borderColor="gray.200">
+        <ModalFooter borderTop="1px solid" borderColor={borderColor}>
           <Button
             variant="outline"
-            mr={3}
             onClick={handleClose}
-            isDisabled={loading}
+            colorScheme="gray"
           >
-            Cancel
-          </Button>
-          <Button
-            colorScheme="red"
-            onClick={handleSubmit}
-            isLoading={loading}
-            loadingText="Creating..."
-            isDisabled={!user || user.role !== 'sales_rep'}
-          >
-            Create Conversation
+            Close
           </Button>
         </ModalFooter>
       </ModalContent>
@@ -323,4 +212,4 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
   )
 }
 
-export default ConversationModal
+export default GlossaryModal
