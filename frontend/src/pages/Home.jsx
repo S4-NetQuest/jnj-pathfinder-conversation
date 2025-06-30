@@ -16,15 +16,15 @@ import {
   Spacer,
 } from '@chakra-ui/react'
 import { AddIcon, SearchIcon } from '@chakra-ui/icons'
+import { useNavigate } from 'react-router-dom' // Add this import
 import { useAuth } from '../contexts/AuthContext'
 import ConversationModal from '../components/ConversationModal'
 import LoadConversationModal from '../components/LoadConversationModal'
-import ComparePhilosophiesModal from '../components/ComparePhilosophiesModal'
 import DevLogin from '../components/DevLogin'
 
 const Home = () => {
   const { user, logout, isSalesRep } = useAuth()
-
+  const navigate = useNavigate() // Add this hook
   const {
     isOpen: isCreateOpen,
     onOpen: onCreateOpen,
@@ -37,18 +37,6 @@ const Home = () => {
     onClose: onLoadClose
   } = useDisclosure()
 
-  const {
-    isOpen: isCompareOpen,
-    onOpen: onCompareOpen,
-    onClose: onCompareClose
-  } = useDisclosure()
-
-  const {
-    isOpen: isQuestionsOpen,
-    onOpen: onQuestionsOpen,
-    onClose: onQuestionsClose
-  } = useDisclosure()
-
   const handleConversationCreated = (conversationId) => {
     onCreateClose()
     // Navigate to conversation or show success message
@@ -59,6 +47,18 @@ const Home = () => {
     onLoadClose()
     // Navigate to conversation
     console.log('Selected conversation:', conversationId)
+  }
+
+  const handleExploreKinematicRestoration = () => {
+    navigate('/explore-kinematic-restoration')
+  }
+
+  const handleComparePhilosophies = () => {
+    navigate('/compare-philosophies')
+  }
+
+  const handleSellingQuestions = () => {
+    navigate('/selling-questions-philosophies')
   }
 
   // Show dev login if not authenticated
@@ -128,14 +128,17 @@ const Home = () => {
           ) : (<></>)}
 
           <Button
-            size="lg"
+              colorScheme="red"
+              size="lg"
+              onClick={handleExploreKinematicRestoration}
           >
-            Review Content
+            Explore Kinematic Restoration
           </Button>
 
           <Button
               colorScheme="red"
               size="lg"
+              onClick={handleComparePhilosophies}
           >
             Compare Philosophies Tool
           </Button>
@@ -144,6 +147,7 @@ const Home = () => {
             <Button
               colorScheme="red"
               size="lg"
+              onClick={handleSellingQuestions}
             >
               Challenger Selling Philosophy Questions
             </Button>
