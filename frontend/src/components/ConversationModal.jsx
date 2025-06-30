@@ -24,7 +24,7 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
   const toast = useToast()
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
-    surgeon_name: '',
+    surgeon_name: user?.role === 'surgeon' ? user.name || '' : '',
     hospital_name: '',
     hospital_size: '',
     surgery_center_name: '',
@@ -86,10 +86,8 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
 
     setLoading(true)
     try {
-      const response = await api.post('/conversations', {
-        ...formData,
-        sales_rep_id: user.id
-      })
+      // Don't include sales_rep_id in the request - it comes from the authenticated user
+      const response = await api.post('/conversations', formData)
 
       if (response.data.success) {
         toast({
@@ -102,7 +100,7 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
 
         // Reset form
         setFormData({
-          surgeon_name: '',
+          surgeon_name: user?.role === 'surgeon' ? user.name || '' : '',
           hospital_name: '',
           hospital_size: '',
           surgery_center_name: '',
@@ -129,7 +127,7 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
   const handleClose = () => {
     // Reset form when closing
     setFormData({
-      surgeon_name: '',
+      surgeon_name: user?.role === 'surgeon' ? user.name || '' : '',
       hospital_name: '',
       hospital_size: '',
       surgery_center_name: '',
@@ -157,14 +155,15 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
           <VStack spacing={5} align="stretch">
             <FormControl isRequired>
               <FormLabel fontSize="sm" fontWeight="medium" color="#312c2a">
-                Surgeon Name(s)
+                {user?.role === 'surgeon' ? 'Your Name' : 'Surgeon Name(s)'}
               </FormLabel>
               <Input
                 value={formData.surgeon_name}
                 onChange={(e) => handleInputChange('surgeon_name', e.target.value)}
-                placeholder="Enter Surgeon name"
+                placeholder={user?.role === 'surgeon' ? 'Your name' : 'Enter Surgeon name'}
                 focusBorderColor="#eb1700"
                 bg="white"
+                isReadOnly={user?.role === 'surgeon'}
               />
             </FormControl>
 

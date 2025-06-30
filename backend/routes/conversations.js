@@ -26,27 +26,49 @@ const responseSchema = Joi.object({
   }).required(),
 })
 
-// Get conversations (sales rep only)
-router.get('/', requireSalesRep, async (req, res) => {
+// Get conversations (sales rep gets their conversations, surgeons get conversations with their name)
+router.get('/', isAuthenticated, async (req, res) => {
   try {
     const pool = dbConfig.getPool()
-    const query = `
-      SELECT c.*,
-             h.name as hospital_name,
-             h.size_category as hospital_size,
-             sc.name as surgery_center_name,
-             sc.size_category as surgery_center_size
-      FROM conversations c
-      LEFT JOIN hospitals h ON c.hospital_id = h.id
-      LEFT JOIN surgery_centers sc ON c.surgery_center_id = sc.id
-      WHERE c.sales_rep_id = @salesRepId
-      ORDER BY c.conversation_date DESC, c.created_at DESC
-    `
+    let query, request
 
-    const result = await pool.request()
-      .input('salesRepId', dbConfig.sql.Int, req.user.id)
-      .query(query)
+    if (req.user.role === 'sales_rep') {
+      // Sales rep sees conversations they created
+      query = `
+        SELECT c.*,
+               h.name as hospital_name,
+               h.size_category as hospital_size,
+               sc.name as surgery_center_name,
+               sc.size_category as surgery_center_size
+        FROM conversations c
+        LEFT JOIN hospitals h ON c.hospital_id = h.id
+        LEFT JOIN surgery_centers sc ON c.surgery_center_id = sc.id
+        WHERE c.sales_rep_id = @userId
+        ORDER BY c.conversation_date DESC, c.created_at DESC
+      `
 
+      request = pool.request().input('userId', dbConfig.sql.Int, req.user.id)
+    } else if (req.user.role === 'surgeon') {
+      // Surgeon sees conversations where they are the surgeon or where surgeon_name matches their name
+      query = `
+        SELECT c.*,
+               h.name as hospital_name,
+               h.size_category as hospital_size,
+               sc.name as surgery_center_name,
+               sc.size_category as surgery_center_size
+        FROM conversations c
+        LEFT JOIN hospitals h ON c.hospital_id = h.id
+        LEFT JOIN surgery_centers sc ON c.surgery_center_id = sc.id
+        WHERE c.surgeon_name = @surgeonName OR c.sales_rep_id IS NULL
+        ORDER BY c.conversation_date DESC, c.created_at DESC
+      `
+
+      request = pool.request().input('surgeonName', dbConfig.sql.VarChar, req.user.name)
+    } else {
+      return res.status(403).json({ error: 'Invalid user role' })
+    }
+
+    const result = await request.query(query)
     res.json({ success: true, conversations: result.recordset })
   } catch (error) {
     console.error('Error fetching conversations:', error)
@@ -54,10 +76,13 @@ router.get('/', requireSalesRep, async (req, res) => {
   }
 })
 
-// Create new conversation (sales rep only)
-router.post('/', requireSalesRep, async (req, res) => {
+// Create new conversation (sales rep or surgeon)
+router.post('/', isAuthenticated, async (req, res) => {
   try {
-    const { error, value } = createConversationSchema.validate(req.body)
+    // Remove sales_rep_id from request body if present (it should come from auth context)
+    const { sales_rep_id, ...requestBody } = req.body
+
+    const { error, value } = createConversationSchema.validate(requestBody)
     if (error) {
       return res.status(400).json({ error: error.details[0].message })
     }
@@ -130,37 +155,69 @@ router.post('/', requireSalesRep, async (req, res) => {
           .query('UPDATE surgery_centers SET size_category = @surgeryCenterSize, updated_at = GETDATE() WHERE id = @surgeryCenterId')
       }
 
-      // Create conversation
-      const insertQuery = `
-        INSERT INTO conversations (
-          sales_rep_id, surgeon_name, hospital_id, hospital_name, hospital_size,
-          surgery_center_id, surgery_center_name, conversation_date,
-          status, created_at, updated_at
-        )
-        OUTPUT INSERTED.*
-        VALUES (
-          @salesRepId, @surgeonName, @hospitalId, @hospitalName, @hospitalSize,
-          @surgeryCenterId, @surgeryCenterName, @conversationDate,
-          'in_progress', GETDATE(), GETDATE()
-        )
-      `
+      // Create conversation with different logic for sales rep vs surgeon
+      let insertQuery, insertValues
 
-      const result = await transaction.request()
-        .input('salesRepId', dbConfig.sql.Int, req.user.id)
-        .input('surgeonName', dbConfig.sql.VarChar, surgeon_name)
-        .input('hospitalId', dbConfig.sql.Int, hospitalId)
-        .input('hospitalName', dbConfig.sql.VarChar, hospital_name)
-        .input('hospitalSize', dbConfig.sql.VarChar, hospital_size)
-        .input('surgeryCenterId', dbConfig.sql.Int, surgeryCenterId)
-        .input('surgeryCenterName', dbConfig.sql.VarChar, surgery_center_name)
-        .input('conversationDate', dbConfig.sql.Date, conversation_date)
-        .query(insertQuery)
+      if (req.user.role === 'sales_rep') {
+        // Sales rep creating conversation with surgeon
+        insertQuery = `
+          INSERT INTO conversations (
+            sales_rep_id, surgeon_name, hospital_id, hospital_name, hospital_size,
+            surgery_center_id, surgery_center_name, conversation_date,
+            status, created_at, updated_at
+          )
+          OUTPUT INSERTED.*
+          VALUES (
+            @salesRepId, @surgeonName, @hospitalId, @hospitalName, @hospitalSize,
+            @surgeryCenterId, @surgeryCenterName, @conversationDate,
+            'in_progress', GETDATE(), GETDATE()
+          )
+        `
+
+        insertValues = await transaction.request()
+          .input('salesRepId', dbConfig.sql.Int, req.user.id)
+          .input('surgeonName', dbConfig.sql.VarChar, surgeon_name)
+          .input('hospitalId', dbConfig.sql.Int, hospitalId)
+          .input('hospitalName', dbConfig.sql.VarChar, hospital_name)
+          .input('hospitalSize', dbConfig.sql.VarChar, hospital_size)
+          .input('surgeryCenterId', dbConfig.sql.Int, surgeryCenterId)
+          .input('surgeryCenterName', dbConfig.sql.VarChar, surgery_center_name)
+          .input('conversationDate', dbConfig.sql.Date, conversation_date)
+          .query(insertQuery)
+      } else if (req.user.role === 'surgeon') {
+        // Surgeon creating conversation for themselves
+        insertQuery = `
+          INSERT INTO conversations (
+            sales_rep_id, surgeon_name, hospital_id, hospital_name, hospital_size,
+            surgery_center_id, surgery_center_name, conversation_date,
+            status, created_at, updated_at
+          )
+          OUTPUT INSERTED.*
+          VALUES (
+            NULL, @surgeonName, @hospitalId, @hospitalName, @hospitalSize,
+            @surgeryCenterId, @surgeryCenterName, @conversationDate,
+            'in_progress', GETDATE(), GETDATE()
+          )
+        `
+
+        insertValues = await transaction.request()
+          .input('surgeonName', dbConfig.sql.VarChar, req.user.name || surgeon_name)
+          .input('hospitalId', dbConfig.sql.Int, hospitalId)
+          .input('hospitalName', dbConfig.sql.VarChar, hospital_name)
+          .input('hospitalSize', dbConfig.sql.VarChar, hospital_size)
+          .input('surgeryCenterId', dbConfig.sql.Int, surgeryCenterId)
+          .input('surgeryCenterName', dbConfig.sql.VarChar, surgery_center_name)
+          .input('conversationDate', dbConfig.sql.Date, conversation_date)
+          .query(insertQuery)
+      } else {
+        throw new Error('Invalid user role')
+      }
 
       await transaction.commit()
 
       res.status(201).json({
         success: true,
-        conversation: result.recordset[0],
+        conversation: insertValues.recordset[0],
         message: 'Conversation created successfully'
       })
     } catch (error) {

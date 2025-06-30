@@ -1,5 +1,3 @@
-
-// frontend/src/pages/Home.jsx (updated to include dev login)
 import React, { useState, useEffect } from 'react'
 import {
   Box,
@@ -16,15 +14,15 @@ import {
   Spacer,
 } from '@chakra-ui/react'
 import { AddIcon, SearchIcon } from '@chakra-ui/icons'
-import { useNavigate } from 'react-router-dom' // Add this import
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import ConversationModal from '../components/ConversationModal'
 import LoadConversationModal from '../components/LoadConversationModal'
 import DevLogin from '../components/DevLogin'
 
 const Home = () => {
-  const { user, logout, isSalesRep } = useAuth()
-  const navigate = useNavigate() // Add this hook
+  const { user, logout, isSalesRep, isSurgeon } = useAuth()
+  const navigate = useNavigate()
   const {
     isOpen: isCreateOpen,
     onOpen: onCreateOpen,
@@ -99,46 +97,53 @@ const Home = () => {
         {/* Welcome Message */}
         <Box textAlign="center" py={6}>
           <Text fontSize="lg" color="gray.700">
-            The Pathfinder Conversation Guide will help identify your customer's alignment philosophy in Total Knee Arthroplasty (TKA).
+            The Pathfinder Conversation Guide will help identify {isSalesRep ? "your customer's" : "your"} alignment philosophy in Total Knee Arthroplasty (TKA).
           </Text>
         </Box>
 
         {/* Action Buttons */}
         <VStack spacing={4} align="stretch" maxW="400px" mx="auto">
-              <Button
-                leftIcon={<AddIcon />}
-                colorScheme="red"
-                size="lg"
-                onClick={onCreateOpen}
-              >
-                Start New Conversation
-              </Button>
+          <Button
+            leftIcon={<AddIcon />}
+            colorScheme="red"
+            size="lg"
+            onClick={onCreateOpen}
+          >
+            {isSalesRep ? 'Start New Conversation' : 'Start New Assessment'}
+          </Button>
 
           {isSalesRep ? (
-            <>
-              <Button
-                leftIcon={<SearchIcon />}
-                colorScheme="red"
-                size="lg"
-                onClick={onLoadOpen}
-              >
-                Load Existing Conversation
-              </Button>
-            </>
-          ) : (<></>)}
-
-          <Button
+            <Button
+              leftIcon={<SearchIcon />}
               colorScheme="red"
               size="lg"
-              onClick={handleExploreKinematicRestoration}
+              onClick={onLoadOpen}
+            >
+              Load Existing Conversation
+            </Button>
+          ) : (
+            <Button
+              leftIcon={<SearchIcon />}
+              colorScheme="red"
+              size="lg"
+              onClick={onLoadOpen}
+            >
+              Load Previous Assessment
+            </Button>
+          )}
+
+          <Button
+            colorScheme="red"
+            size="lg"
+            onClick={handleExploreKinematicRestoration}
           >
             Explore Kinematic Restoration
           </Button>
 
           <Button
-              colorScheme="red"
-              size="lg"
-              onClick={handleComparePhilosophies}
+            colorScheme="red"
+            size="lg"
+            onClick={handleComparePhilosophies}
           >
             Compare Philosophies Tool
           </Button>
@@ -153,6 +158,16 @@ const Home = () => {
             </Button>
           )}
         </VStack>
+
+        {/* Role-specific Info */}
+        {isSurgeon && (
+          <Alert status="info" borderRadius="md">
+            <AlertIcon />
+            <Text fontSize="sm">
+              As a surgeon, you can create and participate in your own alignment assessments. Notes functionality is available only for sales representatives.
+            </Text>
+          </Alert>
+        )}
 
         {/* Development Info */}
         {process.env.NODE_ENV !== 'production' && (
@@ -177,7 +192,6 @@ const Home = () => {
         onClose={onLoadClose}
         onConversationSelected={handleConversationSelected}
       />
-
     </Container>
   )
 }
