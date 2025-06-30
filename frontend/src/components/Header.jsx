@@ -172,7 +172,7 @@ const Header = () => {
             />
 
             {/* User Profile Menu - Only for Sales Reps */}
-            {user?.role === 'sales_rep' && (
+            {/* {user?.role === 'sales_rep' && ( */}
               <Menu>
                 <MenuButton
                   as={Button}
@@ -239,7 +239,7 @@ const Header = () => {
                   </MenuItem>
                 </MenuList>
               </Menu>
-            )}
+            {/* )} */}
           </HStack>
         </Flex>
       </Box>

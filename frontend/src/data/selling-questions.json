@@ -1,0 +1,108 @@
+{
+  "questions": [
+    {
+      "id": 1,
+      "question": "Would you agree that most patients don't have a truly neutral mechanical alignment pre-arthritic?",
+      "answer": "Reframes surgeon's view of normal patient anatomy.",
+      "categories": ["Teach", "Constructive Tension"]
+    },
+    {
+      "id": 2,
+      "question": "How do you think altering a patients natural joint lines might impact soft tissue tension or functional outcomes post-TKA?",
+      "answer": "Creates dissatisfaction with mechanical alignment outcomes.",
+      "categories": ["Constructive Tension"]
+    },
+    {
+      "id": 3,
+      "question": "If we could offer a way to restore native kinematics while still achieving excellent implant survivorship, would that be worth exploring further?",
+      "answer": "Pitches a reframe—'you don't have to sacrifice survivorship for kinematic restoration.",
+      "categories": ["Teach", "Take Control"]
+    },
+    {
+      "id": 4,
+      "question": "Are you familiar with how the ATTUNE™ Knee System supports a kinematic alignment philosophy through its anatomic design and mid-flexion stability improvements?",
+      "answer": "Educates and directs conversation toward ATTUNE™ Knee platform and VELYS™ Robotic-Assisted Solution.",
+      "categories": ["Teach", "Tailor", "Take Control"]
+    },
+    {
+      "id": 5,
+      "question": "Would you be interested in a surgical approach that aims to maximize patient satisfaction by respecting natural anatomy and reducing the need for ligament releases?",
+      "answer": "Connects surgeon's goals directly to benefits of KA/iKA with ATTUNE™ & VELYS™ Robotic-Assisted Solution.",
+      "categories": ["Teach", "Take Control"]
+    },
+    {
+      "id": 6,
+      "question": "Have you explored using the CPAK (Coronal Plane Alignment of the Knee) classification system to better understand your patient's native alignment pattern before surgery?",
+      "answer": "Introduces a personalized classification approach that highlights natural alignment variations, challenging the idea of \"one size fits all\" in MA.",
+      "categories": ["Teach", "Constructive Tension"]
+    },
+    {
+      "id": 7,
+      "question": "Do you find the CPAK classification groupings helpful in identifying patients who may not benefit from standard mechanical alignment?",
+      "answer": "Reinforces how CPAK can support more personalized planning and predict intraoperative adjustments.",
+      "categories": ["Teach", "Tailor"]
+    },
+    {
+      "id": 8,
+      "question": "Do you typically assess or estimate the Medial Proximal Tibial Angle (MPTA) when determining your tibial resection?",
+      "answer": "Encourages reflection on whether they preserve or override natural tibial joint line. Ties directly to KA/iKA vs MA distinction.",
+      "categories": ["Teach", "Constructive Tension"]
+    },
+    {
+      "id": 9,
+      "question": "In your workflow, how do you handle situations where extension and flexion gaps don't match—do you favor femoral or tibial adjustments?",
+      "answer": "Opens opportunity to expose mechanical alignment shortcomings (challenging MA subtly).",
+      "categories": ["Constructive Tension"]
+    },
+    {
+      "id": 10,
+      "question": "Do you consider achieving equal flexion and extension gaps a top priority, even if it means accepting 1-2mm of lateral laxity in flexion?",
+      "answer": "Helps identify surgeons using Functional Alignment, where gap balance is primary—even over strict restoration of anatomy.",
+      "categories": ["Teach", "Know the Customer's World"]
+    },
+    {
+      "id": 11,
+      "question": "What role does gap balancing play in your procedure—do you aim for symmetrical medial/lateral gaps in flexion and extension?",
+      "answer": "Educates that symmetrical gaps may tie more closely to iKA principles; personalizes based on balancing philosophy.",
+      "categories": ["Teach", "Tailor"]
+    },
+    {
+      "id": 12,
+      "question": "Do you prioritize the Lateral Distal Femoral Angle (LDFA) preoperatively or intraoperatively?",
+      "answer": "Highlights importance of understanding native femoral alignment and how KA aims to restore this rather than override it with a neutral axis.",
+      "categories": ["Teach"]
+    }
+  ],
+  "categories": [
+    {
+      "id": "teach",
+      "name": "Teach",
+      "description": "Educational questions that inform and guide understanding",
+      "color": "blue"
+    },
+    {
+      "id": "constructive_tension",
+      "name": "Constructive Tension",
+      "description": "Questions that challenge current thinking and create productive conflict",
+      "color": "orange"
+    },
+    {
+      "id": "take_control",
+      "name": "Take Control",
+      "description": "Questions that direct the conversation and lead to specific outcomes",
+      "color": "red"
+    },
+    {
+      "id": "tailor",
+      "name": "Tailor",
+      "description": "Questions that personalize the approach to the individual surgeon",
+      "color": "green"
+    },
+    {
+      "id": "know_customer_world",
+      "name": "Know the Customer's World",
+      "description": "Questions that demonstrate understanding of the surgeon's environment and challenges",
+      "color": "purple"
+    }
+  ]
+}

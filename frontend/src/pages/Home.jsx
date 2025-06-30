@@ -105,8 +105,6 @@ const Home = () => {
 
         {/* Action Buttons */}
         <VStack spacing={4} align="stretch" maxW="400px" mx="auto">
-          {isSalesRep ? (
-            <>
               <Button
                 leftIcon={<AddIcon />}
                 colorScheme="red"
@@ -116,6 +114,8 @@ const Home = () => {
                 Start New Conversation
               </Button>
 
+          {isSalesRep ? (
+            <>
               <Button
                 leftIcon={<SearchIcon />}
                 colorScheme="red"

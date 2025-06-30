@@ -1,5 +1,4 @@
-// frontend/src/components/GlossaryModal.jsx
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import {
   Modal,
   ModalOverlay,
@@ -9,202 +8,244 @@ import {
   ModalBody,
   ModalCloseButton,
   Button,
+  FormControl,
+  FormLabel,
   Input,
-  InputGroup,
-  InputLeftElement,
+  Select,
   VStack,
   Text,
-  Box,
-  Divider,
-  Badge,
-  useColorModeValue,
-  Spinner,
-  Center,
+  useToast,
 } from '@chakra-ui/react'
-import { SearchIcon } from '@chakra-ui/icons'
+import { useAuth } from '../contexts/AuthContext'
 import api from '../services/api'
 
-const GlossaryModal = ({ isOpen, onClose }) => {
-  const [terms, setTerms] = useState([])
-  const [filteredTerms, setFilteredTerms] = useState([])
-  const [searchQuery, setSearchQuery] = useState('')
+const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
+  const { user } = useAuth()
+  const toast = useToast()
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
+  const [formData, setFormData] = useState({
+    surgeon_name: '',
+    hospital_name: '',
+    hospital_size: '',
+    surgery_center_name: '',
+    conversation_date: new Date().toISOString().split('T')[0] // Today's date
+  })
 
-  const bgColor = useColorModeValue('white', 'gray.800')
-  const borderColor = useColorModeValue('gray.200', 'gray.600')
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }))
+  }
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchTerms()
+  const handleSubmit = async () => {
+    // Validation
+    if (!formData.surgeon_name.trim()) {
+      toast({
+        title: 'Validation Error',
+        description: 'Surgeon name is required',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      })
+      return
     }
-  }, [isOpen])
 
-  useEffect(() => {
-    if (searchQuery.trim() === '') {
-      setFilteredTerms(terms)
-    } else {
-      const filtered = terms.filter(term =>
-        term.term.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        term.definition.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (term.synonyms && term.synonyms.toLowerCase().includes(searchQuery.toLowerCase()))
-      )
-      setFilteredTerms(filtered)
+    if (!formData.hospital_name.trim()) {
+      toast({
+        title: 'Validation Error',
+        description: 'Hospital name is required',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      })
+      return
     }
-  }, [searchQuery, terms])
 
-  const fetchTerms = async () => {
+    if (!formData.hospital_size) {
+      toast({
+        title: 'Validation Error',
+        description: 'Hospital size is required',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      })
+      return
+    }
+
+    if (!formData.surgery_center_name.trim()) {
+      toast({
+        title: 'Validation Error',
+        description: 'Affiliated Ambulatory Surgery Center name is required',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      })
+      return
+    }
+
     setLoading(true)
-    setError(null)
     try {
-      const response = await api.get('/glossary')
-      setTerms(response.data || [])
-      setFilteredTerms(response.data || [])
+      const response = await api.post('/conversations', {
+        ...formData,
+        sales_rep_id: user.id
+      })
+
+      if (response.data.success) {
+        toast({
+          title: 'Success',
+          description: 'Conversation created successfully',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        })
+
+        // Reset form
+        setFormData({
+          surgeon_name: '',
+          hospital_name: '',
+          hospital_size: '',
+          surgery_center_name: '',
+          conversation_date: new Date().toISOString().split('T')[0]
+        })
+
+        // Call the callback with the new conversation ID
+        onConversationCreated(response.data.conversation.id)
+      }
     } catch (error) {
-      console.error('Error fetching glossary terms:', error)
-      setError('Failed to load glossary terms. Please try again.')
+      console.error('Error creating conversation:', error)
+      toast({
+        title: 'Error',
+        description: error.response?.data?.error || 'Failed to create conversation',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      })
     } finally {
       setLoading(false)
     }
   }
 
   const handleClose = () => {
-    setSearchQuery('')
-    setError(null)
+    // Reset form when closing
+    setFormData({
+      surgeon_name: '',
+      hospital_name: '',
+      hospital_size: '',
+      surgery_center_name: '',
+      conversation_date: new Date().toISOString().split('T')[0]
+    })
     onClose()
-  }
-
-  const handleRetry = () => {
-    fetchTerms()
   }
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      size={{ base: 'full', md: 'xl' }}
-      scrollBehavior="inside"
+      size={{ base: 'full', md: 'lg' }}
     >
       <ModalOverlay />
-      <ModalContent maxH="90vh">
-        <ModalHeader bg="gray.50" borderBottom="1px solid" borderColor={borderColor}>
+      <ModalContent>
+        <ModalHeader bg="#f1efed" borderBottom="1px solid" borderColor="#e8e6e3">
           <Text color="#eb1700" fontSize="lg" fontWeight="bold">
-            📚 Medical Glossary
+            Create New Conversation
           </Text>
         </ModalHeader>
         <ModalCloseButton />
 
-        <ModalBody p={0}>
-          <Box p={4} borderBottom="1px solid" borderColor={borderColor}>
-            <InputGroup>
-              <InputLeftElement pointerEvents="none">
-                <SearchIcon color="gray.400" />
-              </InputLeftElement>
+        <ModalBody py={6}>
+          <VStack spacing={5} align="stretch">
+            <FormControl isRequired>
+              <FormLabel fontSize="sm" fontWeight="medium" color="#312c2a">
+                Surgeon Name(s)
+              </FormLabel>
               <Input
-                placeholder="Search terms or definitions..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                value={formData.surgeon_name}
+                onChange={(e) => handleInputChange('surgeon_name', e.target.value)}
+                placeholder="Enter Surgeon name"
                 focusBorderColor="#eb1700"
-                isDisabled={loading}
+                bg="white"
               />
-            </InputGroup>
-          </Box>
+            </FormControl>
 
-          <Box p={4} minH="300px">
-            {loading ? (
-              <Center py={8}>
-                <VStack spacing={3}>
-                  <Spinner size="lg" color="#eb1700" />
-                  <Text color="gray.500">Loading glossary terms...</Text>
-                </VStack>
-              </Center>
-            ) : error ? (
-              <Center py={8}>
-                <VStack spacing={4}>
-                  <Text color="red.500" textAlign="center">
-                    {error}
-                  </Text>
-                  <Button
-                    colorScheme="red"
-                    size="sm"
-                    onClick={handleRetry}
-                    bg="#eb1700"
-                    _hover={{ bg: "#9e0000" }}
-                  >
-                    Try Again
-                  </Button>
-                </VStack>
-              </Center>
-            ) : filteredTerms.length === 0 ? (
-              <Center py={8}>
-                <Text color="gray.500" textAlign="center">
-                  {searchQuery ? 'No terms found matching your search.' : 'No glossary terms available.'}
-                </Text>
-              </Center>
-            ) : (
-              <VStack align="stretch" spacing={4}>
-                {filteredTerms.map((term, index) => (
-                  <Box
-                    key={term.id || index}
-                    p={4}
-                    borderRadius="md"
-                    bg={bgColor}
-                    borderWidth="1px"
-                    borderColor={borderColor}
-                    _hover={{ borderColor: "#eb1700", boxShadow: "sm" }}
-                    transition="all 0.2s"
-                  >
-                    <VStack align="start" spacing={3}>
-                      <Box>
-                        <Text fontWeight="bold" fontSize="lg" color="#eb1700">
-                          {term.term}
-                        </Text>
-                        {term.category && (
-                          <Badge
-                            colorScheme="blue"
-                            size="sm"
-                            mt={1}
-                            bg="#69d0ff"
-                            color="#004685"
-                          >
-                            {term.category}
-                          </Badge>
-                        )}
-                      </Box>
+            <FormControl isRequired>
+              <FormLabel fontSize="sm" fontWeight="medium" color="#312c2a">
+                Affiliated Hospital
+              </FormLabel>
+              <Input
+                value={formData.hospital_name}
+                onChange={(e) => handleInputChange('hospital_name', e.target.value)}
+                placeholder="Enter Hospital name"
+                focusBorderColor="#eb1700"
+                bg="white"
+              />
+            </FormControl>
 
-                      <Text color="gray.700" lineHeight="1.6">
-                        {term.definition}
-                      </Text>
+            <FormControl isRequired>
+              <FormLabel fontSize="sm" fontWeight="medium" color="#312c2a">
+                Affiliated Ambulatory Surgery Center (ASC)
+              </FormLabel>
+              <Input
+                value={formData.surgery_center_name}
+                onChange={(e) => handleInputChange('surgery_center_name', e.target.value)}
+                placeholder="Enter Ambulatory Surgery Center name"
+                focusBorderColor="#eb1700"
+                bg="white"
+              />
+            </FormControl>
 
-                      {term.synonyms && (
-                        <Box>
-                          <Text fontSize="sm" fontWeight="medium" color="gray.600" mb={1}>
-                            Also known as:
-                          </Text>
-                          <Text fontSize="sm" color="gray.500" fontStyle="italic">
-                            {term.synonyms}
-                          </Text>
-                        </Box>
-                      )}
-                    </VStack>
+            <FormControl isRequired>
+              <FormLabel fontSize="sm" fontWeight="medium" color="#312c2a">
+                Hospital Size
+              </FormLabel>
+              <Select
+                value={formData.hospital_size}
+                onChange={(e) => handleInputChange('hospital_size', e.target.value)}
+                placeholder="Select hospital size"
+                focusBorderColor="#eb1700"
+                bg="white"
+              >
+                <option value="small">Small (&lt; 200 beds)</option>
+                <option value="medium">Medium (200-400 beds)</option>
+                <option value="large">Large (400-600 beds)</option>
+                <option value="academic">Academic Medical Center (&gt; 600 beds)</option>
+              </Select>
+            </FormControl>
 
-                    {index < filteredTerms.length - 1 && (
-                      <Divider mt={4} borderColor={borderColor} />
-                    )}
-                  </Box>
-                ))}
-              </VStack>
-            )}
-          </Box>
+            <FormControl isRequired>
+              <FormLabel fontSize="sm" fontWeight="medium" color="#312c2a">
+                Conversation Date
+              </FormLabel>
+              <Input
+                type="date"
+                value={formData.conversation_date}
+                onChange={(e) => handleInputChange('conversation_date', e.target.value)}
+                focusBorderColor="#eb1700"
+                bg="white"
+              />
+            </FormControl>
+          </VStack>
         </ModalBody>
 
-        <ModalFooter borderTop="1px solid" borderColor={borderColor}>
+        <ModalFooter borderTop="1px solid" borderColor="#e8e6e3">
           <Button
             variant="outline"
+            mr={3}
             onClick={handleClose}
-            colorScheme="gray"
+            isDisabled={loading}
           >
-            Close
+            Cancel
+          </Button>
+          <Button
+            bg="#eb1700"
+            color="white"
+            _hover={{ bg: "#9e0000" }}
+            _active={{ bg: "#9e0000" }}
+            onClick={handleSubmit}
+            isLoading={loading}
+            loadingText="Creating..."
+          >
+            Create Conversation
           </Button>
         </ModalFooter>
       </ModalContent>
@@ -212,4 +253,4 @@ const GlossaryModal = ({ isOpen, onClose }) => {
   )
 }
 
-export default GlossaryModal
+export default ConversationModal
