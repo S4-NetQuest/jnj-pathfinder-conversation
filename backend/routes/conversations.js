@@ -1,4 +1,4 @@
-// backend/routes/conversations.js (updated middleware usage)
+// backend/routes/conversations.js (updated with surgery center support)
 import express from 'express'
 import Joi from 'joi'
 import dbConfig from '../config/database.js'
@@ -8,10 +8,11 @@ const router = express.Router()
 
 // Validation schemas
 const createConversationSchema = Joi.object({
-  surgeonName: Joi.string().required().min(2).max(255),
-  hospitalName: Joi.string().required().min(2).max(255),
-  hospitalSize: Joi.string().valid('small', 'medium', 'large').optional(),
-  conversationDate: Joi.date().required(),
+  surgeon_name: Joi.string().required().min(2).max(255),
+  hospital_name: Joi.string().required().min(2).max(255),
+  hospital_size: Joi.string().valid('small', 'medium', 'large', 'academic').required(),
+  surgery_center_name: Joi.string().required().min(2).max(255),
+  conversation_date: Joi.date().required(),
 })
 
 const responseSchema = Joi.object({
@@ -30,9 +31,14 @@ router.get('/', requireSalesRep, async (req, res) => {
   try {
     const pool = dbConfig.getPool()
     const query = `
-      SELECT c.*, h.name as hospital_name, h.size_category
+      SELECT c.*,
+             h.name as hospital_name,
+             h.size_category as hospital_size,
+             sc.name as surgery_center_name,
+             sc.size_category as surgery_center_size
       FROM conversations c
       LEFT JOIN hospitals h ON c.hospital_id = h.id
+      LEFT JOIN surgery_centers sc ON c.surgery_center_id = sc.id
       WHERE c.sales_rep_id = @salesRepId
       ORDER BY c.conversation_date DESC, c.created_at DESC
     `
@@ -41,7 +47,7 @@ router.get('/', requireSalesRep, async (req, res) => {
       .input('salesRepId', dbConfig.sql.Int, req.user.id)
       .query(query)
 
-    res.json(result.recordset)
+    res.json({ success: true, conversations: result.recordset })
   } catch (error) {
     console.error('Error fetching conversations:', error)
     res.status(500).json({ error: 'Failed to fetch conversations' })
@@ -56,55 +62,111 @@ router.post('/', requireSalesRep, async (req, res) => {
       return res.status(400).json({ error: error.details[0].message })
     }
 
-    const { surgeonName, hospitalName, hospitalSize, conversationDate } = value
+    const { surgeon_name, hospital_name, hospital_size, surgery_center_name, conversation_date } = value
     const pool = dbConfig.getPool()
 
-    // Check if hospital exists, create if not
-    let hospitalId = null
-    const hospitalQuery = 'SELECT id FROM hospitals WHERE name = @hospitalName'
-    const hospitalResult = await pool.request()
-      .input('hospitalName', dbConfig.sql.VarChar, hospitalName)
-      .query(hospitalQuery)
+    // Start transaction
+    const transaction = pool.transaction()
+    await transaction.begin()
 
-    if (hospitalResult.recordset.length === 0) {
-      const insertHospitalQuery = `
-        INSERT INTO hospitals (name, size_category, created_at, updated_at)
-        OUTPUT INSERTED.id
-        VALUES (@hospitalName, @hospitalSize, GETDATE(), GETDATE())
+    try {
+      // Check if hospital exists, create if not
+      let hospitalId = null
+      const hospitalQuery = 'SELECT id FROM hospitals WHERE name = @hospitalName'
+      const hospitalResult = await transaction.request()
+        .input('hospitalName', dbConfig.sql.VarChar, hospital_name)
+        .query(hospitalQuery)
+
+      if (hospitalResult.recordset.length === 0) {
+        const insertHospitalQuery = `
+          INSERT INTO hospitals (name, size_category, created_at, updated_at)
+          OUTPUT INSERTED.id
+          VALUES (@hospitalName, @hospitalSize, GETDATE(), GETDATE())
+        `
+
+        const newHospitalResult = await transaction.request()
+          .input('hospitalName', dbConfig.sql.VarChar, hospital_name)
+          .input('hospitalSize', dbConfig.sql.VarChar, hospital_size)
+          .query(insertHospitalQuery)
+
+        hospitalId = newHospitalResult.recordset[0].id
+      } else {
+        hospitalId = hospitalResult.recordset[0].id
+
+        // Update hospital size if different
+        await transaction.request()
+          .input('hospitalId', dbConfig.sql.Int, hospitalId)
+          .input('hospitalSize', dbConfig.sql.VarChar, hospital_size)
+          .query('UPDATE hospitals SET size_category = @hospitalSize, updated_at = GETDATE() WHERE id = @hospitalId')
+      }
+
+      // Check if surgery center exists, create if not
+      let surgeryCenterId = null
+      const surgeryCenterQuery = 'SELECT id FROM surgery_centers WHERE name = @surgeryCenterName'
+      const surgeryCenterResult = await transaction.request()
+        .input('surgeryCenterName', dbConfig.sql.VarChar, surgery_center_name)
+        .query(surgeryCenterQuery)
+
+      if (surgeryCenterResult.recordset.length === 0) {
+        const insertSurgeryCenterQuery = `
+          INSERT INTO surgery_centers (name, size_category, created_at, updated_at)
+          OUTPUT INSERTED.id
+          VALUES (@surgeryCenterName, @surgeryCenterSize, GETDATE(), GETDATE())
+        `
+
+        const newSurgeryCenterResult = await transaction.request()
+          .input('surgeryCenterName', dbConfig.sql.VarChar, surgery_center_name)
+          .input('surgeryCenterSize', dbConfig.sql.VarChar, hospital_size) // Use same size as hospital
+          .query(insertSurgeryCenterQuery)
+
+        surgeryCenterId = newSurgeryCenterResult.recordset[0].id
+      } else {
+        surgeryCenterId = surgeryCenterResult.recordset[0].id
+
+        // Update surgery center size if different
+        await transaction.request()
+          .input('surgeryCenterId', dbConfig.sql.Int, surgeryCenterId)
+          .input('surgeryCenterSize', dbConfig.sql.VarChar, hospital_size)
+          .query('UPDATE surgery_centers SET size_category = @surgeryCenterSize, updated_at = GETDATE() WHERE id = @surgeryCenterId')
+      }
+
+      // Create conversation
+      const insertQuery = `
+        INSERT INTO conversations (
+          sales_rep_id, surgeon_name, hospital_id, hospital_name, hospital_size,
+          surgery_center_id, surgery_center_name, conversation_date,
+          status, created_at, updated_at
+        )
+        OUTPUT INSERTED.*
+        VALUES (
+          @salesRepId, @surgeonName, @hospitalId, @hospitalName, @hospitalSize,
+          @surgeryCenterId, @surgeryCenterName, @conversationDate,
+          'in_progress', GETDATE(), GETDATE()
+        )
       `
 
-      const newHospitalResult = await pool.request()
-        .input('hospitalName', dbConfig.sql.VarChar, hospitalName)
-        .input('hospitalSize', dbConfig.sql.VarChar, hospitalSize)
-        .query(insertHospitalQuery)
+      const result = await transaction.request()
+        .input('salesRepId', dbConfig.sql.Int, req.user.id)
+        .input('surgeonName', dbConfig.sql.VarChar, surgeon_name)
+        .input('hospitalId', dbConfig.sql.Int, hospitalId)
+        .input('hospitalName', dbConfig.sql.VarChar, hospital_name)
+        .input('hospitalSize', dbConfig.sql.VarChar, hospital_size)
+        .input('surgeryCenterId', dbConfig.sql.Int, surgeryCenterId)
+        .input('surgeryCenterName', dbConfig.sql.VarChar, surgery_center_name)
+        .input('conversationDate', dbConfig.sql.Date, conversation_date)
+        .query(insertQuery)
 
-      hospitalId = newHospitalResult.recordset[0].id
-    } else {
-      hospitalId = hospitalResult.recordset[0].id
+      await transaction.commit()
+
+      res.status(201).json({
+        success: true,
+        conversation: result.recordset[0],
+        message: 'Conversation created successfully'
+      })
+    } catch (error) {
+      await transaction.rollback()
+      throw error
     }
-
-    // Create conversation
-    const insertQuery = `
-      INSERT INTO conversations (
-        sales_rep_id, surgeon_name, hospital_id, hospital_name,
-        conversation_date, status, created_at, updated_at
-      )
-      OUTPUT INSERTED.*
-      VALUES (
-        @salesRepId, @surgeonName, @hospitalId, @hospitalName,
-        @conversationDate, 'in_progress', GETDATE(), GETDATE()
-      )
-    `
-
-    const result = await pool.request()
-      .input('salesRepId', dbConfig.sql.Int, req.user.id)
-      .input('surgeonName', dbConfig.sql.VarChar, surgeonName)
-      .input('hospitalId', dbConfig.sql.Int, hospitalId)
-      .input('hospitalName', dbConfig.sql.VarChar, hospitalName)
-      .input('conversationDate', dbConfig.sql.Date, conversationDate)
-      .query(insertQuery)
-
-    res.status(201).json(result.recordset[0])
   } catch (error) {
     console.error('Error creating conversation:', error)
     res.status(500).json({ error: 'Failed to create conversation' })
@@ -124,10 +186,16 @@ router.get('/:id', async (req, res) => {
 
     // Check if user has access to this conversation
     let query = `
-      SELECT c.*, h.name as hospital_name, h.size_category,
-             u.name as sales_rep_name, u.email as sales_rep_email
+      SELECT c.*,
+             h.name as hospital_name,
+             h.size_category as hospital_size,
+             sc.name as surgery_center_name,
+             sc.size_category as surgery_center_size,
+             u.name as sales_rep_name,
+             u.email as sales_rep_email
       FROM conversations c
       LEFT JOIN hospitals h ON c.hospital_id = h.id
+      LEFT JOIN surgery_centers sc ON c.surgery_center_id = sc.id
       LEFT JOIN users u ON c.sales_rep_id = u.id
       WHERE c.id = @conversationId
     `
@@ -163,7 +231,7 @@ router.get('/:id', async (req, res) => {
     const conversation = result.recordset[0]
     conversation.responses = responsesResult.recordset
 
-    res.json(conversation)
+    res.json({ success: true, conversation })
   } catch (error) {
     console.error('Error fetching conversation:', error)
     res.status(500).json({ error: 'Failed to fetch conversation' })
@@ -279,7 +347,7 @@ router.post('/:id/responses', async (req, res) => {
       .input('conversationId', dbConfig.sql.Int, conversationId)
       .query(updateTotalsQuery)
 
-    res.json(result.recordset[0])
+    res.json({ success: true, response: result.recordset[0] })
   } catch (error) {
     console.error('Error saving response:', error)
     res.status(500).json({ error: 'Failed to save response' })
@@ -325,7 +393,7 @@ router.put('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Conversation not found or access denied' })
     }
 
-    res.json(result.recordset[0])
+    res.json({ success: true, conversation: result.recordset[0] })
   } catch (error) {
     console.error('Error updating conversation:', error)
     res.status(500).json({ error: 'Failed to update conversation' })
@@ -383,7 +451,7 @@ router.get('/:id/notes', async (req, res) => {
       .input('conversationId', dbConfig.sql.Int, conversationId)
       .query(query)
 
-    res.json(result.recordset)
+    res.json({ success: true, notes: result.recordset })
   } catch (error) {
     console.error('Error fetching notes:', error)
     res.status(500).json({ error: 'Failed to fetch notes' })
@@ -446,7 +514,7 @@ router.post('/:id/notes', requireSalesRep, async (req, res) => {
         .query(insertQuery)
     }
 
-    res.json(result.recordset[0])
+    res.json({ success: true, note: result.recordset[0] })
   } catch (error) {
     console.error('Error saving note:', error)
     res.status(500).json({ error: 'Failed to save note' })
