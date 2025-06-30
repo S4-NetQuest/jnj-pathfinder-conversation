@@ -15,6 +15,8 @@ import {
   VStack,
   Text,
   useToast,
+  Alert,
+  AlertIcon,
 } from '@chakra-ui/react'
 import { useAuth } from '../contexts/AuthContext'
 import api from '../services/api'
@@ -23,6 +25,7 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
   const { user } = useAuth()
   const toast = useToast()
   const [loading, setLoading] = useState(false)
+  const [debugInfo, setDebugInfo] = useState(null)
   const [formData, setFormData] = useState({
     surgeon_name: user?.role === 'surgeon' ? user.name || '' : '',
     hospital_name: '',
@@ -39,55 +42,62 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
   }
 
   const handleSubmit = async () => {
+    console.log('=== CONVERSATION CREATION DEBUG START ===')
+    console.log('User:', user)
+    console.log('Form Data:', formData)
+
+    // Clear previous debug info
+    setDebugInfo(null)
+
     // Validation
+    const validationErrors = []
     if (!formData.surgeon_name.trim()) {
-      toast({
-        title: 'Validation Error',
-        description: 'Surgeon name is required',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      })
-      return
+      validationErrors.push('Surgeon name is required')
     }
-
     if (!formData.hospital_name.trim()) {
-      toast({
-        title: 'Validation Error',
-        description: 'Hospital name is required',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      })
-      return
+      validationErrors.push('Hospital name is required')
     }
-
     if (!formData.hospital_size) {
-      toast({
-        title: 'Validation Error',
-        description: 'Hospital size is required',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      })
-      return
+      validationErrors.push('Hospital size is required')
+    }
+    if (!formData.surgery_center_name.trim()) {
+      validationErrors.push('Affiliated Ambulatory Surgery Center name is required')
     }
 
-    if (!formData.surgery_center_name.trim()) {
+    if (validationErrors.length > 0) {
+      console.log('Validation errors:', validationErrors)
+      setDebugInfo({ type: 'validation', errors: validationErrors })
       toast({
         title: 'Validation Error',
-        description: 'Affiliated Ambulatory Surgery Center name is required',
+        description: validationErrors.join(', '),
         status: 'error',
-        duration: 3000,
+        duration: 5000,
         isClosable: true,
       })
       return
     }
 
     setLoading(true)
+    setDebugInfo({ type: 'loading', message: 'Starting request...' })
+
     try {
-      // Don't include sales_rep_id in the request - it comes from the authenticated user
-      const response = await api.post('/conversations', formData)
+      console.log('Making API request to /api/conversations')
+      console.log('Request payload:', formData)
+
+      // Add timeout to the request
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Request timeout after 30 seconds')), 30000)
+      })
+
+      const apiPromise = api.post('/conversations', formData)
+
+      const response = await Promise.race([apiPromise, timeoutPromise])
+
+      console.log('API Response received:', response)
+      console.log('Response status:', response.status)
+      console.log('Response data:', response.data)
+
+      setDebugInfo({ type: 'response', data: response.data })
 
       if (response.data.success) {
         toast({
@@ -108,24 +118,45 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
         })
 
         // Call the callback with the new conversation ID
+        console.log('Calling onConversationCreated with ID:', response.data.conversation.id)
         onConversationCreated(response.data.conversation.id)
+      } else {
+        throw new Error(`API returned success: false - ${response.data.error || 'Unknown error'}`)
       }
     } catch (error) {
-      console.error('Error creating conversation:', error)
+      console.error('=== ERROR DETAILS ===')
+      console.error('Error object:', error)
+      console.error('Error message:', error.message)
+      console.error('Error response:', error.response)
+      console.error('Error response data:', error.response?.data)
+      console.error('Error response status:', error.response?.status)
+      console.error('Error response headers:', error.response?.headers)
+      console.error('=== END ERROR DETAILS ===')
+
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to create conversation'
+
+      setDebugInfo({
+        type: 'error',
+        error: errorMessage,
+        status: error.response?.status,
+        fullError: error
+      })
+
       toast({
         title: 'Error',
-        description: error.response?.data?.error || 'Failed to create conversation',
+        description: errorMessage,
         status: 'error',
-        duration: 5000,
+        duration: 8000,
         isClosable: true,
       })
     } finally {
       setLoading(false)
+      console.log('=== CONVERSATION CREATION DEBUG END ===')
     }
   }
 
   const handleClose = () => {
-    // Reset form when closing
+    // Reset form and debug info when closing
     setFormData({
       surgeon_name: user?.role === 'surgeon' ? user.name || '' : '',
       hospital_name: '',
@@ -133,7 +164,30 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
       surgery_center_name: '',
       conversation_date: new Date().toISOString().split('T')[0]
     })
+    setDebugInfo(null)
     onClose()
+  }
+
+  // Check if user is authenticated
+  if (!user) {
+    return (
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Authentication Required</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Alert status="error">
+              <AlertIcon />
+              You must be logged in to create a conversation.
+            </Alert>
+          </ModalBody>
+          <ModalFooter>
+            <Button onClick={onClose}>Close</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    )
   }
 
   return (
@@ -141,6 +195,7 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
       isOpen={isOpen}
       onClose={handleClose}
       size={{ base: 'full', md: 'lg' }}
+      closeOnOverlayClick={!loading}
     >
       <ModalOverlay />
       <ModalContent>
@@ -149,10 +204,21 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
             Create New Conversation
           </Text>
         </ModalHeader>
-        <ModalCloseButton />
+        <ModalCloseButton isDisabled={loading} />
 
         <ModalBody py={6}>
           <VStack spacing={5} align="stretch">
+            {/* Debug Information */}
+            {process.env.NODE_ENV === 'development' && debugInfo && (
+              <Alert status={debugInfo.type === 'error' ? 'error' : 'info'} fontSize="sm">
+                <AlertIcon />
+                <VStack align="start" spacing={1}>
+                  <Text fontWeight="bold">Debug Info:</Text>
+                  <Text>{JSON.stringify(debugInfo, null, 2)}</Text>
+                </VStack>
+              </Alert>
+            )}
+
             <FormControl isRequired>
               <FormLabel fontSize="sm" fontWeight="medium" color="#312c2a">
                 {user?.role === 'surgeon' ? 'Your Name' : 'Surgeon Name(s)'}
@@ -164,6 +230,7 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
                 focusBorderColor="#eb1700"
                 bg="white"
                 isReadOnly={user?.role === 'surgeon'}
+                isDisabled={loading}
               />
             </FormControl>
 
@@ -177,6 +244,7 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
                 placeholder="Enter Hospital name"
                 focusBorderColor="#eb1700"
                 bg="white"
+                isDisabled={loading}
               />
             </FormControl>
 
@@ -190,6 +258,7 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
                 placeholder="Enter Ambulatory Surgery Center name"
                 focusBorderColor="#eb1700"
                 bg="white"
+                isDisabled={loading}
               />
             </FormControl>
 
@@ -203,6 +272,7 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
                 placeholder="Select hospital size"
                 focusBorderColor="#eb1700"
                 bg="white"
+                isDisabled={loading}
               >
                 <option value="small">Small (&lt; 200 beds)</option>
                 <option value="medium">Medium (200-400 beds)</option>
@@ -221,8 +291,22 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
                 onChange={(e) => handleInputChange('conversation_date', e.target.value)}
                 focusBorderColor="#eb1700"
                 bg="white"
+                isDisabled={loading}
               />
             </FormControl>
+
+            {/* User Info Debug (development only) */}
+            {process.env.NODE_ENV === 'development' && (
+              <Alert status="info" fontSize="xs">
+                <AlertIcon />
+                <VStack align="start" spacing={1}>
+                  <Text fontWeight="bold">Current User:</Text>
+                  <Text>Role: {user?.role}</Text>
+                  <Text>Name: {user?.name}</Text>
+                  <Text>ID: {user?.id}</Text>
+                </VStack>
+              </Alert>
+            )}
           </VStack>
         </ModalBody>
 
@@ -243,6 +327,7 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
             onClick={handleSubmit}
             isLoading={loading}
             loadingText="Creating..."
+            isDisabled={loading}
           >
             Create Conversation
           </Button>
