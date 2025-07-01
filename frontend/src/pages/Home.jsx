@@ -47,7 +47,8 @@ const Home = () => {
       isClosable: true,
     })
     // TODO: Navigate to conversation page when conversation component is built
-    console.log('Created conversation:', conversationId)
+    navigate(`/conversation/${conversationId}`)
+    //console.log('Created conversation:', conversationId)
   }
 
   const handleConversationSelected = (conversationId) => {
@@ -60,7 +61,9 @@ const Home = () => {
       isClosable: true,
     })
     // TODO: Navigate to conversation page when conversation component is built
-    console.log('Selected conversation:', conversationId)
+    //console.log('Selected conversation:', conversationId)
+    navigate(`/conversation/${conversationId}`)
+
   }
 
   const handleExploreKinematicRestoration = () => {

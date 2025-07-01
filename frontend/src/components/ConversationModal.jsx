@@ -17,6 +17,9 @@ import {
   useToast,
   Alert,
   AlertIcon,
+  RadioGroup,
+  Radio,
+  HStack,
 } from '@chakra-ui/react'
 import { useAuth } from '../contexts/AuthContext'
 import api from '../services/api'
@@ -29,8 +32,10 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
   const [formData, setFormData] = useState({
     surgeon_name: user?.role === 'surgeon' ? user.name || '' : '',
     hospital_name: '',
-    hospital_size: '',
     surgery_center_name: '',
+    surgeon_volume_per_year: '',
+    uses_robotics: '',
+    current_alignment: '',
     conversation_date: new Date().toISOString().split('T')[0] // Today's date
   })
 
@@ -57,11 +62,20 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
     if (!formData.hospital_name.trim()) {
       validationErrors.push('Hospital name is required')
     }
-    if (!formData.hospital_size) {
-      validationErrors.push('Hospital size is required')
-    }
     if (!formData.surgery_center_name.trim()) {
-      validationErrors.push('Affiliated Ambulatory Surgery Center name is required')
+      validationErrors.push('Surgery Center name is required')
+    }
+    if (!formData.surgeon_volume_per_year) {
+      validationErrors.push('Surgeon knee arthroplasty volume per year is required')
+    }
+    if (!formData.uses_robotics) {
+      validationErrors.push('Robotics usage information is required')
+    }
+    if (!formData.current_alignment) {
+      validationErrors.push('Current alignment approach is required')
+    }
+    if (!formData.conversation_date) {
+      validationErrors.push('Conversation date is required')
     }
 
     if (validationErrors.length > 0) {
@@ -112,8 +126,10 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
         setFormData({
           surgeon_name: user?.role === 'surgeon' ? user.name || '' : '',
           hospital_name: '',
-          hospital_size: '',
           surgery_center_name: '',
+          surgeon_volume_per_year: '',
+          uses_robotics: '',
+          current_alignment: '',
           conversation_date: new Date().toISOString().split('T')[0]
         })
 
@@ -160,8 +176,10 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
     setFormData({
       surgeon_name: user?.role === 'surgeon' ? user.name || '' : '',
       hospital_name: '',
-      hospital_size: '',
       surgery_center_name: '',
+      surgeon_volume_per_year: '',
+      uses_robotics: '',
+      current_alignment: '',
       conversation_date: new Date().toISOString().split('T')[0]
     })
     setDebugInfo(null)
@@ -250,12 +268,12 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
 
             <FormControl isRequired>
               <FormLabel fontSize="sm" fontWeight="medium" color="#312c2a">
-                Affiliated Ambulatory Surgery Center (ASC)
+                Affiliated Surgery Center
               </FormLabel>
               <Input
                 value={formData.surgery_center_name}
                 onChange={(e) => handleInputChange('surgery_center_name', e.target.value)}
-                placeholder="Enter Ambulatory Surgery Center name"
+                placeholder="Enter Surgery Center name"
                 focusBorderColor="#eb1700"
                 bg="white"
                 isDisabled={loading}
@@ -264,20 +282,59 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
 
             <FormControl isRequired>
               <FormLabel fontSize="sm" fontWeight="medium" color="#312c2a">
-                Hospital Size
+                Surgeon Knee Arthroplasty Volume / Year
               </FormLabel>
               <Select
-                value={formData.hospital_size}
-                onChange={(e) => handleInputChange('hospital_size', e.target.value)}
-                placeholder="Select hospital size"
+                value={formData.surgeon_volume_per_year}
+                onChange={(e) => handleInputChange('surgeon_volume_per_year', e.target.value)}
+                placeholder="Select volume range"
                 focusBorderColor="#eb1700"
                 bg="white"
                 isDisabled={loading}
               >
-                <option value="small">Small (&lt; 200 beds)</option>
-                <option value="medium">Medium (200-400 beds)</option>
-                <option value="large">Large (400-600 beds)</option>
-                <option value="academic">Academic Medical Center (&gt; 600 beds)</option>
+                <option value="< 50">< 50</option>
+                <option value="< 100">< 100</option>
+                <option value="< 200">< 200</option>
+                <option value="> 200">> 200</option>
+              </Select>
+            </FormControl>
+
+            <FormControl isRequired>
+              <FormLabel fontSize="sm" fontWeight="medium" color="#312c2a">
+                Is the surgeon currently using robotics?
+              </FormLabel>
+              <RadioGroup
+                value={formData.uses_robotics}
+                onChange={(value) => handleInputChange('uses_robotics', value)}
+                isDisabled={loading}
+              >
+                <HStack spacing={6}>
+                  <Radio value="true" colorScheme="red">
+                    Yes
+                  </Radio>
+                  <Radio value="false" colorScheme="red">
+                    No
+                  </Radio>
+                </HStack>
+              </RadioGroup>
+            </FormControl>
+
+            <FormControl isRequired>
+              <FormLabel fontSize="sm" fontWeight="medium" color="#312c2a">
+                Current Alignment
+              </FormLabel>
+              <Select
+                value={formData.current_alignment}
+                onChange={(e) => handleInputChange('current_alignment', e.target.value)}
+                placeholder="Select current alignment approach"
+                focusBorderColor="#eb1700"
+                bg="white"
+                isDisabled={loading}
+              >
+                <option value="KA">KA (Kinematic Alignment)</option>
+                <option value="iKA">iKA (Inverse Kinematic Alignment)</option>
+                <option value="FA">FA (Functional Alignment)</option>
+                <option value="MA">MA (Manual Alignment)</option>
               </Select>
             </FormControl>
 

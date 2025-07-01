@@ -99,7 +99,9 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
         (conv.surgeon_name && conv.surgeon_name.toLowerCase().includes(query)) ||
         (conv.hospital_name && conv.hospital_name.toLowerCase().includes(query)) ||
         (conv.surgery_center_name && conv.surgery_center_name.toLowerCase().includes(query)) ||
-        (conv.recommended_approach && conv.recommended_approach.toLowerCase().includes(query))
+        (conv.recommended_approach && conv.recommended_approach.toLowerCase().includes(query)) ||
+        (conv.current_alignment && conv.current_alignment.toLowerCase().includes(query)) ||
+        (conv.surgeon_volume_per_year && conv.surgeon_volume_per_year.toLowerCase().includes(query))
       )
     }
 
@@ -159,11 +161,25 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
     }
   }
 
-  const formatHospitalSize = (size) => {
-    if (!size) return 'Unknown'
-    // Convert to string first in case it's a number or other type
-    const sizeStr = String(size).toLowerCase()
-    return sizeStr.charAt(0).toUpperCase() + sizeStr.slice(1)
+  const getAlignmentColor = (alignment) => {
+    switch (alignment) {
+      case 'KA':
+        return 'red'
+      case 'iKA':
+        return 'orange'
+      case 'FA':
+        return 'blue'
+      case 'MA':
+        return 'green'
+      default:
+        return 'gray'
+    }
+  }
+
+  const formatRoboticsUsage = (usesRobotics) => {
+    if (usesRobotics === true || usesRobotics === 'true') return 'Yes'
+    if (usesRobotics === false || usesRobotics === 'false') return 'No'
+    return 'Unknown'
   }
 
   const handleConversationClick = (conversation) => {
@@ -233,7 +249,7 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
                   <SearchIcon color="gray.400" />
                 </InputLeftElement>
                 <Input
-                  placeholder="Search by surgeon, hospital, surgery center, or recommendation..."
+                  placeholder="Search by surgeon, hospital, surgery center, alignment, volume, or recommendation..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   focusBorderColor="red.500"
@@ -304,19 +320,14 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
                             {conversation.surgeon_name || 'Unknown Surgeon'}
                           </Text>
 
-                          {/* Hospital Information */}
+                          {/* Hospital and Surgery Center Information */}
                           <VStack align="start" spacing={1}>
                             <Text fontSize="sm" color="gray.600" fontWeight="medium">
-                              {conversation.hospital_name || 'Unknown Hospital'}
+                              Hospital: {conversation.hospital_name || 'Unknown Hospital'}
                             </Text>
-
-                            {/* Surgery Center (if different from hospital) */}
-                            {conversation.surgery_center_name &&
-                             conversation.surgery_center_name !== conversation.hospital_name && (
-                              <Text fontSize="xs" color="gray.500">
-                                Surgery Center: {conversation.surgery_center_name}
-                              </Text>
-                            )}
+                            <Text fontSize="sm" color="gray.600">
+                              Surgery Center: {conversation.surgery_center_name || 'Unknown Surgery Center'}
+                            </Text>
                           </VStack>
                         </Box>
                         <Badge colorScheme={getStatusColor(conversation.status)} variant="subtle">
@@ -338,15 +349,47 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
                         )}
                       </HStack>
 
-                      {/* Hospital Size */}
-                      {conversation.hospital_size && (
-                        <HStack spacing={2}>
-                          <Text fontSize="sm" color="gray.600">Hospital Size:</Text>
-                          <Badge variant="outline" colorScheme="blue" size="sm">
-                            {formatHospitalSize(conversation.hospital_size)}
-                          </Badge>
+                      {/* New surgeon information */}
+                      <VStack align="stretch" spacing={2}>
+                        {/* Volume and Robotics */}
+                        <HStack spacing={4} fontSize="sm">
+                          {conversation.surgeon_volume_per_year && (
+                            <HStack spacing={2}>
+                              <Text color="gray.600">Volume/Year:</Text>
+                              <Badge variant="outline" colorScheme="purple" size="sm">
+                                {conversation.surgeon_volume_per_year}
+                              </Badge>
+                            </HStack>
+                          )}
+
+                          {conversation.uses_robotics !== undefined && conversation.uses_robotics !== null && (
+                            <HStack spacing={2}>
+                              <Text color="gray.600">Robotics:</Text>
+                              <Badge
+                                variant="outline"
+                                colorScheme={formatRoboticsUsage(conversation.uses_robotics) === 'Yes' ? 'green' : 'orange'}
+                                size="sm"
+                              >
+                                {formatRoboticsUsage(conversation.uses_robotics)}
+                              </Badge>
+                            </HStack>
+                          )}
                         </HStack>
-                      )}
+
+                        {/* Current Alignment */}
+                        {conversation.current_alignment && (
+                          <HStack spacing={2}>
+                            <Text fontSize="sm" color="gray.600">Current Alignment:</Text>
+                            <Badge
+                              colorScheme={getAlignmentColor(conversation.current_alignment)}
+                              variant="solid"
+                              size="sm"
+                            >
+                              {conversation.current_alignment}
+                            </Badge>
+                          </HStack>
+                        )}
+                      </VStack>
 
                       {/* Recommendation */}
                       {conversation.recommended_approach && (
