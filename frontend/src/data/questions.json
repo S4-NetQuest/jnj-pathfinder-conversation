@@ -1,28 +1,32 @@
 {
   "metadata": {
-    "version": "2.0",
+    "version": "2.1",
     "lastUpdated": "2025-01-01",
     "description": "Pathfinder Conversation Guide Questions with KA/iKA/FA/MA alignment scoring",
     "alignmentCategories": {
-      "KA": {
+      "ka": {
         "name": "Kinematic Alignment",
         "description": "Restores the native kinematics of the knee by replicating the patient's pre-arthritic joint anatomy",
-        "color": "#eb1700"
+        "color": "#eb1700",
+        "fullDescription": "Kinematic Alignment (KA) aims to restore the patient's native alignment to its pre-disease state. This approach prioritizes restoring the joint line obliquity and posterior condylar offsets based on the patient's pre-arthritic anatomy. KA allows for deviation from mechanical axis and focuses on recreating the natural kinematics of the knee."
       },
-      "iKA": {
+      "ika": {
         "name": "Inverse Kinematic Alignment",
         "description": "Modified kinematic alignment approach with selective adjustments for extreme anatomical variations",
-        "color": "#ff6017"
+        "color": "#ff6017",
+        "fullDescription": "Inverse Kinematic Alignment (iKA) is a modified kinematic alignment approach that applies coronal boundaries to prevent extreme deviations. This technique balances the restoration of native anatomy with practical limits, using a tibia-first workflow and selective adjustments to achieve optimal outcomes while maintaining safety boundaries."
       },
-      "FA": {
+      "fa": {
         "name": "Functional Alignment",
         "description": "Balances soft tissues while maintaining functional biomechanics and natural joint line orientation",
-        "color": "#0f68b2"
+        "color": "#0f68b2",
+        "fullDescription": "Functional Alignment (FA) prioritizes balanced flexion and extension gaps while distributing changes evenly between femur and tibia components. This approach focuses on achieving optimal soft tissue balance and functional outcomes by making strategic adjustments to both components within defined boundaries."
       },
-      "MA": {
-        "name": "Manual Alignment",
+      "ma": {
+        "name": "Mechanical Alignment",
         "description": "Traditional mechanical alignment approach targeting neutral mechanical axis and standardized component positioning",
-        "color": "#328714"
+        "color": "#328714",
+        "fullDescription": "Mechanical Alignment (MA) follows the traditional approach of achieving a neutral mechanical alignment (0° HKA) with cuts perpendicular to the mechanical axes of both femur and tibia. This method prioritizes standardized positioning and minimizes deviation from neutral alignment, focusing on reproducible mechanical outcomes."
       }
     }
   },
@@ -94,28 +98,242 @@
           }
         }
       ]
+    },
+    {
+      "id": "q3_surgical_workflow",
+      "order": 3,
+      "question": "What is your preferred surgical workflow?",
+      "type": "single_choice",
+      "required": true,
+      "options": [
+        {
+          "id": "femur_first",
+          "text": "Femur-first",
+          "scores": {
+            "ka": 2,
+            "ika": 0,
+            "fa": 0,
+            "ma": 0
+          }
+        },
+        {
+          "id": "tibia_first",
+          "text": "Tibia-first",
+          "scores": {
+            "ka": 0,
+            "ika": 2,
+            "fa": 0,
+            "ma": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "q4_distal_femoral_resection",
+      "order": 4,
+      "question": "When you're performing the distal femoral resection, what are you aiming to achieve?",
+      "type": "single_choice",
+      "required": true,
+      "options": [
+        {
+          "id": "soft_tissue_balance",
+          "text": "Soft tissue balance by adjusting the cut within defined boundaries",
+          "scores": {
+            "ka": 0,
+            "ika": 1,
+            "fa": 1,
+            "ma": 0
+          }
+        },
+        {
+          "id": "perpendicular_mechanical",
+          "text": "A cut that is perpendicular to the mechanical axis of the femur",
+          "scores": {
+            "ka": 0,
+            "ika": 0,
+            "fa": 0,
+            "ma": 2
+          }
+        },
+        {
+          "id": "native_joint_line",
+          "text": "Restoration of native joint line obliquity– the femoral resection is positioned to restore the joint line to the patient's pre-arthritic anatomy",
+          "scores": {
+            "ka": 2,
+            "ika": 0,
+            "fa": 0,
+            "ma": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "q5_tibial_resection",
+      "order": 5,
+      "question": "When you're performing the tibial resection, what are you aiming to achieve?",
+      "type": "single_choice",
+      "required": true,
+      "options": [
+        {
+          "id": "balance_gaps",
+          "text": "Adjust the cut within boundaries to help balance the flexion and extension gaps",
+          "scores": {
+            "ka": 0,
+            "ika": 1,
+            "fa": 1,
+            "ma": 0
+          }
+        },
+        {
+          "id": "perpendicular_tibia",
+          "text": "Make the cut perpendicular to the mechanical axis of the tibia",
+          "scores": {
+            "ka": 0,
+            "ika": 0,
+            "fa": 0,
+            "ma": 2
+          }
+        },
+        {
+          "id": "native_obliquity",
+          "text": "Restoration of the native joint line obliquity based on the patient's pre-arthritic anatomy",
+          "scores": {
+            "ka": 2,
+            "ika": 0,
+            "fa": 0,
+            "ma": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "q6_extension_gaps",
+      "order": 6,
+      "question": "When balancing extension gaps, the priority is:",
+      "type": "single_choice",
+      "required": true,
+      "options": [
+        {
+          "id": "minimize_tibial_varus",
+          "text": "Minimize tibial varus -prioritizes neutral tibia, adjusts femur component to balance extension gaps",
+          "scores": {
+            "ka": 0,
+            "ika": 0,
+            "fa": 0,
+            "ma": 2
+          }
+        },
+        {
+          "id": "minimize_femoral_deviation",
+          "text": "Minimize femoral joint line deviation–prioritizes native femur joint line, adjusts tibia component to balance gaps",
+          "scores": {
+            "ka": 2,
+            "ika": 0,
+            "fa": 0,
+            "ma": 0
+          }
+        },
+        {
+          "id": "evenly_distribute",
+          "text": "Evenly distribute changes to femur/tibia –prioritizes neutral femur and tibia, splits varus/valgus adjustments between both components to balance gaps",
+          "scores": {
+            "ka": 0,
+            "ika": 0,
+            "fa": 2,
+            "ma": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "q7_posterior_femoral",
+      "order": 7,
+      "question": "The posterior femoral resection should:",
+      "type": "single_choice",
+      "required": true,
+      "options": [
+        {
+          "id": "restore_both_offsets",
+          "text": "Restore both medial and lateral posterior condylar offsets– both medial and lateral posterior resections aim to recreate the pre-arthritic posterior condylar offset",
+          "scores": {
+            "ka": 2,
+            "ika": 0,
+            "fa": 0,
+            "ma": 0
+          }
+        },
+        {
+          "id": "restore_medial_balance_lateral",
+          "text": "Restore medial posterior condylar offset and use lateral resection to balance– the medial posterior resection recreates the pre-arthritic medial posterior condylar offset, and the lateral posterior resection is used to balance gaps",
+          "scores": {
+            "ka": 0,
+            "ika": 2,
+            "fa": 0,
+            "ma": 0
+          }
+        },
+        {
+          "id": "use_both_to_balance",
+          "text": "Use both medial and lateral resections to balance– both medial and lateral posterior resections are used to balance gaps to obtain the intended ligament tension",
+          "scores": {
+            "ka": 0,
+            "ika": 0,
+            "fa": 2,
+            "ma": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "q8_coronal_boundaries",
+      "order": 8,
+      "question": "Do you apply coronal boundaries (limits to deviation)?",
+      "type": "single_choice",
+      "required": true,
+      "options": [
+        {
+          "id": "yes",
+          "text": "Yes",
+          "scores": {
+            "ka": 0,
+            "ika": 1,
+            "fa": 1,
+            "ma": 0
+          }
+        },
+        {
+          "id": "no",
+          "text": "No",
+          "scores": {
+            "ka": 2,
+            "ika": 0,
+            "fa": 0,
+            "ma": 0
+          }
+        }
+      ]
     }
   ],
   "scoringRules": {
-    "maxScorePerQuestion": 4,
-    "totalQuestions": 10,
-    "maxTotalScore": 40,
+    "maxScorePerQuestion": 2,
+    "totalQuestions": 8,
+    "maxTotalScore": 16,
     "recommendationThresholds": {
       "ka": {
-        "min": 20,
+        "min": 8,
         "description": "Strong indication for Kinematic Alignment approach"
       },
       "ika": {
-        "min": 16,
+        "min": 6,
         "description": "Strong indication for Inverse Kinematic Alignment approach"
       },
       "fa": {
-        "min": 18,
+        "min": 6,
         "description": "Strong indication for Functional Alignment approach"
       },
       "ma": {
-        "min": 15,
-        "description": "Strong indication for Manual Alignment approach"
+        "min": 6,
+        "description": "Strong indication for Mechanical Alignment approach"
       }
     }
   }

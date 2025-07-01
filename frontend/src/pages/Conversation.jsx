@@ -13,13 +13,10 @@ import {
   Badge,
   Alert,
   AlertIcon,
-  Divider,
   Flex,
-  Icon,
   useToast,
   useBreakpointValue,
   SimpleGrid,
-  Textarea,
   Modal,
   ModalOverlay,
   ModalContent,
@@ -29,16 +26,15 @@ import {
   ModalCloseButton,
   useDisclosure,
 } from '@chakra-ui/react'
-import { 
-  ArrowBackIcon, 
-  ArrowForwardIcon, 
-  CheckCircleIcon, 
-  InfoIcon,
-  DownloadIcon,
+import {
+  ArrowBackIcon,
+  ArrowForwardIcon,
+  CheckCircleIcon,
   EditIcon,
 } from '@chakra-ui/icons'
 import ReactQuill from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
+import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer, Legend } from 'recharts'
 
 import { useAuth } from '../contexts/AuthContext'
 import api from '../services/api'
@@ -50,26 +46,26 @@ const Conversation = () => {
   const { user } = useAuth()
   const toast = useToast()
   const { isOpen: isNotesOpen, onOpen: onNotesOpen, onClose: onNotesClose } = useDisclosure()
-  
+
   const [conversation, setConversation] = useState(null)
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [responses, setResponses] = useState({})
   const [scores, setScores] = useState({
-    mechanical: 0,
-    adjusted: 0,
-    restrictive: 0,
-    kinematic: 0,
+    ka: 0,
+    ika: 0,
+    fa: 0,
+    ma: 0,
   })
   const [notes, setNotes] = useState('')
   const [notesContent, setNotesContent] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [completed, setCompleted] = useState(false)
-  
+
   const isMobile = useBreakpointValue({ base: true, md: false })
   const questions = questionsData.questions
-  const alignmentTypes = questionsData.alignmentTypes
-  
+  const alignmentTypes = questionsData.metadata.alignmentCategories
+
   useEffect(() => {
     if (id) {
       fetchConversation()
@@ -86,21 +82,30 @@ const Conversation = () => {
   const fetchConversation = async () => {
     try {
       const response = await api.get(`/conversations/${id}`)
-      setConversation(response.data)
-      
+      const conversationData = response.data
+      setConversation(conversationData)
+
       // Load existing responses
       const responseMap = {}
-      response.data.responses?.forEach(resp => {
-        responseMap[resp.question_id] = JSON.parse(resp.response_value)
-      })
+      if (conversationData.responses && conversationData.responses.length > 0) {
+        conversationData.responses.forEach(resp => {
+          try {
+            responseMap[resp.question_id] = typeof resp.response_value === 'string'
+              ? JSON.parse(resp.response_value)
+              : resp.response_value
+          } catch (e) {
+            responseMap[resp.question_id] = resp.response_value
+          }
+        })
+      }
       setResponses(responseMap)
-      
+
       // Load notes if user is sales rep
       if (user?.role === 'sales_rep') {
         fetchNotes()
       }
-      
-      setCompleted(response.data.status === 'completed')
+
+      setCompleted(conversationData.status === 'completed')
     } catch (error) {
       console.error('Error fetching conversation:', error)
       toast({
@@ -129,21 +134,21 @@ const Conversation = () => {
 
   const calculateScores = () => {
     const newScores = {
-      mechanical: 0,
-      adjusted: 0,
-      restrictive: 0,
-      kinematic: 0,
+      ka: 0,
+      ika: 0,
+      fa: 0,
+      ma: 0,
     }
 
     questions.forEach(question => {
       const response = responses[question.id]
       if (response) {
-        const selectedOption = question.options.find(opt => opt.value === response)
+        const selectedOption = question.options.find(opt => opt.id === response)
         if (selectedOption) {
-          newScores.mechanical += selectedOption.scores.mechanical
-          newScores.adjusted += selectedOption.scores.adjusted
-          newScores.restrictive += selectedOption.scores.restrictive
-          newScores.kinematic += selectedOption.scores.kinematic
+          newScores.ka += selectedOption.scores.ka
+          newScores.ika += selectedOption.scores.ika
+          newScores.fa += selectedOption.scores.fa
+          newScores.ma += selectedOption.scores.ma
         }
       }
     })
@@ -158,8 +163,8 @@ const Conversation = () => {
     // Save response if we have a conversation ID
     if (id) {
       const question = questions.find(q => q.id === questionId)
-      const selectedOption = question.options.find(opt => opt.value === value)
-      
+      const selectedOption = question.options.find(opt => opt.id === value)
+
       if (selectedOption) {
         try {
           await api.post(`/conversations/${id}/responses`, {
@@ -192,7 +197,7 @@ const Conversation = () => {
     // Determine recommended approach
     const maxScore = Math.max(...Object.values(scores))
     const recommendedApproach = Object.entries(scores).find(([_, score]) => score === maxScore)?.[0]
-    
+
     if (id && user?.role === 'sales_rep') {
       try {
         await api.put(`/conversations/${id}`, {
@@ -203,7 +208,7 @@ const Conversation = () => {
         console.error('Error completing conversation:', error)
       }
     }
-    
+
     setCompleted(true)
   }
 
@@ -215,10 +220,10 @@ const Conversation = () => {
       await api.post(`/conversations/${id}/notes`, {
         content: notesContent,
       })
-      
+
       setNotes(notesContent)
       onNotesClose()
-      
+
       toast({
         title: 'Notes Saved',
         description: 'Your notes have been saved successfully.',
@@ -252,6 +257,49 @@ const Conversation = () => {
     return recommendedKey ? alignmentTypes[recommendedKey] : null
   }
 
+  const getMaxPossibleScore = (alignmentKey) => {
+    return questions.reduce((total, question) => {
+      const maxForQuestion = Math.max(...question.options.map(opt => opt.scores[alignmentKey]))
+      return total + maxForQuestion
+    }, 0)
+  }
+
+  const getRadarChartData = () => {
+    const maxPossible = Math.max(
+      getMaxPossibleScore('ka'),
+      getMaxPossibleScore('ika'),
+      getMaxPossibleScore('fa'),
+      getMaxPossibleScore('ma')
+    )
+
+    return [
+      {
+        alignment: 'KA',
+        score: scores.ka,
+        fullMark: maxPossible,
+        color: alignmentTypes.ka.color
+      },
+      {
+        alignment: 'iKA',
+        score: scores.ika,
+        fullMark: maxPossible,
+        color: alignmentTypes.ika.color
+      },
+      {
+        alignment: 'FA',
+        score: scores.fa,
+        fullMark: maxPossible,
+        color: alignmentTypes.fa.color
+      },
+      {
+        alignment: 'MA',
+        score: scores.ma,
+        fullMark: maxPossible,
+        color: alignmentTypes.ma.color
+      }
+    ]
+  }
+
   if (loading) {
     return (
       <Container maxW="container.lg" py={8}>
@@ -272,24 +320,24 @@ const Conversation = () => {
           <CardBody>
             <Flex justify="space-between" align="start" mb={4}>
               <Box>
-                <Text fontSize="xl" fontWeight="bold" color="jj.red" mb={2}>
-                  {conversation ? 
-                    `Conversation with ${conversation.surgeon_name}` : 
+                <Text fontSize="xl" fontWeight="bold" color="#eb1700" mb={2}>
+                  {conversation ?
+                    `Conversation with ${conversation.conversation.surgeon_name}` :
                     'Alignment Philosophy Assessment'
                   }
                 </Text>
                 {conversation && (
                   <VStack align="start" spacing={1}>
-                    <Text fontSize="sm" color="jj.gray.600">
+                    <Text fontSize="sm" color="#81766f">
                       {conversation.hospital_name}
                     </Text>
-                    <Text fontSize="sm" color="jj.gray.600">
-                      Date: {new Date(conversation.conversation_date).toLocaleDateString()}
+                    <Text fontSize="sm" color="#81766f">
+                      Date: {new Date(conversation.conversation.conversation_date).toLocaleDateString()}
                     </Text>
                   </VStack>
                 )}
               </Box>
-              
+
               <HStack spacing={2}>
                 {user?.role === 'sales_rep' && id && (
                   <>
@@ -298,16 +346,11 @@ const Conversation = () => {
                       variant="outline"
                       leftIcon={<EditIcon />}
                       onClick={onNotesOpen}
+                      borderColor="#eb1700"
+                      color="#eb1700"
+                      _hover={{ bg: "#eb1700", color: "white" }}
                     >
                       {isMobile ? 'Notes' : 'Edit Notes'}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      leftIcon={<DownloadIcon />}
-                      onClick={() => window.open(`/api/conversations/${id}/pdf`, '_blank')}
-                    >
-                      {isMobile ? 'PDF' : 'Download PDF'}
                     </Button>
                   </>
                 )}
@@ -317,6 +360,9 @@ const Conversation = () => {
                     variant="outline"
                     leftIcon={<ArrowBackIcon />}
                     onClick={() => navigate('/')}
+                    borderColor="#eb1700"
+                    color="#eb1700"
+                    _hover={{ bg: "#eb1700", color: "white" }}
                   >
                     Back to Home
                   </Button>
@@ -327,17 +373,17 @@ const Conversation = () => {
             {/* Progress */}
             <Box>
               <Flex justify="space-between" mb={2}>
-                <Text fontSize="sm" color="jj.gray.600">
+                <Text fontSize="sm" color="#81766f">
                   Question {currentQuestionIndex + 1} of {questions.length}
                 </Text>
-                <Text fontSize="sm" color="jj.gray.600">
+                <Text fontSize="sm" color="#81766f">
                   {Math.round(progress)}% Complete
                 </Text>
               </Flex>
-              <Progress 
-                value={progress} 
-                colorScheme="red" 
-                bg="jj.gray.200" 
+              <Progress
+                value={progress}
+                colorScheme="red"
+                bg="#e8e6e3"
                 borderRadius="full"
                 size="sm"
               />
@@ -351,40 +397,34 @@ const Conversation = () => {
             <CardBody>
               <VStack spacing={6} align="stretch">
                 <Box>
-                  <Text fontSize="lg" fontWeight="semibold" color="jj.gray.700" mb={4}>
+                  <Text fontSize="lg" fontWeight="semibold" color="#6e6259" mb={4}>
                     {currentQuestion.question}
                   </Text>
-                  
+
                   <VStack spacing={3} align="stretch">
                     {currentQuestion.options.map((option) => (
-                      <Box
-                        key={option.value}
-                        p={4}
+                      <Button
+                        key={option.id}
+                        p={6}
+                        height="auto"
+                        whiteSpace="normal"
+                        textAlign="left"
+                        justifyContent="flex-start"
+                        bg={responses[currentQuestion.id] === option.id ? '#eb1700' : 'white'}
+                        color={responses[currentQuestion.id] === option.id ? 'white' : '#6e6259'}
                         borderWidth="2px"
-                        borderColor={responses[currentQuestion.id] === option.value ? 'jj.red' : 'jj.gray.200'}
+                        borderColor={responses[currentQuestion.id] === option.id ? '#eb1700' : '#e8e6e3'}
                         borderRadius="md"
-                        cursor="pointer"
                         transition="all 0.2s"
                         _hover={{
-                          borderColor: 'jj.red',
-                          bg: 'jj.gray.50'
+                          borderColor: '#eb1700',
+                          bg: responses[currentQuestion.id] === option.id ? '#9e0000' : '#eb1700',
+                          color: 'white'
                         }}
-                        onClick={() => handleResponse(currentQuestion.id, option.value)}
+                        onClick={() => handleResponse(currentQuestion.id, option.id)}
                       >
-                        <HStack spacing={3}>
-                          <Box
-                            w={4}
-                            h={4}
-                            borderRadius="full"
-                            borderWidth="2px"
-                            borderColor={responses[currentQuestion.id] === option.value ? 'jj.red' : 'jj.gray.300'}
-                            bg={responses[currentQuestion.id] === option.value ? 'jj.red' : 'transparent'}
-                          />
-                          <Text fontSize="md" color="jj.gray.700">
-                            {option.label}
-                          </Text>
-                        </HStack>
-                      </Box>
+                        {option.text}
+                      </Button>
                     ))}
                   </VStack>
                 </Box>
@@ -396,15 +436,20 @@ const Conversation = () => {
                     leftIcon={<ArrowBackIcon />}
                     onClick={handlePrevious}
                     isDisabled={currentQuestionIndex === 0}
+                    borderColor="#eb1700"
+                    color="#eb1700"
+                    _hover={{ bg: "#eb1700", color: "white" }}
                   >
                     Previous
                   </Button>
-                  
+
                   <Button
-                    variant="primary"
+                    bg="#eb1700"
+                    color="white"
                     rightIcon={currentQuestionIndex === questions.length - 1 ? <CheckCircleIcon /> : <ArrowForwardIcon />}
                     onClick={handleNext}
                     isDisabled={!responses[currentQuestion.id]}
+                    _hover={{ bg: "#9e0000" }}
                   >
                     {currentQuestionIndex === questions.length - 1 ? 'Complete' : 'Next'}
                   </Button>
@@ -428,10 +473,10 @@ const Conversation = () => {
                 <CardBody>
                   <VStack spacing={4} align="stretch">
                     <Flex justify="space-between" align="center">
-                      <Text fontSize="lg" fontWeight="bold" color="jj.gray.700">
-                        Recommended Approach
+                      <Text fontSize="lg" fontWeight="bold" color="#6e6259">
+                        Your approach suggests:
                       </Text>
-                      <Badge 
+                      <Badge
                         bg={recommendedAlignment.color}
                         color="white"
                         px={3}
@@ -442,62 +487,93 @@ const Conversation = () => {
                         {recommendedAlignment.name}
                       </Badge>
                     </Flex>
-                    
-                    <Text color="jj.gray.600" lineHeight="1.6">
-                      {recommendedAlignment.description}
+
+                    <Text color="#81766f" lineHeight="1.6">
+                      {recommendedAlignment.fullDescription}
                     </Text>
-                    
-                    <Box>
-                      <Text fontSize="sm" fontWeight="medium" color="jj.gray.700" mb={2}>
-                        Key Characteristics:
-                      </Text>
-                      <VStack spacing={1} align="start">
-                        {recommendedAlignment.characteristics.map((characteristic, index) => (
-                          <Text key={index} fontSize="sm" color="jj.gray.600">
-                            • {characteristic}
-                          </Text>
-                        ))}
-                      </VStack>
-                    </Box>
                   </VStack>
                 </CardBody>
               </Card>
             )}
 
-            {/* Scores */}
+            {/* Radar Chart */}
             <Card>
               <CardBody>
-                <Text fontSize="lg" fontWeight="bold" color="jj.gray.700" mb={4}>
-                  Alignment Scores
+                <Text fontSize="lg" fontWeight="bold" color="#6e6259" mb={4}>
+                  Alignment Philosophy Scores
+                </Text>
+                <Box h="400px" w="100%">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RadarChart data={getRadarChartData()}>
+                      <PolarGrid stroke="#cbc4bc" />
+                      <PolarAngleAxis
+                        dataKey="alignment"
+                        tick={{ fontSize: 14, fill: '#6e6259' }}
+                      />
+                      <PolarRadiusAxis
+                        angle={90}
+                        domain={[0, Math.max(
+                          getMaxPossibleScore('ka'),
+                          getMaxPossibleScore('ika'),
+                          getMaxPossibleScore('fa'),
+                          getMaxPossibleScore('ma')
+                        )]}
+                        tick={{ fontSize: 12, fill: '#81766f' }}
+                      />
+                      <Radar
+                        name="Score"
+                        dataKey="score"
+                        stroke="#eb1700"
+                        fill="#eb1700"
+                        fillOpacity={0.2}
+                        strokeWidth={2}
+                      />
+                    </RadarChart>
+                  </ResponsiveContainer>
+                </Box>
+              </CardBody>
+            </Card>
+
+            {/* Score Breakdown */}
+            <Card>
+              <CardBody>
+                <Text fontSize="lg" fontWeight="bold" color="#6e6259" mb={4}>
+                  Score Breakdown
                 </Text>
                 <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
-                  {Object.entries(alignmentTypes).map(([key, alignment]) => (
-                    <Box key={key} p={4} bg="jj.gray.50" borderRadius="md">
-                      <Flex justify="space-between" align="center" mb={2}>
-                        <Text fontSize="sm" fontWeight="medium" color="jj.gray.700">
-                          {alignment.name}
-                        </Text>
-                        <Badge 
-                          bg={alignment.color}
-                          color="white"
-                          px={2}
-                          py={1}
-                          borderRadius="md"
-                          fontSize="xs"
-                        >
-                          {scores[key]} / {questionsData.scoringRules.maxScore}
-                        </Badge>
-                      </Flex>
-                      <Progress 
-                        value={(scores[key] / questionsData.scoringRules.maxScore) * 100} 
-                        bg="jj.gray.200"
-                        borderRadius="full"
-                        size="sm"
-                      >
-                        <Box bg={alignment.color} />
-                      </Progress>
-                    </Box>
-                  ))}
+                  {Object.entries(alignmentTypes).map(([key, alignment]) => {
+                    const maxForAlignment = getMaxPossibleScore(key)
+                    return (
+                      <Box key={key} p={4} bg="#f1efed" borderRadius="md">
+                        <Flex justify="space-between" align="center" mb={2}>
+                          <Text fontSize="sm" fontWeight="medium" color="#6e6259">
+                            {alignment.name}
+                          </Text>
+                          <Badge
+                            bg={alignment.color}
+                            color="white"
+                            px={2}
+                            py={1}
+                            borderRadius="md"
+                            fontSize="xs"
+                          >
+                            {scores[key]} / {maxForAlignment}
+                          </Badge>
+                        </Flex>
+                        <Progress
+                          value={(scores[key] / maxForAlignment) * 100}
+                          bg="#e8e6e3"
+                          borderRadius="full"
+                          size="sm"
+                          sx={{
+                            '& > div': {
+                              bg: alignment.color
+                            }
+                          }}
+                        />
+                      </Box>
+                    )
+                  })}
                 </SimpleGrid>
               </CardBody>
             </Card>
@@ -507,15 +583,31 @@ const Conversation = () => {
               <Button
                 variant="outline"
                 onClick={handleRestart}
+                borderColor="#eb1700"
+                color="#eb1700"
+                _hover={{ bg: "#eb1700", color: "white" }}
               >
                 Restart Assessment
               </Button>
-              <Button
-                variant="primary"
-                onClick={() => navigate('/')}
-              >
-                Back to Home
-              </Button>
+              {id ? (
+                <Button
+                  bg="#eb1700"
+                  color="white"
+                  _hover={{ bg: "#9e0000" }}
+                  onClick={() => navigate('/')}
+                >
+                  Back to Home
+                </Button>
+              ) : (
+                <Button
+                  bg="#eb1700"
+                  color="white"
+                  _hover={{ bg: "#9e0000" }}
+                  onClick={() => navigate('/')}
+                >
+                  Start New Assessment
+                </Button>
+              )}
             </HStack>
           </VStack>
         )}
@@ -525,9 +617,9 @@ const Conversation = () => {
       <Modal isOpen={isNotesOpen} onClose={onNotesClose} size="xl">
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Edit Notes</ModalHeader>
+          <ModalHeader color="#6e6259">Edit Notes</ModalHeader>
           <ModalCloseButton />
-          
+
           <ModalBody>
             <ReactQuill
               theme="snow"
@@ -535,15 +627,32 @@ const Conversation = () => {
               onChange={setNotesContent}
               style={{ height: '300px', marginBottom: '50px' }}
               placeholder="Add your notes about this conversation..."
+              modules={{
+                toolbar: [
+                  [{ 'header': [1, 2, false] }],
+                  ['bold', 'italic', 'underline'],
+                  [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                  ['clean']
+                ],
+              }}
             />
           </ModalBody>
 
           <ModalFooter>
-            <Button variant="outline" mr={3} onClick={onNotesClose}>
+            <Button
+              variant="outline"
+              mr={3}
+              onClick={onNotesClose}
+              borderColor="#eb1700"
+              color="#eb1700"
+              _hover={{ bg: "#eb1700", color: "white" }}
+            >
               Cancel
             </Button>
             <Button
-              variant="primary"
+              bg="#eb1700"
+              color="white"
+              _hover={{ bg: "#9e0000" }}
               onClick={handleSaveNotes}
               isLoading={saving}
               loadingText="Saving..."
