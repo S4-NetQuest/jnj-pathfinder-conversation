@@ -1,0 +1,52 @@
+Q1:
+Are you willing to deviate from mechanical axis (0° HKA)?
+Answers:
+	Yes (+1 KA / +1 iKA / +1 FA )
+	No (+2 MA)
+
+Q2:
+What is your primary goal when performing Total Knee Arthroplasty (TKA)?
+Answers:
+	Aiming for a neutral mechanical alignment (0° HKA) (+2 MA)
+	Restoring the patient’s native alignment to its pre-disease state (+2 KA)
+	Prioritizing balanced flexion and extension gaps (+2 FA)
+
+Q3:
+What is your preferred surgical workflow?
+Answers:
+	Femur-first (+2 KA)
+	Tibia-first (+2 iKA)
+
+Q4:
+When you're performing the distal femoral resection, what are you aiming to achieve?
+Answers:
+	Soft tissue balance by adjusting the cut within defined boundaries (+1 FA / +1 iKA)
+	A cut that is perpendicular to the mechanical axis of the femur (+2 MA)
+	Restoration of native joint line obliquity– the femoral resection is positioned to restore the joint line to the patient's pre-arthritic anatomy (+2 KA)
+
+Q5:
+When you're performing the tibial resection, what are you aiming to achieve?
+Answers:
+	Adjust the cut within boundaries to help balance the flexion and extension gaps (+1 FA / +1 iKA)
+	Make the cut perpendicular to the mechanical axis of the tibia (+2 MA)
+	Restoration of the native joint line obliquity based on the patient's pre-arthritic anatomy (+2 KA)
+
+Q6:
+When balancing extension gaps, the priority is:
+Answers:
+	Minimize tibial varus -prioritizes neutral tibia, adjusts femur component to balance extension gaps (+2 MA)
+	Minimize femoral joint line deviation–prioritizes native femur joint line, adjusts tibia component to balance gaps (+2 KA)
+	Evenly distribute changes to femur/tibia –prioritizes neutral femur and tibia, splits varus/valgus adjustments between both components to balance gaps (+2 FA)
+
+Q7:
+The posterior femoral resection should:
+Answers:
+	Restore both medial and lateral posterior condylar offsets– both medial and lateral posterior resections aim to recreate the pre-arthritic posterior condylar offset (+2 KA)
+	Restore medial posterior condylar offset and use lateral resection to balance– the medial posterior resection recreates the pre-arthritic medial posterior condylar offset, and the lateral posterior resection is used to balance gaps (+2 iKA)
+	Use both medial and lateral resections to balance– both medial and lateral posterior resections are used to balance gaps to obtain the intended ligament tension (+2 FA)
+
+Q8:
+Do you apply coronal boundaries (limits to deviation)?
+Answers:
+	Yes (+1 iKA / +1 FA)
+	No (+2 KA)
