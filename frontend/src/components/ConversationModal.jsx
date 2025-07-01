@@ -292,10 +292,10 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
                 bg="white"
                 isDisabled={loading}
               >
-                <option value="< 50">< 50</option>
-                <option value="< 100">< 100</option>
-                <option value="< 200">< 200</option>
-                <option value="> 200">> 200</option>
+                <option value="< 50">&lt; 50</option>
+                <option value="< 100">&lt; 100</option>
+                <option value="< 200">&lt; 200</option>
+                <option value="> 200">&gt; 200</option>
               </Select>
             </FormControl>
 

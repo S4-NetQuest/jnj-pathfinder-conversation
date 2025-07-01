@@ -1,4 +1,4 @@
-// backend/routes/conversations.js (Complete file with proper validation import)
+// backend/routes/conversations.js (Complete file with KA/iKA/FA/MA updates)
 import express from 'express'
 import dbConfig from '../config/database.js'
 import { requireSalesRep, isAuthenticated, getCurrentUser } from '../middleware/auth.js'
@@ -123,7 +123,7 @@ router.get('/', async (req, res) => {
       status: conv.status || 'in_progress',
       notes: conv.notes || '',
       recommended_approach: conv.recommended_approach || '',
-      // Updated alignment scores with new field names
+      // Updated alignment scores with new field names (KA/iKA/FA/MA)
       alignment_score_ka: conv.alignment_score_ka || 0,
       alignment_score_ika: conv.alignment_score_ika || 0,
       alignment_score_fa: conv.alignment_score_fa || 0,
@@ -215,7 +215,7 @@ router.get('/:id', async (req, res) => {
 
     const conversation = result.recordset[0]
 
-    // Get conversation responses with updated field names
+    // Get conversation responses with updated field names (KA/iKA/FA/MA)
     const responsesQuery = `
       SELECT question_id, response_value, scores_ka, scores_ika,
              scores_fa, scores_ma, created_at
@@ -408,4 +408,391 @@ router.post('/', async (req, res) => {
           .input('surgeonName', dbConfig.sql.VarChar, currentUser.name || surgeon_name)
           .input('hospitalId', dbConfig.sql.Int, hospitalId)
           .input('surgeryCenterId', dbConfig.sql.Int, surgeryCenterId)
-          .input('surgeonVolumePerYear', dbConfig.sql.Var
+          .input('surgeonVolumePerYear', dbConfig.sql.VarChar, surgeon_volume_per_year)
+          .input('usesRobotics', dbConfig.sql.Bit, roboticsValue ? 1 : 0)
+          .input('currentAlignment', dbConfig.sql.VarChar, current_alignment)
+          .input('conversationDate', dbConfig.sql.Date, conversation_date)
+          .query(insertQuery)
+      } else {
+        throw new Error('Invalid user role')
+      }
+
+      console.log('Insert query result:', insertValues.recordset[0])
+
+      await transaction.commit()
+      console.log('Transaction committed successfully')
+
+      const newConversation = insertValues.recordset[0]
+
+      res.status(201).json({
+        success: true,
+        message: 'Conversation created successfully',
+        conversation: {
+          ...newConversation,
+          hospital_name,
+          surgery_center_name,
+          // Initialize scores to 0
+          alignment_score_ka: 0,
+          alignment_score_ika: 0,
+          alignment_score_fa: 0,
+          alignment_score_ma: 0
+        }
+      })
+    } catch (transactionError) {
+      console.error('Transaction error:', transactionError)
+      await transaction.rollback()
+      throw transactionError
+    }
+  } catch (error) {
+    console.error('Error creating conversation:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Failed to create conversation',
+      details: process.env.NODE_ENV !== 'production' ? error.message : undefined
+    })
+  }
+})
+
+// Update conversation
+router.patch('/:id', async (req, res) => {
+  try {
+    const conversationId = parseInt(req.params.id)
+    if (isNaN(conversationId)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid conversation ID'
+      })
+    }
+
+    const currentUser = getCurrentUser(req)
+    if (!currentUser) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      })
+    }
+
+    // Validate request body
+    const { error, value } = updateConversationSchema.validate(req.body)
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        error: error.details[0].message
+      })
+    }
+
+    const pool = dbConfig.getPool()
+
+    // Check if user has access to this conversation
+    let accessQuery, accessRequest
+    if (currentUser.role === 'sales_rep') {
+      accessQuery = 'SELECT id FROM conversations WHERE id = @conversationId AND sales_rep_id = @userId'
+      accessRequest = pool.request()
+        .input('conversationId', dbConfig.sql.Int, conversationId)
+        .input('userId', dbConfig.sql.Int, currentUser.id)
+    } else if (currentUser.role === 'surgeon') {
+      accessQuery = 'SELECT id FROM conversations WHERE id = @conversationId AND (surgeon_name = @surgeonName OR sales_rep_id IS NULL)'
+      accessRequest = pool.request()
+        .input('conversationId', dbConfig.sql.Int, conversationId)
+        .input('surgeonName', dbConfig.sql.VarChar, currentUser.name)
+    } else {
+      return res.status(403).json({
+        success: false,
+        error: 'Invalid user role'
+      })
+    }
+
+    const accessResult = await accessRequest.query(accessQuery)
+    if (accessResult.recordset.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Conversation not found or access denied'
+      })
+    }
+
+    // Build update query dynamically
+    const updateFields = []
+    const request = pool.request()
+    request.input('conversationId', dbConfig.sql.Int, conversationId)
+
+    if (value.status !== undefined) {
+      updateFields.push('status = @status')
+      request.input('status', dbConfig.sql.VarChar, value.status)
+    }
+
+    // Notes can only be updated by sales reps
+    if (value.notes !== undefined) {
+      if (currentUser.role !== 'sales_rep') {
+        return res.status(403).json({
+          success: false,
+          error: 'Only sales representatives can update notes'
+        })
+      }
+      updateFields.push('notes = @notes')
+      request.input('notes', dbConfig.sql.Text, value.notes || '')
+    }
+
+    if (value.recommended_approach !== undefined) {
+      updateFields.push('recommended_approach = @recommendedApproach')
+      request.input('recommendedApproach', dbConfig.sql.VarChar, value.recommended_approach)
+    }
+
+    if (value.surgeon_volume_per_year !== undefined) {
+      updateFields.push('surgeon_volume_per_year = @surgeonVolumePerYear')
+      request.input('surgeonVolumePerYear', dbConfig.sql.VarChar, value.surgeon_volume_per_year)
+    }
+
+    if (value.uses_robotics !== undefined) {
+      updateFields.push('uses_robotics = @usesRobotics')
+      const roboticsValue = transformRoboticsValue(value.uses_robotics)
+      request.input('usesRobotics', dbConfig.sql.Bit, roboticsValue ? 1 : 0)
+    }
+
+    if (value.current_alignment !== undefined) {
+      updateFields.push('current_alignment = @currentAlignment')
+      request.input('currentAlignment', dbConfig.sql.VarChar, value.current_alignment)
+    }
+
+    // Handle alignment scores with new field names (KA/iKA/FA/MA)
+    if (value.alignment_scores) {
+      if (value.alignment_scores.ka !== undefined) {
+        updateFields.push('alignment_score_ka = @alignmentScoreKA')
+        request.input('alignmentScoreKA', dbConfig.sql.Int, value.alignment_scores.ka)
+      }
+      if (value.alignment_scores.ika !== undefined) {
+        updateFields.push('alignment_score_ika = @alignmentScoreiKA')
+        request.input('alignmentScoreiKA', dbConfig.sql.Int, value.alignment_scores.ika)
+      }
+      if (value.alignment_scores.fa !== undefined) {
+        updateFields.push('alignment_score_fa = @alignmentScoreFA')
+        request.input('alignmentScoreFA', dbConfig.sql.Int, value.alignment_scores.fa)
+      }
+      if (value.alignment_scores.ma !== undefined) {
+        updateFields.push('alignment_score_ma = @alignmentScoreMA')
+        request.input('alignmentScoreMA', dbConfig.sql.Int, value.alignment_scores.ma)
+      }
+    }
+
+    if (updateFields.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'No valid fields to update'
+      })
+    }
+
+    // Add updated_at field
+    updateFields.push('updated_at = GETDATE()')
+
+    const updateQuery = `
+      UPDATE conversations
+      SET ${updateFields.join(', ')}
+      OUTPUT INSERTED.*
+      WHERE id = @conversationId
+    `
+
+    const result = await request.query(updateQuery)
+
+    res.json({
+      success: true,
+      message: 'Conversation updated successfully',
+      conversation: result.recordset[0]
+    })
+  } catch (error) {
+    console.error('Error updating conversation:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update conversation',
+      details: process.env.NODE_ENV !== 'production' ? error.message : undefined
+    })
+  }
+})
+
+// Add response to conversation
+router.post('/:id/responses', async (req, res) => {
+  try {
+    const conversationId = parseInt(req.params.id)
+    if (isNaN(conversationId)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid conversation ID'
+      })
+    }
+
+    const currentUser = getCurrentUser(req)
+    if (!currentUser) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      })
+    }
+
+    // Validate request body
+    const { error, value } = responseSchema.validate(req.body)
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        error: error.details[0].message
+      })
+    }
+
+    const { questionId, responseValue, scores } = value
+
+    const pool = dbConfig.getPool()
+
+    // Check if user has access to this conversation
+    let accessQuery, accessRequest
+    if (currentUser.role === 'sales_rep') {
+      accessQuery = 'SELECT id FROM conversations WHERE id = @conversationId AND sales_rep_id = @userId'
+      accessRequest = pool.request()
+        .input('conversationId', dbConfig.sql.Int, conversationId)
+        .input('userId', dbConfig.sql.Int, currentUser.id)
+    } else if (currentUser.role === 'surgeon') {
+      accessQuery = 'SELECT id FROM conversations WHERE id = @conversationId AND (surgeon_name = @surgeonName OR sales_rep_id IS NULL)'
+      accessRequest = pool.request()
+        .input('conversationId', dbConfig.sql.Int, conversationId)
+        .input('surgeonName', dbConfig.sql.VarChar, currentUser.name)
+    } else {
+      return res.status(403).json({
+        success: false,
+        error: 'Invalid user role'
+      })
+    }
+
+    const accessResult = await accessRequest.query(accessQuery)
+    if (accessResult.recordset.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Conversation not found or access denied'
+      })
+    }
+
+    // Insert or update response with new score field names (KA/iKA/FA/MA)
+    const responseQuery = `
+      MERGE conversation_responses AS target
+      USING (VALUES (@conversationId, @questionId)) AS source (conversation_id, question_id)
+      ON target.conversation_id = source.conversation_id AND target.question_id = source.question_id
+      WHEN MATCHED THEN
+        UPDATE SET
+          response_value = @responseValue,
+          scores_ka = @scoresKA,
+          scores_ika = @scoresiKA,
+          scores_fa = @scoresFA,
+          scores_ma = @scoresMA,
+          updated_at = GETDATE()
+      WHEN NOT MATCHED THEN
+        INSERT (conversation_id, question_id, response_value, scores_ka, scores_ika, scores_fa, scores_ma, created_at, updated_at)
+        VALUES (@conversationId, @questionId, @responseValue, @scoresKA, @scoresiKA, @scoresFA, @scoresMA, GETDATE(), GETDATE())
+      OUTPUT $action, INSERTED.*;
+    `
+
+    const responseResult = await pool.request()
+      .input('conversationId', dbConfig.sql.Int, conversationId)
+      .input('questionId', dbConfig.sql.VarChar, questionId)
+      .input('responseValue', dbConfig.sql.VarChar, JSON.stringify(responseValue))
+      .input('scoresKA', dbConfig.sql.Int, scores.ka)
+      .input('scoresiKA', dbConfig.sql.Int, scores.ika)
+      .input('scoresFA', dbConfig.sql.Int, scores.fa)
+      .input('scoresMA', dbConfig.sql.Int, scores.ma)
+      .query(responseQuery)
+
+    // Update conversation total scores with new field names (KA/iKA/FA/MA)
+    const totalScoresQuery = `
+      UPDATE conversations
+      SET
+        alignment_score_ka = (
+          SELECT ISNULL(SUM(scores_ka), 0)
+          FROM conversation_responses
+          WHERE conversation_id = @conversationId
+        ),
+        alignment_score_ika = (
+          SELECT ISNULL(SUM(scores_ika), 0)
+          FROM conversation_responses
+          WHERE conversation_id = @conversationId
+        ),
+        alignment_score_fa = (
+          SELECT ISNULL(SUM(scores_fa), 0)
+          FROM conversation_responses
+          WHERE conversation_id = @conversationId
+        ),
+        alignment_score_ma = (
+          SELECT ISNULL(SUM(scores_ma), 0)
+          FROM conversation_responses
+          WHERE conversation_id = @conversationId
+        ),
+        updated_at = GETDATE()
+      WHERE id = @conversationId
+    `
+
+    await pool.request()
+      .input('conversationId', dbConfig.sql.Int, conversationId)
+      .query(totalScoresQuery)
+
+    res.json({
+      success: true,
+      message: 'Response added successfully',
+      response: responseResult.recordset[0],
+      action: responseResult.recordset[0].$action
+    })
+  } catch (error) {
+    console.error('Error adding response:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Failed to add response',
+      details: process.env.NODE_ENV !== 'production' ? error.message : undefined
+    })
+  }
+})
+
+// Delete conversation
+router.delete('/:id', requireSalesRep, async (req, res) => {
+  try {
+    const conversationId = parseInt(req.params.id)
+    if (isNaN(conversationId)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid conversation ID'
+      })
+    }
+
+    const currentUser = getCurrentUser(req)
+    const pool = dbConfig.getPool()
+
+    // Check if conversation exists and belongs to the sales rep
+    const checkQuery = 'SELECT id FROM conversations WHERE id = @conversationId AND sales_rep_id = @userId'
+    const checkResult = await pool.request()
+      .input('conversationId', dbConfig.sql.Int, conversationId)
+      .input('userId', dbConfig.sql.Int, currentUser.id)
+      .query(checkQuery)
+
+    if (checkResult.recordset.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Conversation not found or access denied'
+      })
+    }
+
+    // Delete responses first
+    await pool.request()
+      .input('conversationId', dbConfig.sql.Int, conversationId)
+      .query('DELETE FROM conversation_responses WHERE conversation_id = @conversationId')
+
+    // Delete conversation
+    await pool.request()
+      .input('conversationId', dbConfig.sql.Int, conversationId)
+      .query('DELETE FROM conversations WHERE id = @conversationId')
+
+    res.json({
+      success: true,
+      message: 'Conversation deleted successfully'
+    })
+  } catch (error) {
+    console.error('Error deleting conversation:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete conversation',
+      details: process.env.NODE_ENV !== 'production' ? error.message : undefined
+    })
+  }
+})
+
+export default router

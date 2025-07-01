@@ -148,16 +148,16 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
 
   const getRecommendationColor = (approach) => {
     switch (approach) {
-      case 'mechanical':
-        return 'blue.500'
-      case 'adjusted':
-        return 'green.500'
-      case 'restrictive':
-        return 'orange.500'
-      case 'kinematic':
-        return 'red.500'
+      case 'KA':
+        return '#eb1700'
+      case 'iKA':
+        return '#ff6017'
+      case 'FA':
+        return '#0f68b2'
+      case 'MA':
+        return '#328714'
       default:
-        return 'gray.400'
+        return '#6e6259'
     }
   }
 
@@ -173,6 +173,21 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
         return 'green'
       default:
         return 'gray'
+    }
+  }
+
+  const getAlignmentDisplayName = (alignment) => {
+    switch (alignment) {
+      case 'KA':
+        return 'Kinematic Alignment'
+      case 'iKA':
+        return 'Inverse Kinematic Alignment'
+      case 'FA':
+        return 'Functional Alignment'
+      case 'MA':
+        return 'Manual Alignment'
+      default:
+        return alignment
     }
   }
 
@@ -230,10 +245,10 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
     >
       <ModalOverlay />
       <ModalContent maxH="90vh">
-        <ModalHeader bg="gray.50" borderBottom="1px solid" borderColor="gray.200">
+        <ModalHeader bg="#f1efed" borderBottom="1px solid" borderColor="#e8e6e3">
           <HStack spacing={3}>
-            <Icon as={CalendarIcon} color="blue.500" />
-            <Text color="red.500" fontSize="lg" fontWeight="bold">
+            <Icon as={CalendarIcon} color="#eb1700" />
+            <Text color="#eb1700" fontSize="lg" fontWeight="bold">
               Load Existing Conversation
             </Text>
           </HStack>
@@ -242,24 +257,26 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
 
         <ModalBody p={0}>
           {/* Filters */}
-          <Box p={4} borderBottom="1px solid" borderColor="gray.200">
+          <Box p={4} borderBottom="1px solid" borderColor="#e8e6e3">
             <VStack spacing={4}>
               <InputGroup>
                 <InputLeftElement pointerEvents="none">
-                  <SearchIcon color="gray.400" />
+                  <SearchIcon color="#6e6259" />
                 </InputLeftElement>
                 <Input
-                  placeholder="Search by surgeon, hospital, surgery center, alignment, volume, or recommendation..."
+                  placeholder="Search by surgeon, hospital, surgery center, alignment, or volume..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  focusBorderColor="red.500"
+                  focusBorderColor="#eb1700"
+                  bg="white"
                 />
               </InputGroup>
 
               <Select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                focusBorderColor="red.500"
+                focusBorderColor="#eb1700"
+                bg="white"
               >
                 <option value="all">All Conversations</option>
                 <option value="in_progress">In Progress</option>
@@ -274,20 +291,20 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
             {loading ? (
               <Center py={8}>
                 <VStack spacing={4}>
-                  <Spinner size="lg" color="red.500" />
-                  <Text color="gray.600">Loading conversations...</Text>
+                  <Spinner size="lg" color="#eb1700" />
+                  <Text color="#6e6259">Loading conversations...</Text>
                 </VStack>
               </Center>
             ) : filteredConversations.length === 0 ? (
               <Center py={8}>
                 <VStack spacing={4}>
-                  <Text color="gray.500" textAlign="center">
+                  <Text color="#6e6259" textAlign="center">
                     {searchQuery || statusFilter !== 'all'
                       ? 'No conversations match your search criteria.'
                       : 'No conversations found. Create your first conversation to get started.'}
                   </Text>
                   {conversations.length === 0 && !searchQuery && statusFilter === 'all' && (
-                    <Text fontSize="sm" color="gray.400" textAlign="center">
+                    <Text fontSize="sm" color="#a39992" textAlign="center">
                       Click "Start New Conversation" to create your first conversation.
                     </Text>
                   )}
@@ -302,12 +319,12 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
                     bg={cardBg}
                     borderRadius="md"
                     borderWidth="2px"
-                    borderColor={selectedConversation?.id === conversation.id ? 'red.500' : 'gray.200'}
+                    borderColor={selectedConversation?.id === conversation.id ? '#eb1700' : '#e8e6e3'}
                     cursor="pointer"
                     transition="all 0.2s"
                     _hover={{
                       bg: hoverBg,
-                      borderColor: 'red.500',
+                      borderColor: '#eb1700',
                       shadow: 'md'
                     }}
                     onClick={() => handleConversationClick(conversation)}
@@ -316,16 +333,16 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
                       {/* Header */}
                       <Flex justify="space-between" align="start">
                         <Box flex={1}>
-                          <Text fontWeight="bold" fontSize="lg" color="gray.700" mb={1}>
+                          <Text fontWeight="bold" fontSize="lg" color="#312c2a" mb={1}>
                             {conversation.surgeon_name || 'Unknown Surgeon'}
                           </Text>
 
                           {/* Hospital and Surgery Center Information */}
                           <VStack align="start" spacing={1}>
-                            <Text fontSize="sm" color="gray.600" fontWeight="medium">
+                            <Text fontSize="sm" color="#6e6259" fontWeight="medium">
                               Hospital: {conversation.hospital_name || 'Unknown Hospital'}
                             </Text>
-                            <Text fontSize="sm" color="gray.600">
+                            <Text fontSize="sm" color="#6e6259">
                               Surgery Center: {conversation.surgery_center_name || 'Unknown Surgery Center'}
                             </Text>
                           </VStack>
@@ -336,7 +353,7 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
                       </Flex>
 
                       {/* Details */}
-                      <HStack spacing={4} fontSize="sm" color="gray.600">
+                      <HStack spacing={4} fontSize="sm" color="#6e6259">
                         <HStack spacing={1}>
                           <Icon as={CalendarIcon} boxSize={3} />
                           <Text>{formatDate(conversation.conversation_date)}</Text>
@@ -349,13 +366,13 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
                         )}
                       </HStack>
 
-                      {/* New surgeon information */}
+                      {/* Surgeon information */}
                       <VStack align="stretch" spacing={2}>
                         {/* Volume and Robotics */}
                         <HStack spacing={4} fontSize="sm">
                           {conversation.surgeon_volume_per_year && (
                             <HStack spacing={2}>
-                              <Text color="gray.600">Volume/Year:</Text>
+                              <Text color="#6e6259">Volume/Year:</Text>
                               <Badge variant="outline" colorScheme="purple" size="sm">
                                 {conversation.surgeon_volume_per_year}
                               </Badge>
@@ -364,7 +381,7 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
 
                           {conversation.uses_robotics !== undefined && conversation.uses_robotics !== null && (
                             <HStack spacing={2}>
-                              <Text color="gray.600">Robotics:</Text>
+                              <Text color="#6e6259">Robotics:</Text>
                               <Badge
                                 variant="outline"
                                 colorScheme={formatRoboticsUsage(conversation.uses_robotics) === 'Yes' ? 'green' : 'orange'}
@@ -379,7 +396,7 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
                         {/* Current Alignment */}
                         {conversation.current_alignment && (
                           <HStack spacing={2}>
-                            <Text fontSize="sm" color="gray.600">Current Alignment:</Text>
+                            <Text fontSize="sm" color="#6e6259">Current Alignment:</Text>
                             <Badge
                               colorScheme={getAlignmentColor(conversation.current_alignment)}
                               variant="solid"
@@ -387,6 +404,9 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
                             >
                               {conversation.current_alignment}
                             </Badge>
+                            <Text fontSize="xs" color="#a39992">
+                              ({getAlignmentDisplayName(conversation.current_alignment)})
+                            </Text>
                           </HStack>
                         )}
                       </VStack>
@@ -394,41 +414,45 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
                       {/* Recommendation */}
                       {conversation.recommended_approach && (
                         <Flex align="center" justify="space-between">
-                          <Text fontSize="sm" color="gray.600">
+                          <Text fontSize="sm" color="#6e6259">
                             Recommended Approach:
                           </Text>
-                          <Badge
-                            bg={getRecommendationColor(conversation.recommended_approach)}
-                            color="white"
-                            px={2}
-                            py={1}
-                            borderRadius="md"
-                            fontSize="xs"
-                            textTransform="capitalize"
-                          >
-                            {conversation.recommended_approach?.replace('_', ' ')}
-                          </Badge>
+                          <HStack spacing={2}>
+                            <Badge
+                              bg={getRecommendationColor(conversation.recommended_approach)}
+                              color="white"
+                              px={2}
+                              py={1}
+                              borderRadius="md"
+                              fontSize="xs"
+                            >
+                              {conversation.recommended_approach}
+                            </Badge>
+                            <Text fontSize="xs" color="#a39992">
+                              ({getAlignmentDisplayName(conversation.recommended_approach)})
+                            </Text>
+                          </HStack>
                         </Flex>
                       )}
 
-                      {/* Scores Preview */}
+                      {/* Scores Preview - Updated with KA/iKA/FA/MA */}
                       {conversation.status === 'completed' && (
                         <Box>
-                          <Text fontSize="xs" color="gray.500" mb={2}>
+                          <Text fontSize="xs" color="#a39992" mb={2}>
                             Alignment Scores:
                           </Text>
-                          <HStack spacing={3} fontSize="xs" color="gray.600">
+                          <HStack spacing={3} fontSize="xs" color="#6e6259">
                             <Text>
-                              <Text as="span" fontWeight="medium" color="blue.500">M:</Text> {conversation.alignment_score_mechanical || 0}
+                              <Text as="span" fontWeight="medium" color="#eb1700">KA:</Text> {conversation.alignment_score_ka || 0}
                             </Text>
                             <Text>
-                              <Text as="span" fontWeight="medium" color="green.500">A:</Text> {conversation.alignment_score_adjusted || 0}
+                              <Text as="span" fontWeight="medium" color="#ff6017">iKA:</Text> {conversation.alignment_score_ika || 0}
                             </Text>
                             <Text>
-                              <Text as="span" fontWeight="medium" color="orange.500">R:</Text> {conversation.alignment_score_restrictive || 0}
+                              <Text as="span" fontWeight="medium" color="#0f68b2">FA:</Text> {conversation.alignment_score_fa || 0}
                             </Text>
                             <Text>
-                              <Text as="span" fontWeight="medium" color="red.500">K:</Text> {conversation.alignment_score_kinematic || 0}
+                              <Text as="span" fontWeight="medium" color="#328714">MA:</Text> {conversation.alignment_score_ma || 0}
                             </Text>
                           </HStack>
                         </Box>
@@ -436,8 +460,8 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
 
                       {/* Sales Rep Info (for surgeons viewing conversations) */}
                       {user.role === 'surgeon' && conversation.sales_rep_name && (
-                        <Box pt={2} borderTop="1px solid" borderColor="gray.100">
-                          <Text fontSize="xs" color="gray.500">
+                        <Box pt={2} borderTop="1px solid" borderColor="#f1efed">
+                          <Text fontSize="xs" color="#a39992">
                             Sales Representative: <Text as="span" fontWeight="medium">{conversation.sales_rep_name}</Text>
                           </Text>
                         </Box>
@@ -450,7 +474,7 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
           </Box>
         </ModalBody>
 
-        <ModalFooter borderTop="1px solid" borderColor="gray.200">
+        <ModalFooter borderTop="1px solid" borderColor="#e8e6e3">
           <Button
             variant="outline"
             mr={3}
@@ -459,7 +483,10 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
             Cancel
           </Button>
           <Button
-            colorScheme="red"
+            bg="#eb1700"
+            color="white"
+            _hover={{ bg: "#9e0000" }}
+            _active={{ bg: "#9e0000" }}
             onClick={handleLoadConversation}
             isDisabled={!selectedConversation}
           >
