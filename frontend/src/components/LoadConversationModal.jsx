@@ -98,6 +98,7 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
       filtered = filtered.filter(conv =>
         (conv.surgeon_name && conv.surgeon_name.toLowerCase().includes(query)) ||
         (conv.hospital_name && conv.hospital_name.toLowerCase().includes(query)) ||
+        (conv.surgery_center_name && conv.surgery_center_name.toLowerCase().includes(query)) ||
         (conv.recommended_approach && conv.recommended_approach.toLowerCase().includes(query))
       )
     }
@@ -156,6 +157,13 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
       default:
         return 'gray.400'
     }
+  }
+
+  const formatHospitalSize = (size) => {
+    if (!size) return 'Unknown'
+    // Convert to string first in case it's a number or other type
+    const sizeStr = String(size).toLowerCase()
+    return sizeStr.charAt(0).toUpperCase() + sizeStr.slice(1)
   }
 
   const handleConversationClick = (conversation) => {
@@ -225,7 +233,7 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
                   <SearchIcon color="gray.400" />
                 </InputLeftElement>
                 <Input
-                  placeholder="Search by surgeon name, hospital, or recommendation..."
+                  placeholder="Search by surgeon, hospital, surgery center, or recommendation..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   focusBorderColor="red.500"
@@ -295,14 +303,21 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
                           <Text fontWeight="bold" fontSize="lg" color="gray.700" mb={1}>
                             {conversation.surgeon_name || 'Unknown Surgeon'}
                           </Text>
-                          <Text fontSize="sm" color="gray.600">
-                            {conversation.hospital_name || 'Unknown Hospital'}
-                          </Text>
-                          {conversation.surgery_center_name && (
-                            <Text fontSize="xs" color="gray.500">
-                              {conversation.surgery_center_name}
+
+                          {/* Hospital Information */}
+                          <VStack align="start" spacing={1}>
+                            <Text fontSize="sm" color="gray.600" fontWeight="medium">
+                              {conversation.hospital_name || 'Unknown Hospital'}
                             </Text>
-                          )}
+
+                            {/* Surgery Center (if different from hospital) */}
+                            {conversation.surgery_center_name &&
+                             conversation.surgery_center_name !== conversation.hospital_name && (
+                              <Text fontSize="xs" color="gray.500">
+                                Surgery Center: {conversation.surgery_center_name}
+                              </Text>
+                            )}
+                          </VStack>
                         </Box>
                         <Badge colorScheme={getStatusColor(conversation.status)} variant="subtle">
                           {(conversation.status || 'unknown').replace('_', ' ')}
@@ -328,7 +343,7 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
                         <HStack spacing={2}>
                           <Text fontSize="sm" color="gray.600">Hospital Size:</Text>
                           <Badge variant="outline" colorScheme="blue" size="sm">
-                            {conversation.hospital_size}
+                            {formatHospitalSize(conversation.hospital_size)}
                           </Badge>
                         </HStack>
                       )}
@@ -359,20 +374,29 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
                           <Text fontSize="xs" color="gray.500" mb={2}>
                             Alignment Scores:
                           </Text>
-                          <HStack spacing={3} fontSize="xs">
+                          <HStack spacing={3} fontSize="xs" color="gray.600">
                             <Text>
-                              <Text as="span" fontWeight="medium">M:</Text> {conversation.alignment_score_mechanical || 0}
+                              <Text as="span" fontWeight="medium" color="blue.500">M:</Text> {conversation.alignment_score_mechanical || 0}
                             </Text>
                             <Text>
-                              <Text as="span" fontWeight="medium">A:</Text> {conversation.alignment_score_adjusted || 0}
+                              <Text as="span" fontWeight="medium" color="green.500">A:</Text> {conversation.alignment_score_adjusted || 0}
                             </Text>
                             <Text>
-                              <Text as="span" fontWeight="medium">R:</Text> {conversation.alignment_score_restrictive || 0}
+                              <Text as="span" fontWeight="medium" color="orange.500">R:</Text> {conversation.alignment_score_restrictive || 0}
                             </Text>
                             <Text>
-                              <Text as="span" fontWeight="medium">K:</Text> {conversation.alignment_score_kinematic || 0}
+                              <Text as="span" fontWeight="medium" color="red.500">K:</Text> {conversation.alignment_score_kinematic || 0}
                             </Text>
                           </HStack>
+                        </Box>
+                      )}
+
+                      {/* Sales Rep Info (for surgeons viewing conversations) */}
+                      {user.role === 'surgeon' && conversation.sales_rep_name && (
+                        <Box pt={2} borderTop="1px solid" borderColor="gray.100">
+                          <Text fontSize="xs" color="gray.500">
+                            Sales Representative: <Text as="span" fontWeight="medium">{conversation.sales_rep_name}</Text>
+                          </Text>
                         </Box>
                       )}
                     </VStack>

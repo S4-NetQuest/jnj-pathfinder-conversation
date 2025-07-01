@@ -1,4 +1,4 @@
-// backend/routes/conversations.js (Fixed Response Format)
+// backend/routes/conversations.js (Fixed to eliminate duplication)
 import express from 'express'
 import Joi from 'joi'
 import dbConfig from '../config/database.js'
@@ -118,22 +118,29 @@ router.get('/', async (req, res) => {
 
     // Process the results to ensure proper data formatting
     const conversations = result.recordset.map(conv => ({
-      ...conv,
-      // Ensure dates are properly formatted
+      id: conv.id,
+      surgeon_name: conv.surgeon_name || '',
+      sales_rep_id: conv.sales_rep_id,
+      hospital_id: conv.hospital_id,
+      surgery_center_id: conv.surgery_center_id,
+      // Use the joined data from hospitals/surgery_centers tables, not the duplicate fields
+      hospital_name: conv.hospital_name || '',
+      hospital_size: conv.hospital_size || conv.size_category || 'unknown',
+      surgery_center_name: conv.surgery_center_name || '',
+      surgery_center_size: conv.surgery_center_size || 'unknown',
+      // Other conversation fields
       conversation_date: conv.conversation_date ? new Date(conv.conversation_date).toISOString() : null,
       created_at: conv.created_at ? new Date(conv.created_at).toISOString() : null,
       updated_at: conv.updated_at ? new Date(conv.updated_at).toISOString() : null,
-      // Ensure string fields are not null
-      surgeon_name: conv.surgeon_name || '',
-      hospital_name: conv.hospital_name || '',
-      surgery_center_name: conv.surgery_center_name || '',
       status: conv.status || 'in_progress',
-      hospital_size: conv.hospital_size || 'unknown',
-      // Ensure numeric fields are numbers
+      notes: conv.notes || '',
+      recommended_approach: conv.recommended_approach || '',
       alignment_score_mechanical: conv.alignment_score_mechanical || 0,
       alignment_score_adjusted: conv.alignment_score_adjusted || 0,
       alignment_score_restrictive: conv.alignment_score_restrictive || 0,
       alignment_score_kinematic: conv.alignment_score_kinematic || 0,
+      sales_rep_name: conv.sales_rep_name || '',
+      sales_rep_email: conv.sales_rep_email || '',
     }))
 
     res.json({
@@ -240,6 +247,11 @@ router.get('/:id', async (req, res) => {
       success: true,
       conversation: {
         ...conversation,
+        // Use joined data, not duplicate fields
+        hospital_name: conversation.hospital_name,
+        hospital_size: conversation.hospital_size,
+        surgery_center_name: conversation.surgery_center_name,
+        surgery_center_size: conversation.surgery_center_size,
         responses: responsesResult.recordset
       }
     })
@@ -363,7 +375,7 @@ router.post('/', async (req, res) => {
           .query('UPDATE surgery_centers SET size_category = @surgeryCenterSize, updated_at = GETDATE() WHERE id = @surgeryCenterId')
       }
 
-      // Create conversation with different logic for sales rep vs surgeon
+      // Create conversation - ONLY store IDs, not duplicate names/sizes
       console.log('Creating conversation for user role:', currentUser.role)
       let insertQuery, insertValues
 
@@ -372,14 +384,12 @@ router.post('/', async (req, res) => {
         console.log('Creating sales rep conversation')
         insertQuery = `
           INSERT INTO conversations (
-            sales_rep_id, surgeon_name, hospital_id, hospital_name, hospital_size,
-            surgery_center_id, surgery_center_name, conversation_date,
+            sales_rep_id, surgeon_name, hospital_id, surgery_center_id, conversation_date,
             status, created_at, updated_at
           )
           OUTPUT INSERTED.*
           VALUES (
-            @salesRepId, @surgeonName, @hospitalId, @hospitalName, @hospitalSize,
-            @surgeryCenterId, @surgeryCenterName, @conversationDate,
+            @salesRepId, @surgeonName, @hospitalId, @surgeryCenterId, @conversationDate,
             'in_progress', GETDATE(), GETDATE()
           )
         `
@@ -388,10 +398,7 @@ router.post('/', async (req, res) => {
           .input('salesRepId', dbConfig.sql.Int, currentUser.id)
           .input('surgeonName', dbConfig.sql.VarChar, surgeon_name)
           .input('hospitalId', dbConfig.sql.Int, hospitalId)
-          .input('hospitalName', dbConfig.sql.VarChar, hospital_name)
-          .input('hospitalSize', dbConfig.sql.VarChar, hospital_size)
           .input('surgeryCenterId', dbConfig.sql.Int, surgeryCenterId)
-          .input('surgeryCenterName', dbConfig.sql.VarChar, surgery_center_name)
           .input('conversationDate', dbConfig.sql.Date, conversation_date)
           .query(insertQuery)
       } else if (currentUser.role === 'surgeon') {
@@ -399,14 +406,12 @@ router.post('/', async (req, res) => {
         console.log('Creating surgeon conversation')
         insertQuery = `
           INSERT INTO conversations (
-            sales_rep_id, surgeon_name, hospital_id, hospital_name, hospital_size,
-            surgery_center_id, surgery_center_name, conversation_date,
+            sales_rep_id, surgeon_name, hospital_id, surgery_center_id, conversation_date,
             status, created_at, updated_at
           )
           OUTPUT INSERTED.*
           VALUES (
-            NULL, @surgeonName, @hospitalId, @hospitalName, @hospitalSize,
-            @surgeryCenterId, @surgeryCenterName, @conversationDate,
+            NULL, @surgeonName, @hospitalId, @surgeryCenterId, @conversationDate,
             'in_progress', GETDATE(), GETDATE()
           )
         `
@@ -414,10 +419,7 @@ router.post('/', async (req, res) => {
         insertValues = await transaction.request()
           .input('surgeonName', dbConfig.sql.VarChar, currentUser.name || surgeon_name)
           .input('hospitalId', dbConfig.sql.Int, hospitalId)
-          .input('hospitalName', dbConfig.sql.VarChar, hospital_name)
-          .input('hospitalSize', dbConfig.sql.VarChar, hospital_size)
           .input('surgeryCenterId', dbConfig.sql.Int, surgeryCenterId)
-          .input('surgeryCenterName', dbConfig.sql.VarChar, surgery_center_name)
           .input('conversationDate', dbConfig.sql.Date, conversation_date)
           .query(insertQuery)
       } else {
@@ -428,9 +430,27 @@ router.post('/', async (req, res) => {
       await transaction.commit()
       console.log('Transaction committed successfully')
 
+      // Return the conversation with joined hospital/surgery center data
+      const createdConversation = insertValues.recordset[0]
+
+      // Get the hospital and surgery center names for the response
+      const hospitalData = await pool.request()
+        .input('hospitalId', dbConfig.sql.Int, hospitalId)
+        .query('SELECT name, size_category FROM hospitals WHERE id = @hospitalId')
+
+      const surgeryCenterData = await pool.request()
+        .input('surgeryCenterId', dbConfig.sql.Int, surgeryCenterId)
+        .query('SELECT name, size_category FROM surgery_centers WHERE id = @surgeryCenterId')
+
       res.status(201).json({
         success: true,
-        conversation: insertValues.recordset[0],
+        conversation: {
+          ...createdConversation,
+          hospital_name: hospitalData.recordset[0]?.name || '',
+          hospital_size: hospitalData.recordset[0]?.size_category || '',
+          surgery_center_name: surgeryCenterData.recordset[0]?.name || '',
+          surgery_center_size: surgeryCenterData.recordset[0]?.size_category || '',
+        },
         message: 'Conversation created successfully'
       })
     } catch (error) {
@@ -449,6 +469,7 @@ router.post('/', async (req, res) => {
   }
 })
 
+// Rest of the routes remain the same...
 // Update conversation status or notes
 router.put('/:id', async (req, res) => {
   try {
@@ -722,5 +743,4 @@ router.delete('/:id', requireSalesRep, async (req, res) => {
   }
 })
 
-// Export the router
 export default router

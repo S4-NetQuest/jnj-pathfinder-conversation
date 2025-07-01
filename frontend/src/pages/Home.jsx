@@ -108,18 +108,6 @@ const Home = () => {
               Kinematic Restoration Conversion Guide
             </Text>
           </Box>
-          <Spacer />
-          <VStack align="end" spacing={2}>
-            <Text fontSize="sm" color="gray.600">
-              Welcome, {user.name}
-            </Text>
-            <Text fontSize="xs" color="gray.500">
-              Role: {user.role.replace('_', ' ')}
-            </Text>
-            <Button size="sm" variant="outline" onClick={logout}>
-              Logout
-            </Button>
-          </VStack>
         </Flex>
 
         {/* Welcome Message */}
