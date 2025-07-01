@@ -82,7 +82,7 @@ const Conversation = () => {
   const fetchConversation = async () => {
     try {
       const response = await api.get(`/conversations/${id}`)
-      const conversationData = response.data
+      const conversationData = response.data.conversation
       setConversation(conversationData)
 
       // Load existing responses
@@ -100,9 +100,9 @@ const Conversation = () => {
       }
       setResponses(responseMap)
 
-      // Load notes if user is sales rep
+      // Load notes if user is sales rep - await this call
       if (user?.role === 'sales_rep') {
-        fetchNotes()
+        await fetchNotes()
       }
 
       setCompleted(conversationData.status === 'completed')
@@ -122,15 +122,35 @@ const Conversation = () => {
 
   const fetchNotes = async () => {
     try {
+      console.log('Fetching notes for conversation:', id)
       const response = await api.get(`/conversations/${id}/notes`)
-      if (response.data.length > 0) {
-        setNotes(response.data[0].content || '')
-        setNotesContent(response.data[0].content || '')
+      console.log('Notes response:', response.data)
+
+      // The API returns { success: true, notes: [...] }
+      if (response.data.success && response.data.notes && response.data.notes.length > 0) {
+        const noteContent = response.data.notes[0].content || ''
+        console.log('Setting notes content:', noteContent)
+        setNotes(noteContent)
+        setNotesContent(noteContent)
+      } else {
+        console.log('No notes found, setting empty content')
+        setNotes('')
+        setNotesContent('')
       }
     } catch (error) {
       console.error('Error fetching notes:', error)
+      // Don't show error toast for missing notes, just set empty
+      setNotes('')
+      setNotesContent('')
     }
   }
+
+  const handleNotesOpen = () => {
+    // Make sure notesContent is synced with notes when opening
+    setNotesContent(notes)
+    onNotesOpen()
+  }
+
 
   const calculateScores = () => {
     const newScores = {
@@ -322,7 +342,7 @@ const Conversation = () => {
               <Box>
                 <Text fontSize="xl" fontWeight="bold" color="#eb1700" mb={2}>
                   {conversation ?
-                    `Conversation with ${conversation.conversation.surgeon_name}` :
+                    `Conversation with ${conversation.surgeon_name}` :
                     'Alignment Philosophy Assessment'
                   }
                 </Text>
@@ -332,7 +352,7 @@ const Conversation = () => {
                       {conversation.hospital_name}
                     </Text>
                     <Text fontSize="sm" color="#81766f">
-                      Date: {new Date(conversation.conversation.conversation_date).toLocaleDateString()}
+                      Date: {new Date(conversation.conversation_date).toLocaleDateString()}
                     </Text>
                   </VStack>
                 )}
@@ -345,7 +365,7 @@ const Conversation = () => {
                       size="sm"
                       variant="outline"
                       leftIcon={<EditIcon />}
-                      onClick={onNotesOpen}
+                      onClick={handleNotesOpen}
                       borderColor="#eb1700"
                       color="#eb1700"
                       _hover={{ bg: "#eb1700", color: "white" }}

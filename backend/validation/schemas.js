@@ -1,11 +1,15 @@
-// backend/validation/schemas.js (Complete validation schemas with KA/iKA/FA/MA scoring)
+// backend/validation/schemas.js (Updated with flexible case handling)
 import Joi from 'joi'
 
 // Volume options
 const VOLUME_OPTIONS = ['< 50', '< 100', '< 200', '> 200']
 
-// Alignment options (used for both current_alignment and recommended_approach)
-const ALIGNMENT_OPTIONS = ['KA', 'iKA', 'FA', 'MA']
+// Alignment options (uppercase for database storage)
+const ALIGNMENT_OPTIONS_UPPER = ['KA', 'iKA', 'FA', 'MA']
+// Alignment options (lowercase for frontend compatibility)
+const ALIGNMENT_OPTIONS_LOWER = ['ka', 'ika', 'fa', 'ma']
+// Combined alignment options for validation
+const ALIGNMENT_OPTIONS_ALL = [...ALIGNMENT_OPTIONS_UPPER, ...ALIGNMENT_OPTIONS_LOWER]
 
 // Boolean string options for robotics
 const BOOLEAN_STRING_OPTIONS = ['true', 'false']
@@ -13,20 +17,41 @@ const BOOLEAN_STRING_OPTIONS = ['true', 'false']
 // Status options
 const STATUS_OPTIONS = ['in_progress', 'completed', 'abandoned']
 
-// Alignment display names
+// Alignment display names (both cases)
 const ALIGNMENT_DISPLAY_NAMES = {
   'KA': 'Kinematic Alignment',
+  'ka': 'Kinematic Alignment',
   'iKA': 'Inverse Kinematic Alignment',
+  'ika': 'Inverse Kinematic Alignment',
   'FA': 'Functional Alignment',
-  'MA': 'Manual Alignment'
+  'fa': 'Functional Alignment',
+  'MA': 'Mechanical Alignment',  // Fixed: was "Manual" should be "Mechanical"
+  'ma': 'Mechanical Alignment'
 }
 
-// Alignment color schemes for UI
+// Alignment color schemes for UI (both cases)
 const ALIGNMENT_COLOR_SCHEMES = {
   'KA': 'red',
+  'ka': 'red',
   'iKA': 'orange',
+  'ika': 'orange',
   'FA': 'blue',
-  'MA': 'green'
+  'fa': 'blue',
+  'MA': 'green',
+  'ma': 'green'
+}
+
+// Helper function to normalize alignment case (convert to uppercase for storage)
+const normalizeAlignment = (alignment) => {
+  if (!alignment) return alignment
+  const normalized = alignment.toLowerCase()
+  switch (normalized) {
+    case 'ka': return 'KA'
+    case 'ika': return 'iKA'
+    case 'fa': return 'FA'
+    case 'ma': return 'MA'
+    default: return alignment.toUpperCase()
+  }
 }
 
 export const createConversationSchema = Joi.object({
@@ -84,9 +109,9 @@ export const createConversationSchema = Joi.object({
 
   current_alignment: Joi.string()
     .required()
-    .valid(...ALIGNMENT_OPTIONS)
+    .valid(...ALIGNMENT_OPTIONS_ALL)
     .messages({
-      'any.only': `Current alignment must be one of: ${ALIGNMENT_OPTIONS.join(', ')} (KA=Kinematic, iKA=Inverse Kinematic, FA=Functional, MA=Manual)`,
+      'any.only': `Current alignment must be one of: ${ALIGNMENT_OPTIONS_LOWER.join(', ')} (ka=Kinematic, ika=Inverse Kinematic, fa=Functional, ma=Mechanical)`,
       'any.required': 'Current alignment approach is required'
     }),
 
@@ -114,10 +139,17 @@ export const updateConversationSchema = Joi.object({
       'string.max': 'Notes cannot exceed 10,000 characters'
     }),
 
+  // Handle both snake_case and camelCase for recommended approach
   recommended_approach: Joi.string()
-    .valid(...ALIGNMENT_OPTIONS)
+    .valid(...ALIGNMENT_OPTIONS_ALL)
     .messages({
-      'any.only': `Recommended approach must be one of: ${ALIGNMENT_OPTIONS.join(', ')} (KA=Kinematic, iKA=Inverse Kinematic, FA=Functional, MA=Manual)`
+      'any.only': `Recommended approach must be one of: ${ALIGNMENT_OPTIONS_LOWER.join(', ')} (ka=Kinematic, ika=Inverse Kinematic, fa=Functional, ma=Mechanical)`
+    }),
+
+  recommendedApproach: Joi.string()
+    .valid(...ALIGNMENT_OPTIONS_ALL)
+    .messages({
+      'any.only': `Recommended approach must be one of: ${ALIGNMENT_OPTIONS_LOWER.join(', ')} (ka=Kinematic, ika=Inverse Kinematic, fa=Functional, ma=Mechanical)`
     }),
 
   surgeon_volume_per_year: Joi.string()
@@ -136,9 +168,9 @@ export const updateConversationSchema = Joi.object({
     }),
 
   current_alignment: Joi.string()
-    .valid(...ALIGNMENT_OPTIONS)
+    .valid(...ALIGNMENT_OPTIONS_ALL)
     .messages({
-      'any.only': `Current alignment must be one of: ${ALIGNMENT_OPTIONS.join(', ')} (KA=Kinematic, iKA=Inverse Kinematic, FA=Functional, MA=Manual)`
+      'any.only': `Current alignment must be one of: ${ALIGNMENT_OPTIONS_LOWER.join(', ')} (ka=Kinematic, ika=Inverse Kinematic, fa=Functional, ma=Mechanical)`
     }),
 
   alignment_scores: Joi.object({
@@ -158,9 +190,9 @@ export const updateConversationSchema = Joi.object({
       'number.integer': 'FA (Functional Alignment) score must be a whole number'
     }),
     ma: Joi.number().min(0).max(4).integer().messages({
-      'number.min': 'MA (Manual Alignment) score must be between 0 and 4',
-      'number.max': 'MA (Manual Alignment) score must be between 0 and 4',
-      'number.integer': 'MA (Manual Alignment) score must be a whole number'
+      'number.min': 'MA (Mechanical Alignment) score must be between 0 and 4',
+      'number.max': 'MA (Mechanical Alignment) score must be between 0 and 4',
+      'number.integer': 'MA (Mechanical Alignment) score must be a whole number'
     })
   }).messages({
     'object.unknown': 'Unknown alignment score field'
@@ -230,10 +262,10 @@ export const responseSchema = Joi.object({
       .max(4)
       .integer()
       .messages({
-        'number.min': 'MA (Manual Alignment) score must be between 0 and 4',
-        'number.max': 'MA (Manual Alignment) score must be between 0 and 4',
-        'number.integer': 'MA (Manual Alignment) score must be a whole number',
-        'any.required': 'MA (Manual Alignment) score is required'
+        'number.min': 'MA (Mechanical Alignment) score must be between 0 and 4',
+        'number.max': 'MA (Mechanical Alignment) score must be between 0 and 4',
+        'number.integer': 'MA (Mechanical Alignment) score must be a whole number',
+        'any.required': 'MA (Mechanical Alignment) score is required'
       })
   }).required().messages({
     'any.required': 'Scores object is required',
@@ -296,7 +328,7 @@ export const getAlignmentColorScheme = (alignment) => {
 
 // Helper function to validate alignment option
 export const isValidAlignment = (alignment) => {
-  return ALIGNMENT_OPTIONS.includes(alignment)
+  return ALIGNMENT_OPTIONS_ALL.includes(alignment)
 }
 
 // Helper function to validate volume option
@@ -312,7 +344,10 @@ export const isValidStatus = (status) => {
 // Export constants for use in other files
 export const CONSTANTS = {
   VOLUME_OPTIONS,
-  ALIGNMENT_OPTIONS,
+  ALIGNMENT_OPTIONS: ALIGNMENT_OPTIONS_UPPER, // For backwards compatibility
+  ALIGNMENT_OPTIONS_UPPER,
+  ALIGNMENT_OPTIONS_LOWER,
+  ALIGNMENT_OPTIONS_ALL,
   BOOLEAN_STRING_OPTIONS,
   STATUS_OPTIONS,
   ALIGNMENT_DISPLAY_NAMES,
@@ -326,7 +361,8 @@ export const validators = {
   getAlignmentColorScheme,
   isValidAlignment,
   isValidVolume,
-  isValidStatus
+  isValidStatus,
+  normalizeAlignment
 }
 
 // Default exports for convenience

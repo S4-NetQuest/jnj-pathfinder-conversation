@@ -40,7 +40,7 @@ const Login = () => {
         method: 'POST',
         credentials: 'include',
       })
-      
+
       if (response.ok) {
         const data = await response.json()
         login(data.user)
@@ -62,20 +62,20 @@ const Login = () => {
       <VStack spacing={8} align="stretch">
         {/* Header */}
         <Box textAlign="center">
-          <Text 
-            fontSize={{ base: '2xl', md: '3xl' }} 
-            fontWeight="bold" 
-            color="jj.red" 
+          <Text
+            fontSize={{ base: '2xl', md: '3xl' }}
+            fontWeight="bold"
+            color="jj.red"
             mb={2}
           >
             Kinematic Restoration
           </Text>
-          <Text 
-            fontSize={{ base: 'lg', md: 'xl' }} 
-            color="jj.gray.600" 
+          <Text
+            fontSize={{ base: 'lg', md: 'xl' }}
+            color="jj.gray.600"
             mb={4}
           >
-            Conversion Guide
+            Conversation Guide
           </Text>
           <Text fontSize="md" color="jj.gray.600" maxW="md" mx="auto">
             Choose your role to access the Pathfinder Conversation Guide
@@ -85,8 +85,8 @@ const Login = () => {
         {/* Login Options */}
         <VStack spacing={6} align="stretch">
           {/* Sales Rep Login */}
-          <Card 
-            _hover={{ shadow: 'lg', borderColor: 'jj.red' }} 
+          <Card
+            _hover={{ shadow: 'lg', borderColor: 'jj.red' }}
             transition="all 0.2s"
             borderWidth="2px"
             borderColor="transparent"
@@ -96,7 +96,7 @@ const Login = () => {
                 <Flex align="center" justify="center" mb={2}>
                   <Icon as={LockIcon} color="jj.red" boxSize={8} />
                 </Flex>
-                
+
                 <Box textAlign="center">
                   <Text fontSize="xl" fontWeight="bold" color="jj.gray.700" mb={2}>
                     J&J Sales Representative
@@ -149,8 +149,8 @@ const Login = () => {
           </Flex>
 
           {/* Surgeon Access */}
-          <Card 
-            _hover={{ shadow: 'lg', borderColor: 'jj.blue.300' }} 
+          <Card
+            _hover={{ shadow: 'lg', borderColor: 'jj.blue.300' }}
             transition="all 0.2s"
             borderWidth="2px"
             borderColor="transparent"
@@ -160,7 +160,7 @@ const Login = () => {
                 <Flex align="center" justify="center" mb={2}>
                   <Icon as={ViewIcon} color="jj.blue.300" boxSize={8} />
                 </Flex>
-                
+
                 <Box textAlign="center">
                   <Text fontSize="xl" fontWeight="bold" color="jj.gray.700" mb={2}>
                     Surgeon
@@ -204,10 +204,10 @@ const Login = () => {
         </VStack>
 
         {/* Footer Info */}
-        <Box 
-          textAlign="center" 
-          pt={6} 
-          borderTop="1px solid" 
+        <Box
+          textAlign="center"
+          pt={6}
+          borderTop="1px solid"
           borderColor="jj.gray.200"
         >
           <Text fontSize="xs" color="jj.gray.500">

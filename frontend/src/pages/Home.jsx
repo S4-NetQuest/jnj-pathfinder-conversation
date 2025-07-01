@@ -67,7 +67,7 @@ const Home = () => {
   }
 
   const handleExploreKinematicRestoration = () => {
-    navigate('/explore-kinematic-restoration')
+    window.open('https://home.jnj.com/sites/velys-digital-surgery/SitePageModern/1892994/velys-robotic-assisted-solution-1-8', '_blank', 'noopener,noreferrer')
   }
 
   const handleComparePhilosophies = () => {
@@ -88,7 +88,7 @@ const Home = () => {
               Pathfinder Conversation Guide
             </Heading>
             <Text color="gray.600">
-              Kinematic Restoration Conversion Guide
+              Kinematic Restoration Conversation Guide
             </Text>
           </Box>
 
@@ -99,20 +99,8 @@ const Home = () => {
   }
 
   return (
-    <Container maxW="container.lg" py={8}>
+    <Container maxW="container.lg" py={2}>
       <VStack spacing={8} align="stretch">
-        {/* Header */}
-        <Flex align="center">
-          <Box>
-            <Heading color="red.500" fontSize="2xl">
-              Pathfinder Conversation Guide
-            </Heading>
-            <Text color="gray.600" fontSize="sm">
-              Kinematic Restoration Conversion Guide
-            </Text>
-          </Box>
-        </Flex>
-
         {/* Welcome Message */}
         <Box textAlign="center" py={6}>
           <Text fontSize="lg" color="gray.700">

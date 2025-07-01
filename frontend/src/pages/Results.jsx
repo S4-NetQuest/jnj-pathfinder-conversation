@@ -38,7 +38,7 @@ const Results = () => {
               mb={4}
               lineHeight="1.2"
             >
-              Kinematic Restoration Conversion Guide
+              Kinematic Restoration Conversation Guide
             </Text>
             <Text
               fontSize={{ base: '16px', md: '18px' }}

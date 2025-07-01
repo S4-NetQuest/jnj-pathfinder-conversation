@@ -129,7 +129,7 @@ const Header = () => {
               cursor="pointer"
               onClick={handleHomeClick}
             >
-              Kinematic Restoration Conversion Guide
+              Kinematic Restoration Conversation Guide
             </Text>
           </Flex>
 

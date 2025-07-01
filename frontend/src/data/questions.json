@@ -6,27 +6,27 @@
     "alignmentCategories": {
       "ka": {
         "name": "Kinematic Alignment",
-        "description": "Restores the native kinematics of the knee by replicating the patient's pre-arthritic joint anatomy",
+        "description": "Kinematic Alignment (KA) prioritizes restoring the native joint line",
         "color": "#eb1700",
-        "fullDescription": "Kinematic Alignment (KA) aims to restore the patient's native alignment to its pre-disease state. This approach prioritizes restoring the joint line obliquity and posterior condylar offsets based on the patient's pre-arthritic anatomy. KA allows for deviation from mechanical axis and focuses on recreating the natural kinematics of the knee."
+        "fullDescription": "Kinematic Alignment (KA) prioritizes restoring the native joint line. The femur is resurfaced first. Next, the tibia is resurfaced. Femoral and tibial resection depths are planned as the implant thickness minus the estimated cartilage and bone wear values."
       },
       "ika": {
         "name": "Inverse Kinematic Alignment",
-        "description": "Modified kinematic alignment approach with selective adjustments for extreme anatomical variations",
+        "description": "Inverse Kinematic Alignment (iKA) aims to resurface the proximal tibia back to its pre-arthritic state",
         "color": "#ff6017",
-        "fullDescription": "Inverse Kinematic Alignment (iKA) is a modified kinematic alignment approach that applies coronal boundaries to prevent extreme deviations. This technique balances the restoration of native anatomy with practical limits, using a tibia-first workflow and selective adjustments to achieve optimal outcomes while maintaining safety boundaries."
+        "fullDescription": "Inverse Kinematic Alignment (iKA) aims to resurface the proximal tibia back to its pre-arthritic state. The tibial resection thickness assumes the minimum tibial insert is used and is equal to implant thickness minus cartilage and bone wear. The tibia is resurfaced, and osteophytes are resected. The soft tissues of the knee are assessed using the CAS tensioner and ACCUBALANCE™ Graph before proceeding with the femoral resections. The femoral resection depth and angulations are planned in a way to balance gaps using the ACCUBALANCE Graph and obtain the intended soft tissue balance of the knee."
       },
       "fa": {
         "name": "Functional Alignment",
         "description": "Balances soft tissues while maintaining functional biomechanics and natural joint line orientation",
         "color": "#0f68b2",
-        "fullDescription": "Functional Alignment (FA) prioritizes balanced flexion and extension gaps while distributing changes evenly between femur and tibia components. This approach focuses on achieving optimal soft tissue balance and functional outcomes by making strategic adjustments to both components within defined boundaries."
+        "fullDescription": "Functional Alignment (FA) aims to provide balanced flexion-extension gaps. The Functional Alignment planning method enables adjustments in the coronal plane for both the distal femoral and proximal tibial resections to achieve the desired soft tissue laxity symmetry on the ACCUBALANCE™ Graph."
       },
       "ma": {
         "name": "Mechanical Alignment",
-        "description": "Traditional mechanical alignment approach targeting neutral mechanical axis and standardized component positioning",
+        "description": "Mechanical Alignment with balancing starts off with standard mechanical alignment that aims for a neutral HKA.",
         "color": "#328714",
-        "fullDescription": "Mechanical Alignment (MA) follows the traditional approach of achieving a neutral mechanical alignment (0° HKA) with cuts perpendicular to the mechanical axes of both femur and tibia. This method prioritizes standardized positioning and minimizes deviation from neutral alignment, focusing on reproducible mechanical outcomes."
+        "fullDescription": "Mechanical Alignment with balancing starts off with standard mechanical alignment that aims for a neutral HKA. The femur position is then adjusted to balance flexion and extension gaps. The tibia proximal resection depths are then adjusted if needed. This technique prioritizes minimizing femur and tibia deviation from neutral."
       }
     }
   },

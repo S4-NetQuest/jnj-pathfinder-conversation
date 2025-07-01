@@ -607,6 +607,182 @@ router.patch('/:id', async (req, res) => {
   }
 })
 
+// Add this PUT endpoint to your backend/routes/conversations.js file
+// Place it after the PATCH endpoint
+
+// Update conversation (PUT - complete update)
+router.put('/:id', async (req, res) => {
+  try {
+    const conversationId = parseInt(req.params.id)
+    if (isNaN(conversationId)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid conversation ID'
+      })
+    }
+
+    const currentUser = getCurrentUser(req)
+    if (!currentUser) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      })
+    }
+
+    console.log('=== UPDATE CONVERSATION (PUT) ===')
+    console.log('Conversation ID:', conversationId)
+    console.log('Current user:', currentUser)
+    console.log('Request body:', req.body)
+
+    // Validate request body using the same schema as PATCH
+    const { error, value } = updateConversationSchema.validate(req.body)
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        error: error.details[0].message
+      })
+    }
+
+    const pool = dbConfig.getPool()
+
+    // Check if user has access to this conversation
+    let accessQuery, accessRequest
+    if (currentUser.role === 'sales_rep') {
+      accessQuery = 'SELECT id FROM conversations WHERE id = @conversationId AND sales_rep_id = @userId'
+      accessRequest = pool.request()
+        .input('conversationId', dbConfig.sql.Int, conversationId)
+        .input('userId', dbConfig.sql.Int, currentUser.id)
+    } else if (currentUser.role === 'surgeon') {
+      accessQuery = 'SELECT id FROM conversations WHERE id = @conversationId AND (surgeon_name = @surgeonName OR sales_rep_id IS NULL)'
+      accessRequest = pool.request()
+        .input('conversationId', dbConfig.sql.Int, conversationId)
+        .input('surgeonName', dbConfig.sql.VarChar, currentUser.name)
+    } else {
+      return res.status(403).json({
+        success: false,
+        error: 'Invalid user role'
+      })
+    }
+
+    const accessResult = await accessRequest.query(accessQuery)
+    if (accessResult.recordset.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Conversation not found or access denied'
+      })
+    }
+
+    // Build update query dynamically
+    const updateFields = []
+    const request = pool.request()
+    request.input('conversationId', dbConfig.sql.Int, conversationId)
+
+    if (value.status !== undefined) {
+      updateFields.push('status = @status')
+      request.input('status', dbConfig.sql.VarChar, value.status)
+    }
+
+    // Handle recommendedApproach (camelCase from frontend) - normalize to uppercase
+    if (value.recommendedApproach !== undefined) {
+      updateFields.push('recommended_approach = @recommendedApproach')
+      const normalizedValue = validators.normalizeAlignment(value.recommendedApproach)
+      request.input('recommendedApproach', dbConfig.sql.VarChar, normalizedValue)
+    }
+
+    // Also handle recommended_approach (snake_case) for consistency - normalize to uppercase
+    if (value.recommended_approach !== undefined) {
+      updateFields.push('recommended_approach = @recommendedApproach')
+      const normalizedValue = validators.normalizeAlignment(value.recommended_approach)
+      request.input('recommendedApproach', dbConfig.sql.VarChar, normalizedValue)
+    }
+
+    // Notes can only be updated by sales reps
+    if (value.notes !== undefined) {
+      if (currentUser.role !== 'sales_rep') {
+        return res.status(403).json({
+          success: false,
+          error: 'Only sales representatives can update notes'
+        })
+      }
+      updateFields.push('notes = @notes')
+      request.input('notes', dbConfig.sql.Text, value.notes || '')
+    }
+
+    if (value.surgeon_volume_per_year !== undefined) {
+      updateFields.push('surgeon_volume_per_year = @surgeonVolumePerYear')
+      request.input('surgeonVolumePerYear', dbConfig.sql.VarChar, value.surgeon_volume_per_year)
+    }
+
+    if (value.uses_robotics !== undefined) {
+      updateFields.push('uses_robotics = @usesRobotics')
+      const roboticsValue = transformRoboticsValue(value.uses_robotics)
+      request.input('usesRobotics', dbConfig.sql.Bit, roboticsValue ? 1 : 0)
+    }
+
+    if (value.current_alignment !== undefined) {
+      updateFields.push('current_alignment = @currentAlignment')
+      request.input('currentAlignment', dbConfig.sql.VarChar, value.current_alignment)
+    }
+
+    // Handle alignment scores with new field names (KA/iKA/FA/MA)
+    if (value.alignment_scores) {
+      if (value.alignment_scores.ka !== undefined) {
+        updateFields.push('alignment_score_ka = @alignmentScoreKA')
+        request.input('alignmentScoreKA', dbConfig.sql.Int, value.alignment_scores.ka)
+      }
+      if (value.alignment_scores.ika !== undefined) {
+        updateFields.push('alignment_score_ika = @alignmentScoreiKA')
+        request.input('alignmentScoreiKA', dbConfig.sql.Int, value.alignment_scores.ika)
+      }
+      if (value.alignment_scores.fa !== undefined) {
+        updateFields.push('alignment_score_fa = @alignmentScoreFA')
+        request.input('alignmentScoreFA', dbConfig.sql.Int, value.alignment_scores.fa)
+      }
+      if (value.alignment_scores.ma !== undefined) {
+        updateFields.push('alignment_score_ma = @alignmentScoreMA')
+        request.input('alignmentScoreMA', dbConfig.sql.Int, value.alignment_scores.ma)
+      }
+    }
+
+    if (updateFields.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'No valid fields to update'
+      })
+    }
+
+    // Add updated_at field
+    updateFields.push('updated_at = GETDATE()')
+
+    const updateQuery = `
+      UPDATE conversations
+      SET ${updateFields.join(', ')}
+      OUTPUT INSERTED.*
+      WHERE id = @conversationId
+    `
+
+    console.log('Update query:', updateQuery)
+    console.log('Update fields:', updateFields)
+
+    const result = await request.query(updateQuery)
+
+    console.log('Update result:', result.recordset[0])
+
+    res.json({
+      success: true,
+      message: 'Conversation updated successfully',
+      conversation: result.recordset[0]
+    })
+  } catch (error) {
+    console.error('Error updating conversation (PUT):', error)
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update conversation',
+      details: process.env.NODE_ENV !== 'production' ? error.message : undefined
+    })
+  }
+})
+
 // Add response to conversation
 router.post('/:id/responses', async (req, res) => {
   try {
@@ -790,6 +966,250 @@ router.delete('/:id', requireSalesRep, async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to delete conversation',
+      details: process.env.NODE_ENV !== 'production' ? error.message : undefined
+    })
+  }
+})
+
+
+// Get notes for a conversation
+router.get('/:id/notes', async (req, res) => {
+  try {
+    const conversationId = parseInt(req.params.id)
+    if (isNaN(conversationId)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid conversation ID'
+      })
+    }
+
+    const currentUser = getCurrentUser(req)
+    if (!currentUser) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      })
+    }
+
+    // Only sales reps can access notes
+    if (currentUser.role !== 'sales_rep') {
+      return res.status(403).json({
+        success: false,
+        error: 'Only sales representatives can access notes'
+      })
+    }
+
+    const pool = dbConfig.getPool()
+
+    // Check if user has access to this conversation
+    const accessQuery = 'SELECT id FROM conversations WHERE id = @conversationId AND sales_rep_id = @userId'
+    const accessResult = await pool.request()
+      .input('conversationId', dbConfig.sql.Int, conversationId)
+      .input('userId', dbConfig.sql.Int, currentUser.id)
+      .query(accessQuery)
+
+    if (accessResult.recordset.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Conversation not found or access denied'
+      })
+    }
+
+    // Get notes for this conversation
+    const notesQuery = `
+      SELECT id, conversation_id, content, created_at, updated_at
+      FROM conversation_notes
+      WHERE conversation_id = @conversationId AND sales_rep_id = @userId
+      ORDER BY updated_at DESC
+    `
+
+    const notesResult = await pool.request()
+      .input('conversationId', dbConfig.sql.Int, conversationId)
+      .input('userId', dbConfig.sql.Int, currentUser.id)
+      .query(notesQuery)
+
+    res.json({
+      success: true,
+      notes: notesResult.recordset
+    })
+  } catch (error) {
+    console.error('Error fetching notes:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch notes',
+      details: process.env.NODE_ENV !== 'production' ? error.message : undefined
+    })
+  }
+})
+
+// Create or update notes for a conversation
+router.post('/:id/notes', async (req, res) => {
+  try {
+    const conversationId = parseInt(req.params.id)
+    if (isNaN(conversationId)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid conversation ID'
+      })
+    }
+
+    const currentUser = getCurrentUser(req)
+    if (!currentUser) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      })
+    }
+
+    // Only sales reps can create/update notes
+    if (currentUser.role !== 'sales_rep') {
+      return res.status(403).json({
+        success: false,
+        error: 'Only sales representatives can create notes'
+      })
+    }
+
+    const { content } = req.body
+    if (typeof content !== 'string') {
+      return res.status(400).json({
+        success: false,
+        error: 'Notes content must be a string'
+      })
+    }
+
+    const pool = dbConfig.getPool()
+
+    // Check if user has access to this conversation
+    const accessQuery = 'SELECT id FROM conversations WHERE id = @conversationId AND sales_rep_id = @userId'
+    const accessResult = await pool.request()
+      .input('conversationId', dbConfig.sql.Int, conversationId)
+      .input('userId', dbConfig.sql.Int, currentUser.id)
+      .query(accessQuery)
+
+    if (accessResult.recordset.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Conversation not found or access denied'
+      })
+    }
+
+    // Create or update notes using MERGE
+    const notesQuery = `
+      MERGE conversation_notes AS target
+      USING (VALUES (@conversationId, @salesRepId)) AS source (conversation_id, sales_rep_id)
+      ON target.conversation_id = source.conversation_id AND target.sales_rep_id = source.sales_rep_id
+      WHEN MATCHED THEN
+        UPDATE SET
+          content = @content,
+          updated_at = GETDATE()
+      WHEN NOT MATCHED THEN
+        INSERT (conversation_id, sales_rep_id, content, created_at, updated_at)
+        VALUES (@conversationId, @salesRepId, @content, GETDATE(), GETDATE())
+      OUTPUT $action, INSERTED.*;
+    `
+
+    const notesResult = await pool.request()
+      .input('conversationId', dbConfig.sql.Int, conversationId)
+      .input('salesRepId', dbConfig.sql.Int, currentUser.id)
+      .input('content', dbConfig.sql.Text, content)
+      .query(notesQuery)
+
+    const savedNote = notesResult.recordset[0]
+    const action = savedNote.$action
+
+    res.json({
+      success: true,
+      message: `Notes ${action === 'INSERT' ? 'created' : 'updated'} successfully`,
+      note: {
+        id: savedNote.id,
+        conversation_id: savedNote.conversation_id,
+        content: savedNote.content,
+        created_at: savedNote.created_at,
+        updated_at: savedNote.updated_at
+      },
+      action
+    })
+  } catch (error) {
+    console.error('Error saving notes:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Failed to save notes',
+      details: process.env.NODE_ENV !== 'production' ? error.message : undefined
+    })
+  }
+})
+
+// Delete notes for a conversation
+router.delete('/:id/notes', async (req, res) => {
+  try {
+    const conversationId = parseInt(req.params.id)
+    if (isNaN(conversationId)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid conversation ID'
+      })
+    }
+
+    const currentUser = getCurrentUser(req)
+    if (!currentUser) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      })
+    }
+
+    // Only sales reps can delete notes
+    if (currentUser.role !== 'sales_rep') {
+      return res.status(403).json({
+        success: false,
+        error: 'Only sales representatives can delete notes'
+      })
+    }
+
+    const pool = dbConfig.getPool()
+
+    // Check if user has access to this conversation and notes exist
+    const checkQuery = `
+      SELECT cn.id
+      FROM conversation_notes cn
+      INNER JOIN conversations c ON cn.conversation_id = c.id
+      WHERE cn.conversation_id = @conversationId
+        AND cn.sales_rep_id = @userId
+        AND c.sales_rep_id = @userId
+    `
+
+    const checkResult = await pool.request()
+      .input('conversationId', dbConfig.sql.Int, conversationId)
+      .input('userId', dbConfig.sql.Int, currentUser.id)
+      .query(checkQuery)
+
+    if (checkResult.recordset.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Notes not found or access denied'
+      })
+    }
+
+    // Delete notes
+    const deleteQuery = `
+      DELETE FROM conversation_notes
+      WHERE conversation_id = @conversationId AND sales_rep_id = @userId
+    `
+
+    await pool.request()
+      .input('conversationId', dbConfig.sql.Int, conversationId)
+      .input('userId', dbConfig.sql.Int, currentUser.id)
+      .query(deleteQuery)
+
+    res.json({
+      success: true,
+      message: 'Notes deleted successfully'
+    })
+  } catch (error) {
+    console.error('Error deleting notes:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete notes',
       details: process.env.NODE_ENV !== 'production' ? error.message : undefined
     })
   }
