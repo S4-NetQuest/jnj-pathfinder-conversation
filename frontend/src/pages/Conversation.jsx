@@ -85,6 +85,10 @@ const Conversation = () => {
       const conversationData = response.data.conversation
       setConversation(conversationData)
 
+      // Check if conversation is completed
+      const isCompleted = conversationData.status === 'completed'
+      setCompleted(isCompleted)
+
       // Load existing responses
       const responseMap = {}
       if (conversationData.responses && conversationData.responses.length > 0) {
@@ -100,12 +104,39 @@ const Conversation = () => {
       }
       setResponses(responseMap)
 
-      // Load notes if user is sales rep - await this call
+      // Set current question index based on completion status and responses
+      if (isCompleted) {
+        // For completed conversations, show the results (set to last question)
+        setCurrentQuestionIndex(questions.length - 1)
+      } else {
+        // For in-progress conversations, find the first unanswered question
+        let nextQuestionIndex = 0
+        for (let i = 0; i < questions.length; i++) {
+          if (responseMap[questions[i].id]) {
+            nextQuestionIndex = i + 1
+          } else {
+            break
+          }
+        }
+        // Make sure we don't go beyond the last question
+        setCurrentQuestionIndex(Math.min(nextQuestionIndex, questions.length - 1))
+      }
+
+      // Load existing scores if conversation is completed
+      if (isCompleted && conversationData.alignment_score_ka !== undefined) {
+        setScores({
+          ka: conversationData.alignment_score_ka || 0,
+          ika: conversationData.alignment_score_ika || 0,
+          fa: conversationData.alignment_score_fa || 0,
+          ma: conversationData.alignment_score_ma || 0,
+        })
+      }
+
+      // Load notes if user is sales rep
       if (user?.role === 'sales_rep') {
         await fetchNotes()
       }
 
-      setCompleted(conversationData.status === 'completed')
     } catch (error) {
       console.error('Error fetching conversation:', error)
       toast({
@@ -150,7 +181,6 @@ const Conversation = () => {
     setNotesContent(notes)
     onNotesOpen()
   }
-
 
   const calculateScores = () => {
     const newScores = {
@@ -272,6 +302,13 @@ const Conversation = () => {
   }
 
   const getRecommendedAlignment = () => {
+    // For completed conversations, use the stored recommended approach first
+    if (completed && conversation?.recommended_approach) {
+      const approach = conversation.recommended_approach.toLowerCase()
+      return alignmentTypes[approach] || null
+    }
+
+    // Otherwise calculate from current scores
     const maxScore = Math.max(...Object.values(scores))
     const recommendedKey = Object.entries(scores).find(([_, score]) => score === maxScore)?.[0]
     return recommendedKey ? alignmentTypes[recommendedKey] : null
@@ -320,6 +357,10 @@ const Conversation = () => {
     ]
   }
 
+  // Calculate the number of answered questions
+  const answeredQuestionsCount = Object.keys(responses).length
+  const totalQuestionsCount = questions.length
+
   if (loading) {
     return (
       <Container maxW="container.lg" py={8}>
@@ -329,8 +370,36 @@ const Conversation = () => {
   }
 
   const currentQuestion = questions[currentQuestionIndex]
-  const progress = ((currentQuestionIndex + 1) / questions.length) * 100
+
+  // Calculate progress based on completion status
+  let progress
+  let progressText
+
+  if (completed) {
+    progress = 100
+    progressText = 'Completed'
+  } else {
+    progress = (answeredQuestionsCount / totalQuestionsCount) * 100
+    progressText = `${answeredQuestionsCount} of ${totalQuestionsCount} answered`
+  }
+
   const recommendedAlignment = getRecommendedAlignment()
+
+  const handleExploreKinematicRestoration = () => {
+    window.open('https://home.jnj.com/sites/velys-digital-surgery/SitePageModern/1892994/velys-robotic-assisted-solution-1-8', '_blank', 'noopener,noreferrer')
+  }
+
+  const handleComparePhilosophies = () => {
+    navigate('/compare-philosophies')
+  }
+
+  const handleSellingQuestions = () => {
+    navigate('/selling-questions-philosophies')
+  }
+
+  const handleReferences = () => {
+    navigate('/references')
+  }
 
   return (
     <Container maxW="container.lg" py={8}>
@@ -354,6 +423,12 @@ const Conversation = () => {
                     <Text fontSize="sm" color="#81766f">
                       Date: {new Date(conversation.conversation_date).toLocaleDateString()}
                     </Text>
+                    {/* Show completion status for completed conversations */}
+                    {completed && (
+                      <Badge colorScheme="green" variant="solid">
+                        Completed
+                      </Badge>
+                    )}
                   </VStack>
                 )}
               </Box>
@@ -390,19 +465,22 @@ const Conversation = () => {
               </HStack>
             </Flex>
 
-            {/* Progress */}
+            {/* Progress - Show different info for completed vs in-progress */}
             <Box>
               <Flex justify="space-between" mb={2}>
                 <Text fontSize="sm" color="#81766f">
-                  Question {currentQuestionIndex + 1} of {questions.length}
+                  {completed ?
+                    'Assessment Results' :
+                    `Question ${currentQuestionIndex + 1} of ${questions.length}`
+                  }
                 </Text>
                 <Text fontSize="sm" color="#81766f">
-                  {Math.round(progress)}% Complete
+                  {progressText}
                 </Text>
               </Flex>
               <Progress
                 value={progress}
-                colorScheme="red"
+                colorScheme={completed ? "green" : "red"}
                 bg="#e8e6e3"
                 borderRadius="full"
                 size="sm"
@@ -516,87 +594,125 @@ const Conversation = () => {
               </Card>
             )}
 
-            {/* Radar Chart */}
-            <Card>
-              <CardBody>
-                <Text fontSize="lg" fontWeight="bold" color="#6e6259" mb={4}>
-                  Alignment Philosophy Scores
-                </Text>
-                <Box h="400px" w="100%">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <RadarChart data={getRadarChartData()}>
-                      <PolarGrid stroke="#cbc4bc" />
-                      <PolarAngleAxis
-                        dataKey="alignment"
-                        tick={{ fontSize: 14, fill: '#6e6259' }}
-                      />
-                      <PolarRadiusAxis
-                        angle={90}
-                        domain={[0, Math.max(
-                          getMaxPossibleScore('ka'),
-                          getMaxPossibleScore('ika'),
-                          getMaxPossibleScore('fa'),
-                          getMaxPossibleScore('ma')
-                        )]}
-                        tick={{ fontSize: 12, fill: '#81766f' }}
-                      />
-                      <Radar
-                        name="Score"
-                        dataKey="score"
-                        stroke="#eb1700"
-                        fill="#eb1700"
-                        fillOpacity={0.2}
-                        strokeWidth={2}
-                      />
-                    </RadarChart>
-                  </ResponsiveContainer>
-                </Box>
-              </CardBody>
-            </Card>
-
-            {/* Score Breakdown */}
-            <Card>
-              <CardBody>
-                <Text fontSize="lg" fontWeight="bold" color="#6e6259" mb={4}>
-                  Score Breakdown
-                </Text>
-                <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
-                  {Object.entries(alignmentTypes).map(([key, alignment]) => {
-                    const maxForAlignment = getMaxPossibleScore(key)
-                    return (
-                      <Box key={key} p={4} bg="#f1efed" borderRadius="md">
-                        <Flex justify="space-between" align="center" mb={2}>
-                          <Text fontSize="sm" fontWeight="medium" color="#6e6259">
-                            {alignment.name}
-                          </Text>
-                          <Badge
-                            bg={alignment.color}
-                            color="white"
-                            px={2}
-                            py={1}
-                            borderRadius="md"
-                            fontSize="xs"
-                          >
-                            {scores[key]} / {maxForAlignment}
-                          </Badge>
-                        </Flex>
-                        <Progress
-                          value={(scores[key] / maxForAlignment) * 100}
-                          bg="#e8e6e3"
-                          borderRadius="full"
-                          size="sm"
-                          sx={{
-                            '& > div': {
-                              bg: alignment.color
-                            }
-                          }}
+            <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={4} align="start">
+              {/* Radar Chart */}
+              <Card>
+                <CardBody>
+                  <Text fontSize="lg" fontWeight="bold" color="#6e6259" mb={4}>
+                    Alignment Philosophy Scores
+                  </Text>
+                  <Box h="400px" w="100%">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RadarChart data={getRadarChartData()}>
+                        <PolarGrid stroke="#cbc4bc" />
+                        <PolarAngleAxis
+                          dataKey="alignment"
+                          tick={{ fontSize: 14, fill: '#6e6259' }}
                         />
-                      </Box>
-                    )
-                  })}
-                </SimpleGrid>
-              </CardBody>
-            </Card>
+                        <PolarRadiusAxis
+                          angle={90}
+                          domain={[0, Math.max(
+                            getMaxPossibleScore('ka'),
+                            getMaxPossibleScore('ika'),
+                            getMaxPossibleScore('fa'),
+                            getMaxPossibleScore('ma')
+                          )]}
+                          tick={{ fontSize: 12, fill: '#81766f' }}
+                        />
+                        <Radar
+                          name="Score"
+                          dataKey="score"
+                          stroke="#eb1700"
+                          fill="#eb1700"
+                          fillOpacity={0.2}
+                          strokeWidth={2}
+                        />
+                      </RadarChart>
+                    </ResponsiveContainer>
+                  </Box>
+                </CardBody>
+              </Card>
+
+              {/* Score Breakdown */}
+              <Card>
+                <CardBody>
+                  <Text fontSize="lg" fontWeight="bold" color="#6e6259" mb={4}>
+                    Score Breakdown
+                  </Text>
+                  <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+                    {Object.entries(alignmentTypes).map(([key, alignment]) => {
+                      const maxForAlignment = getMaxPossibleScore(key)
+                      return (
+                        <Box key={key} p={5} bg="#f1efed" borderRadius="md">
+                          <Flex justify="space-between" align="start" mb={2}>
+                            <Text fontSize="sm" fontWeight="medium" color="#6e6259" pt={0.5}>
+                              {alignment.name}
+                            </Text>
+                            <Badge
+                              bg={alignment.color}
+                              color="white"
+                              px={2}
+                              py={1}
+                              borderRadius="md"
+                              fontSize="xs"
+                            >
+                              {scores[key]} / {maxForAlignment}
+                            </Badge>
+                          </Flex>
+                          <Progress
+                            value={(scores[key] / maxForAlignment) * 100}
+                            bg="#e8e6e3"
+                            borderRadius="full"
+                            size="sm"
+                            sx={{
+                              '& > div': {
+                                bg: alignment.color
+                              }
+                            }}
+                          />
+                        </Box>
+                      )
+                    })}
+                  </SimpleGrid>
+                </CardBody>
+              </Card>
+            </SimpleGrid>
+
+            {/* Buttons Section */}
+            <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={4} align="start">
+              <Button
+                colorScheme="red"
+                size="lg"
+                onClick={handleExploreKinematicRestoration}
+              >
+                Explore Kinematic Restoration
+              </Button>
+
+              <Button
+                colorScheme="red"
+                size="lg"
+                onClick={handleComparePhilosophies}
+              >
+                Compare Philosophies Tool
+              </Button>
+
+              <Button
+                colorScheme="red"
+                size="lg"
+                onClick={handleSellingQuestions}
+              >
+                Challenger Selling Philosophy Questions
+              </Button>
+
+              <Button
+                colorScheme="red"
+                size="lg"
+                onClick={handleReferences}
+              >
+                References / Citations
+              </Button>
+
+            </SimpleGrid>
 
             {/* Actions */}
             <HStack justify="center" spacing={4}>
