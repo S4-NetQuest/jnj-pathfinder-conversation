@@ -1,4 +1,4 @@
-// backend/validation/schemas.js (Updated with flexible case handling)
+// backend/validation/schemas.js (Updated to allow future dates and improve error messages)
 import Joi from 'joi'
 
 // Volume options
@@ -25,7 +25,7 @@ const ALIGNMENT_DISPLAY_NAMES = {
   'ika': 'Inverse Kinematic Alignment',
   'FA': 'Functional Alignment',
   'fa': 'Functional Alignment',
-  'MA': 'Mechanical Alignment',  // Fixed: was "Manual" should be "Mechanical"
+  'MA': 'Mechanical Alignment',
   'ma': 'Mechanical Alignment'
 }
 
@@ -95,7 +95,7 @@ export const createConversationSchema = Joi.object({
     .required()
     .valid(...VOLUME_OPTIONS)
     .messages({
-      'any.only': `Surgeon volume must be one of: ${VOLUME_OPTIONS.join(', ')}`,
+      'any.only': 'Please select a valid volume range from the dropdown',
       'any.required': 'Surgeon knee arthroplasty volume per year is required'
     }),
 
@@ -103,7 +103,7 @@ export const createConversationSchema = Joi.object({
     .required()
     .valid(...BOOLEAN_STRING_OPTIONS)
     .messages({
-      'any.only': 'Robotics usage must be either "true" or "false"',
+      'any.only': 'Please select whether the surgeon uses robotics',
       'any.required': 'Robotics usage information is required'
     }),
 
@@ -111,16 +111,18 @@ export const createConversationSchema = Joi.object({
     .required()
     .valid(...ALIGNMENT_OPTIONS_ALL)
     .messages({
-      'any.only': `Current alignment must be one of: ${ALIGNMENT_OPTIONS_LOWER.join(', ')} (ka=Kinematic, ika=Inverse Kinematic, fa=Functional, ma=Mechanical)`,
+      'any.only': 'Please select a valid alignment approach from the dropdown',
       'any.required': 'Current alignment approach is required'
     }),
 
   conversation_date: Joi.date()
     .required()
-    .max('now')
+    .min('1900-01-01')  // Allow reasonable date range but not too far in the past
+    .max('2100-12-31')  // Allow future dates up to a reasonable limit
     .messages({
-      'date.base': 'Conversation date must be a valid date',
-      'date.max': 'Conversation date cannot be in the future',
+      'date.base': 'Please enter a valid date',
+      'date.min': 'Conversation date cannot be before January 1, 1900',
+      'date.max': 'Conversation date cannot be after December 31, 2100',
       'any.required': 'Conversation date is required'
     })
 })
@@ -129,7 +131,7 @@ export const updateConversationSchema = Joi.object({
   status: Joi.string()
     .valid(...STATUS_OPTIONS)
     .messages({
-      'any.only': `Status must be one of: ${STATUS_OPTIONS.join(', ')}`
+      'any.only': 'Status must be in progress, completed, or abandoned'
     }),
 
   notes: Joi.string()
@@ -143,19 +145,19 @@ export const updateConversationSchema = Joi.object({
   recommended_approach: Joi.string()
     .valid(...ALIGNMENT_OPTIONS_ALL)
     .messages({
-      'any.only': `Recommended approach must be one of: ${ALIGNMENT_OPTIONS_LOWER.join(', ')} (ka=Kinematic, ika=Inverse Kinematic, fa=Functional, ma=Mechanical)`
+      'any.only': 'Please select a valid alignment approach'
     }),
 
   recommendedApproach: Joi.string()
     .valid(...ALIGNMENT_OPTIONS_ALL)
     .messages({
-      'any.only': `Recommended approach must be one of: ${ALIGNMENT_OPTIONS_LOWER.join(', ')} (ka=Kinematic, ika=Inverse Kinematic, fa=Functional, ma=Mechanical)`
+      'any.only': 'Please select a valid alignment approach'
     }),
 
   surgeon_volume_per_year: Joi.string()
     .valid(...VOLUME_OPTIONS)
     .messages({
-      'any.only': `Surgeon volume must be one of: ${VOLUME_OPTIONS.join(', ')}`
+      'any.only': 'Please select a valid volume range from the dropdown'
     }),
 
   uses_robotics: Joi.alternatives()
@@ -164,38 +166,38 @@ export const updateConversationSchema = Joi.object({
       Joi.boolean()
     )
     .messages({
-      'alternatives.match': 'Robotics usage must be a boolean value or "true"/"false" string'
+      'alternatives.match': 'Please select whether robotics are used'
     }),
 
   current_alignment: Joi.string()
     .valid(...ALIGNMENT_OPTIONS_ALL)
     .messages({
-      'any.only': `Current alignment must be one of: ${ALIGNMENT_OPTIONS_LOWER.join(', ')} (ka=Kinematic, ika=Inverse Kinematic, fa=Functional, ma=Mechanical)`
+      'any.only': 'Please select a valid alignment approach from the dropdown'
     }),
 
   alignment_scores: Joi.object({
     ka: Joi.number().min(0).max(4).integer().messages({
-      'number.min': 'KA (Kinematic Alignment) score must be between 0 and 4',
-      'number.max': 'KA (Kinematic Alignment) score must be between 0 and 4',
-      'number.integer': 'KA (Kinematic Alignment) score must be a whole number'
+      'number.min': 'KA score must be between 0 and 4',
+      'number.max': 'KA score must be between 0 and 4',
+      'number.integer': 'KA score must be a whole number'
     }),
     ika: Joi.number().min(0).max(4).integer().messages({
-      'number.min': 'iKA (Inverse Kinematic Alignment) score must be between 0 and 4',
-      'number.max': 'iKA (Inverse Kinematic Alignment) score must be between 0 and 4',
-      'number.integer': 'iKA (Inverse Kinematic Alignment) score must be a whole number'
+      'number.min': 'iKA score must be between 0 and 4',
+      'number.max': 'iKA score must be between 0 and 4',
+      'number.integer': 'iKA score must be a whole number'
     }),
     fa: Joi.number().min(0).max(4).integer().messages({
-      'number.min': 'FA (Functional Alignment) score must be between 0 and 4',
-      'number.max': 'FA (Functional Alignment) score must be between 0 and 4',
-      'number.integer': 'FA (Functional Alignment) score must be a whole number'
+      'number.min': 'FA score must be between 0 and 4',
+      'number.max': 'FA score must be between 0 and 4',
+      'number.integer': 'FA score must be a whole number'
     }),
     ma: Joi.number().min(0).max(4).integer().messages({
-      'number.min': 'MA (Mechanical Alignment) score must be between 0 and 4',
-      'number.max': 'MA (Mechanical Alignment) score must be between 0 and 4',
-      'number.integer': 'MA (Mechanical Alignment) score must be a whole number'
+      'number.min': 'MA score must be between 0 and 4',
+      'number.max': 'MA score must be between 0 and 4',
+      'number.integer': 'MA score must be a whole number'
     })
   }).messages({
-    'object.unknown': 'Unknown alignment score field'
+    'object.unknown': 'Invalid score field provided'
   })
 }).min(1).messages({
   'object.min': 'At least one field must be provided for update'
@@ -209,14 +211,14 @@ export const responseSchema = Joi.object({
     .messages({
       'string.empty': 'Question ID is required',
       'string.min': 'Question ID cannot be empty',
-      'string.max': 'Question ID cannot exceed 100 characters',
+      'string.max': 'Question ID is too long',
       'any.required': 'Question ID is required'
     }),
 
   responseValue: Joi.any()
     .required()
     .messages({
-      'any.required': 'Response value is required'
+      'any.required': 'Please provide a response'
     }),
 
   scores: Joi.object({
@@ -226,10 +228,10 @@ export const responseSchema = Joi.object({
       .max(4)
       .integer()
       .messages({
-        'number.min': 'KA (Kinematic Alignment) score must be between 0 and 4',
-        'number.max': 'KA (Kinematic Alignment) score must be between 0 and 4',
-        'number.integer': 'KA (Kinematic Alignment) score must be a whole number',
-        'any.required': 'KA (Kinematic Alignment) score is required'
+        'number.min': 'KA score must be between 0 and 4',
+        'number.max': 'KA score must be between 0 and 4',
+        'number.integer': 'KA score must be a whole number',
+        'any.required': 'KA score is required'
       }),
 
     ika: Joi.number()
@@ -238,10 +240,10 @@ export const responseSchema = Joi.object({
       .max(4)
       .integer()
       .messages({
-        'number.min': 'iKA (Inverse Kinematic Alignment) score must be between 0 and 4',
-        'number.max': 'iKA (Inverse Kinematic Alignment) score must be between 0 and 4',
-        'number.integer': 'iKA (Inverse Kinematic Alignment) score must be a whole number',
-        'any.required': 'iKA (Inverse Kinematic Alignment) score is required'
+        'number.min': 'iKA score must be between 0 and 4',
+        'number.max': 'iKA score must be between 0 and 4',
+        'number.integer': 'iKA score must be a whole number',
+        'any.required': 'iKA score is required'
       }),
 
     fa: Joi.number()
@@ -250,10 +252,10 @@ export const responseSchema = Joi.object({
       .max(4)
       .integer()
       .messages({
-        'number.min': 'FA (Functional Alignment) score must be between 0 and 4',
-        'number.max': 'FA (Functional Alignment) score must be between 0 and 4',
-        'number.integer': 'FA (Functional Alignment) score must be a whole number',
-        'any.required': 'FA (Functional Alignment) score is required'
+        'number.min': 'FA score must be between 0 and 4',
+        'number.max': 'FA score must be between 0 and 4',
+        'number.integer': 'FA score must be a whole number',
+        'any.required': 'FA score is required'
       }),
 
     ma: Joi.number()
@@ -262,14 +264,14 @@ export const responseSchema = Joi.object({
       .max(4)
       .integer()
       .messages({
-        'number.min': 'MA (Mechanical Alignment) score must be between 0 and 4',
-        'number.max': 'MA (Mechanical Alignment) score must be between 0 and 4',
-        'number.integer': 'MA (Mechanical Alignment) score must be a whole number',
-        'any.required': 'MA (Mechanical Alignment) score is required'
+        'number.min': 'MA score must be between 0 and 4',
+        'number.max': 'MA score must be between 0 and 4',
+        'number.integer': 'MA score must be a whole number',
+        'any.required': 'MA score is required'
       })
   }).required().messages({
-    'any.required': 'Scores object is required',
-    'object.unknown': 'Unknown score field - only ka, ika, fa, and ma are allowed'
+    'any.required': 'Scores are required',
+    'object.unknown': 'Invalid score field - only ka, ika, fa, and ma are allowed'
   })
 })
 
@@ -304,7 +306,7 @@ export const devLoginSchema = Joi.object({
     'any.required': 'Email is required'
   }),
   role: Joi.string().valid('sales_rep', 'surgeon').required().messages({
-    'any.only': 'Role must be either "sales_rep" or "surgeon"',
+    'any.only': 'Role must be either sales representative or surgeon',
     'any.required': 'Role is required'
   })
 })

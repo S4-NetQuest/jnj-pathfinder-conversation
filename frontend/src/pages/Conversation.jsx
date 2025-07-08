@@ -641,7 +641,7 @@ const Conversation = () => {
                       return (
                         <Box key={key} p={5} bg="#f1efed" borderRadius="md">
                           <Flex justify="space-between" align="start" mb={2}>
-                            <Text fontSize="sm" fontWeight="medium" color="#6e6259" pt={0.5}>
+                            <Text fontSize="sm" fontWeight="medium" color="#6e6259" pt={0.5} ml={2}>
                               {alignment.name}
                             </Text>
                             <Badge

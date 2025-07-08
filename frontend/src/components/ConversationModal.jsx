@@ -20,6 +20,7 @@ import {
   RadioGroup,
   Radio,
   HStack,
+  Box,
 } from '@chakra-ui/react'
 import { useAuth } from '../contexts/AuthContext'
 import api from '../services/api'
@@ -28,7 +29,6 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
   const { user } = useAuth()
   const toast = useToast()
   const [loading, setLoading] = useState(false)
-  const [debugInfo, setDebugInfo] = useState(null)
   const [formData, setFormData] = useState({
     surgeon_name: user?.role === 'surgeon' ? user.name || '' : '',
     hospital_name: '',
@@ -46,45 +46,90 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
     }))
   }
 
+  // Function to get user-friendly error message
+  const getUserFriendlyErrorMessage = (error) => {
+    // If the error is from validation, it's already user-friendly
+    if (error.response?.data?.error) {
+      const errorMessage = error.response.data.error
+
+      // Check if it's a validation error (these are already user-friendly)
+      if (errorMessage.includes('required') ||
+          errorMessage.includes('must be') ||
+          errorMessage.includes('cannot be') ||
+          errorMessage.includes('select a valid') ||
+          errorMessage.includes('Please')) {
+        return errorMessage
+      }
+    }
+
+    // Handle network and other errors with user-friendly messages
+    if (error.code === 'NETWORK_ERROR' || error.message.includes('Network Error')) {
+      return 'Unable to connect to the server. Please check your internet connection and try again.'
+    }
+
+    if (error.code === 'ECONNREFUSED' || error.message.includes('ECONNREFUSED')) {
+      return 'The server is currently unavailable. Please try again in a few moments.'
+    }
+
+    if (error.response?.status === 500) {
+      return 'A server error occurred. Please try again or contact support if the problem persists.'
+    }
+
+    if (error.response?.status === 401) {
+      return 'Your session has expired. Please refresh the page and log in again.'
+    }
+
+    if (error.response?.status === 403) {
+      return 'You do not have permission to perform this action.'
+    }
+
+    if (error.response?.status === 400) {
+      return 'Please check your input and try again.'
+    }
+
+    if (error.message.includes('timeout')) {
+      return 'The request took too long to complete. Please try again.'
+    }
+
+    // Default user-friendly message
+    return 'An unexpected error occurred. Please try again or contact support if the problem continues.'
+  }
+
   const handleSubmit = async () => {
     console.log('=== CONVERSATION CREATION DEBUG START ===')
     console.log('User:', user)
     console.log('Form Data:', formData)
 
-    // Clear previous debug info
-    setDebugInfo(null)
-
-    // Validation
-    const validationErrors = []
+    // Basic client-side validation for better UX
+    const clientValidationErrors = []
     if (!formData.surgeon_name.trim()) {
-      validationErrors.push('Surgeon name is required')
+      clientValidationErrors.push('Surgeon name is required')
     }
     if (!formData.hospital_name.trim()) {
-      validationErrors.push('Hospital name is required')
+      clientValidationErrors.push('Hospital name is required')
     }
     if (!formData.surgery_center_name.trim()) {
-      validationErrors.push('Surgery Center name is required')
+      clientValidationErrors.push('Surgery Center name is required')
     }
     if (!formData.surgeon_volume_per_year) {
-      validationErrors.push('Surgeon knee arthroplasty volume per year is required')
+      clientValidationErrors.push('Please select surgeon volume per year')
     }
     if (!formData.uses_robotics) {
-      validationErrors.push('Robotics usage information is required')
+      clientValidationErrors.push('Please select whether the surgeon uses robotics')
     }
     if (!formData.current_alignment) {
-      validationErrors.push('Current alignment approach is required')
+      clientValidationErrors.push('Please select current alignment approach')
     }
     if (!formData.conversation_date) {
-      validationErrors.push('Conversation date is required')
+      clientValidationErrors.push('Conversation date is required')
     }
 
-    if (validationErrors.length > 0) {
-      console.log('Validation errors:', validationErrors)
-      setDebugInfo({ type: 'validation', errors: validationErrors })
+    if (clientValidationErrors.length > 0) {
+      console.log('Client validation errors:', clientValidationErrors)
       toast({
-        title: 'Validation Error',
-        description: validationErrors.join(', '),
-        status: 'error',
+        title: 'Please Complete All Fields',
+        description: clientValidationErrors[0], // Show the first error
+        status: 'warning',
         duration: 5000,
         isClosable: true,
       })
@@ -92,30 +137,20 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
     }
 
     setLoading(true)
-    setDebugInfo({ type: 'loading', message: 'Starting request...' })
 
     try {
       console.log('Making API request to /api/conversations')
       console.log('Request payload:', formData)
 
-      // Add timeout to the request
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Request timeout after 30 seconds')), 30000)
-      })
-
-      const apiPromise = api.post('/conversations', formData)
-
-      const response = await Promise.race([apiPromise, timeoutPromise])
+      const response = await api.post('/conversations', formData)
 
       console.log('API Response received:', response)
       console.log('Response status:', response.status)
       console.log('Response data:', response.data)
 
-      setDebugInfo({ type: 'response', data: response.data })
-
       if (response.data.success) {
         toast({
-          title: 'Success',
+          title: 'Success!',
           description: 'Conversation created successfully',
           status: 'success',
           duration: 3000,
@@ -144,23 +179,13 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
       console.error('Error object:', error)
       console.error('Error message:', error.message)
       console.error('Error response:', error.response)
-      console.error('Error response data:', error.response?.data)
-      console.error('Error response status:', error.response?.status)
-      console.error('Error response headers:', error.response?.headers)
       console.error('=== END ERROR DETAILS ===')
 
-      const errorMessage = error.response?.data?.error || error.message || 'Failed to create conversation'
-
-      setDebugInfo({
-        type: 'error',
-        error: errorMessage,
-        status: error.response?.status,
-        fullError: error
-      })
+      const userFriendlyMessage = getUserFriendlyErrorMessage(error)
 
       toast({
-        title: 'Error',
-        description: errorMessage,
+        title: 'Unable to Create Conversation',
+        description: userFriendlyMessage,
         status: 'error',
         duration: 8000,
         isClosable: true,
@@ -172,7 +197,7 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
   }
 
   const handleClose = () => {
-    // Reset form and debug info when closing
+    // Reset form when closing
     setFormData({
       surgeon_name: user?.role === 'surgeon' ? user.name || '' : '',
       hospital_name: '',
@@ -182,7 +207,6 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
       current_alignment: '',
       conversation_date: new Date().toISOString().split('T')[0]
     })
-    setDebugInfo(null)
     onClose()
   }
 
@@ -226,20 +250,10 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
 
         <ModalBody py={6}>
           <VStack spacing={5} align="stretch">
-            {/* Debug Information */}
-            {process.env.NODE_ENV === 'development' && debugInfo && (
-              <Alert status={debugInfo.type === 'error' ? 'error' : 'info'} fontSize="sm">
-                <AlertIcon />
-                <VStack align="start" spacing={1}>
-                  <Text fontWeight="bold">Debug Info:</Text>
-                  <Text>{JSON.stringify(debugInfo, null, 2)}</Text>
-                </VStack>
-              </Alert>
-            )}
-
             <FormControl isRequired>
               <FormLabel fontSize="sm" fontWeight="medium" color="#312c2a">
                 {user?.role === 'surgeon' ? 'Your Name' : 'Surgeon Name(s)'}
+                <Text as="span" color="#eb1700" ml={1}>*</Text>
               </FormLabel>
               <Input
                 value={formData.surgeon_name}
@@ -255,6 +269,7 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
             <FormControl isRequired>
               <FormLabel fontSize="sm" fontWeight="medium" color="#312c2a">
                 Affiliated Hospital
+                <Text as="span" color="#eb1700" ml={1}>*</Text>
               </FormLabel>
               <Input
                 value={formData.hospital_name}
@@ -269,6 +284,7 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
             <FormControl isRequired>
               <FormLabel fontSize="sm" fontWeight="medium" color="#312c2a">
                 Affiliated Surgery Center
+                <Text as="span" color="#eb1700" ml={1}>*</Text>
               </FormLabel>
               <Input
                 value={formData.surgery_center_name}
@@ -283,6 +299,7 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
             <FormControl isRequired>
               <FormLabel fontSize="sm" fontWeight="medium" color="#312c2a">
                 Surgeon Knee Arthroplasty Volume / Year
+                <Text as="span" color="#eb1700" ml={1}>*</Text>
               </FormLabel>
               <Select
                 value={formData.surgeon_volume_per_year}
@@ -302,6 +319,7 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
             <FormControl isRequired>
               <FormLabel fontSize="sm" fontWeight="medium" color="#312c2a">
                 Is the surgeon currently using robotics?
+                <Text as="span" color="#eb1700" ml={1}>*</Text>
               </FormLabel>
               <RadioGroup
                 value={formData.uses_robotics}
@@ -322,6 +340,7 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
             <FormControl isRequired>
               <FormLabel fontSize="sm" fontWeight="medium" color="#312c2a">
                 Current Alignment Philosophy
+                <Text as="span" color="#eb1700" ml={1}>*</Text>
               </FormLabel>
               <Select
                 value={formData.current_alignment}
@@ -334,13 +353,14 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
                 <option value="KA">KA (Kinematic Alignment)</option>
                 <option value="iKA">iKA (Inverse Kinematic Alignment)</option>
                 <option value="FA">FA (Functional Alignment)</option>
-                <option value="MA">MA (Manual Alignment)</option>
+                <option value="MA">MA (Mechanical Alignment)</option>
               </Select>
             </FormControl>
 
             <FormControl isRequired>
               <FormLabel fontSize="sm" fontWeight="medium" color="#312c2a">
                 Conversation Date
+                <Text as="span" color="#eb1700" ml={1}>*</Text>
               </FormLabel>
               <Input
                 type="date"
@@ -350,19 +370,19 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
                 bg="white"
                 isDisabled={loading}
               />
+              <Text fontSize="xs" color="#6e6259" mt={1}>
+                You can schedule conversations for future dates
+              </Text>
             </FormControl>
 
-            {/* User Info Debug (development only) */}
+            {/* User Info for development only */}
             {process.env.NODE_ENV === 'development' && (
-              <Alert status="info" fontSize="xs">
-                <AlertIcon />
-                <VStack align="start" spacing={1}>
-                  <Text fontWeight="bold">Current User:</Text>
-                  <Text>Role: {user?.role}</Text>
-                  <Text>Name: {user?.name}</Text>
-                  <Text>ID: {user?.id}</Text>
-                </VStack>
-              </Alert>
+              <Box p={3} bg="#f1efed" borderRadius="md" fontSize="xs">
+                <Text fontWeight="bold" color="#312c2a">Development Info:</Text>
+                <Text color="#6e6259">Role: {user?.role}</Text>
+                <Text color="#6e6259">Name: {user?.name}</Text>
+                <Text color="#6e6259">ID: {user?.id}</Text>
+              </Box>
             )}
           </VStack>
         </ModalBody>
@@ -373,6 +393,9 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
             mr={3}
             onClick={handleClose}
             isDisabled={loading}
+            borderColor="#d5cfc9"
+            color="#312c2a"
+            _hover={{ borderColor: "#cbc4bc", bg: "#f1efed" }}
           >
             Cancel
           </Button>
