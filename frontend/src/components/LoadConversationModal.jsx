@@ -396,7 +396,7 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
                         {/* Current Alignment */}
                         {conversation.current_alignment && (
                           <HStack spacing={2}>
-                            <Text fontSize="sm" color="#6e6259">Current Alignment:</Text>
+                            <Text fontSize="sm" color="#6e6259">Current Alignment Philosophy:</Text>
                             <Badge
                               colorScheme={getAlignmentColor(conversation.current_alignment)}
                               variant="solid"

@@ -321,7 +321,7 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
 
             <FormControl isRequired>
               <FormLabel fontSize="sm" fontWeight="medium" color="#312c2a">
-                Current Alignment
+                Current Alignment Philosophy
               </FormLabel>
               <Select
                 value={formData.current_alignment}

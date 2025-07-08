@@ -1,0 +1,16 @@
+Load Conversation Modal
+	convert scores to percentage of total for each philosophy
+Conversation Summary
+	convert scores to percentage of total for each philosophy
+	convert graph values accordingly to percentages
+	add Button called Schedule Follow-up
+		I suggested a modal that allows a calendar entry template to be copied to the clipboard. 
+		Will investigate other UX options - primary target is iOS
+			Modal Title: J&J MedTech KR Follow up with {Dr}
+			Modal Description: TBD
+References & Citations
+	remove study type and subcategory filters / icons
+	replace study type icon in cards with JnJ Robotics icon if indicated by metadata (JJMT_Icon_Robotics_RGB)  
+Create once example conversation that shows each modality
+Create a list of questions relating to the scoring / summary presentation (i.e. how to handle ties or scores within a certain range)
+Publish to Stage and make available by 7/11 for JnJ internal review
