@@ -29,6 +29,7 @@ import {
 import { SearchIcon, CalendarIcon, TimeIcon } from '@chakra-ui/icons'
 import { useAuth } from '../contexts/AuthContext'
 import api from '../services/api'
+import questionsData from '../data/questions.json'
 
 const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
   const { user } = useAuth()
@@ -52,6 +53,20 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
   useEffect(() => {
     filterConversations()
   }, [conversations, searchQuery, statusFilter])
+
+  // Helper function to calculate max possible score for an alignment
+  const calculateMaxPossibleScore = (alignmentKey) => {
+    return questionsData.questions.reduce((total, question) => {
+      const maxForQuestion = Math.max(...question.options.map(opt => opt.scores[alignmentKey]))
+      return total + maxForQuestion
+    }, 0)
+  }
+
+  // Helper function to calculate percentage
+  const calculatePercentage = (score, alignmentKey) => {
+    const maxScore = calculateMaxPossibleScore(alignmentKey)
+    return maxScore > 0 ? Math.round((score / maxScore) * 100) : 0
+  }
 
   const fetchConversations = async () => {
     setLoading(true)
@@ -435,7 +450,7 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
                         </Flex>
                       )}
 
-                      {/* Scores Preview - Updated with KA/iKA/FA/MA */}
+                      {/* Scores Preview - Updated with Percentages */}
                       {conversation.status === 'completed' && (
                         <Box>
                           <Text fontSize="xs" color="#a39992" mb={2}>
@@ -443,16 +458,16 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
                           </Text>
                           <HStack spacing={3} fontSize="xs" color="#6e6259">
                             <Text>
-                              <Text as="span" fontWeight="medium" color="#eb1700">KA:</Text> {conversation.alignment_score_ka || 0}
+                              <Text as="span" fontWeight="medium" color="#eb1700">KA:</Text> {calculatePercentage(conversation.alignment_score_ka || 0, 'ka')}%
                             </Text>
                             <Text>
-                              <Text as="span" fontWeight="medium" color="#ff6017">iKA:</Text> {conversation.alignment_score_ika || 0}
+                              <Text as="span" fontWeight="medium" color="#ff6017">iKA:</Text> {calculatePercentage(conversation.alignment_score_ika || 0, 'ika')}%
                             </Text>
                             <Text>
-                              <Text as="span" fontWeight="medium" color="#0f68b2">FA:</Text> {conversation.alignment_score_fa || 0}
+                              <Text as="span" fontWeight="medium" color="#0f68b2">FA:</Text> {calculatePercentage(conversation.alignment_score_fa || 0, 'fa')}%
                             </Text>
                             <Text>
-                              <Text as="span" fontWeight="medium" color="#328714">MA:</Text> {conversation.alignment_score_ma || 0}
+                              <Text as="span" fontWeight="medium" color="#328714">MA:</Text> {calculatePercentage(conversation.alignment_score_ma || 0, 'ma')}%
                             </Text>
                           </HStack>
                         </Box>

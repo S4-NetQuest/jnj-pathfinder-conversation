@@ -321,37 +321,36 @@ const Conversation = () => {
     }, 0)
   }
 
-  const getRadarChartData = () => {
-    const maxPossible = Math.max(
-      getMaxPossibleScore('ka'),
-      getMaxPossibleScore('ika'),
-      getMaxPossibleScore('fa'),
-      getMaxPossibleScore('ma')
-    )
+  // New helper function for percentage calculation
+  const getPercentageScore = (alignmentKey) => {
+    const maxForAlignment = getMaxPossibleScore(alignmentKey)
+    return maxForAlignment > 0 ? Math.round((scores[alignmentKey] / maxForAlignment) * 100) : 0
+  }
 
+  const getRadarChartData = () => {
     return [
       {
         alignment: 'KA',
-        score: scores.ka,
-        fullMark: maxPossible,
+        score: getPercentageScore('ka'),
+        fullMark: 100,
         color: alignmentTypes.ka.color
       },
       {
         alignment: 'iKA',
-        score: scores.ika,
-        fullMark: maxPossible,
+        score: getPercentageScore('ika'),
+        fullMark: 100,
         color: alignmentTypes.ika.color
       },
       {
         alignment: 'FA',
-        score: scores.fa,
-        fullMark: maxPossible,
+        score: getPercentageScore('fa'),
+        fullMark: 100,
         color: alignmentTypes.fa.color
       },
       {
         alignment: 'MA',
-        score: scores.ma,
-        fullMark: maxPossible,
+        score: getPercentageScore('ma'),
+        fullMark: 100,
         color: alignmentTypes.ma.color
       }
     ]
@@ -611,13 +610,9 @@ const Conversation = () => {
                         />
                         <PolarRadiusAxis
                           angle={90}
-                          domain={[0, Math.max(
-                            getMaxPossibleScore('ka'),
-                            getMaxPossibleScore('ika'),
-                            getMaxPossibleScore('fa'),
-                            getMaxPossibleScore('ma')
-                          )]}
+                          domain={[0, 100]}
                           tick={{ fontSize: 12, fill: '#81766f' }}
+                          tickFormatter={(value) => `${value}%`}
                         />
                         <Radar
                           name="Score"
@@ -642,6 +637,7 @@ const Conversation = () => {
                   <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
                     {Object.entries(alignmentTypes).map(([key, alignment]) => {
                       const maxForAlignment = getMaxPossibleScore(key)
+                      const percentage = getPercentageScore(key)
                       return (
                         <Box key={key} p={5} bg="#f1efed" borderRadius="md">
                           <Flex justify="space-between" align="start" mb={2}>
@@ -656,11 +652,12 @@ const Conversation = () => {
                               borderRadius="md"
                               fontSize="xs"
                             >
-                              {scores[key]} / {maxForAlignment}
+                              {/* {percentage}% ({scores[key]} / {maxForAlignment}) */}
+                              {percentage}%
                             </Badge>
                           </Flex>
                           <Progress
-                            value={(scores[key] / maxForAlignment) * 100}
+                            value={percentage}
                             bg="#e8e6e3"
                             borderRadius="full"
                             size="sm"

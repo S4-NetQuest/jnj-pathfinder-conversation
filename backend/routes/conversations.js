@@ -1,4 +1,3 @@
-// backend/routes/conversations.js (Complete file with KA/iKA/FA/MA updates)
 import express from 'express'
 import dbConfig from '../config/database.js'
 import { requireSalesRep, isAuthenticated, getCurrentUser } from '../middleware/auth.js'
@@ -12,8 +11,136 @@ import {
   validators,
   CONSTANTS
 } from '../validation/schemas.js'
+import {
+  loadQuestionsData,
+  calculateMaxScores,
+  calculatePercentageScores,
+  getRecommendedApproachFromPercentages,
+  getQuestionsData
+} from '../utils/questionsHelper.js'
 
 const router = express.Router()
+
+// Helper function to load questions data for max score calculation
+/*
+let questionsData = null
+const loadQuestionsData = async () => {
+  if (!questionsData) {
+    try {
+      // In a real application, you might load this from a database or file
+      // For now, we'll use a placeholder structure
+      // You should replace this with your actual questions data loading logic
+      const { readFile } = await import('fs/promises')
+      const { fileURLToPath } = await import('url')
+      const { dirname, join } = await import('path')
+
+      const __filename = fileURLToPath(import.meta.url)
+      const __dirname = dirname(__filename)
+      const questionsPath = join(__dirname, '../data/questions.json')
+
+      try {
+        const questionsContent = await readFile(questionsPath, 'utf8')
+        questionsData = JSON.parse(questionsContent)
+      } catch (fileError) {
+        console.warn('Could not load questions.json file, using default max scores')
+        // Fallback to default max scores if file is not available
+        questionsData = {
+          questions: [],
+          metadata: {
+            maxScores: {
+              ka: 20,   // Default max scores - adjust based on your actual questions
+              ika: 20,
+              fa: 20,
+              ma: 20
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error loading questions data:', error)
+      // Use fallback data
+      questionsData = {
+        questions: [],
+        metadata: {
+          maxScores: {
+            ka: 20,
+            ika: 20,
+            fa: 20,
+            ma: 20
+          }
+        }
+      }
+    }
+  }
+  return questionsData
+}
+
+// Helper function to calculate max possible score for each alignment
+const calculateMaxScores = (questions) => {
+  if (!questions || !Array.isArray(questions) || questions.length === 0) {
+    // Return default max scores if no questions available
+    return {
+      ka: 20,
+      ika: 20,
+      fa: 20,
+      ma: 20
+    }
+  }
+
+  return questions.reduce((totals, question) => {
+    if (question.options && Array.isArray(question.options)) {
+      const maxForQuestion = {
+        ka: Math.max(...question.options.map(opt => opt.scores?.ka || 0)),
+        ika: Math.max(...question.options.map(opt => opt.scores?.ika || 0)),
+        fa: Math.max(...question.options.map(opt => opt.scores?.fa || 0)),
+        ma: Math.max(...question.options.map(opt => opt.scores?.ma || 0))
+      }
+
+      totals.ka += maxForQuestion.ka
+      totals.ika += maxForQuestion.ika
+      totals.fa += maxForQuestion.fa
+      totals.ma += maxForQuestion.ma
+    }
+    return totals
+  }, { ka: 0, ika: 0, fa: 0, ma: 0 })
+}
+
+// Helper function to calculate percentage scores
+const calculatePercentageScores = (rawScores, maxScores) => {
+  return {
+    ka: maxScores.ka > 0 ? Math.round((rawScores.ka / maxScores.ka) * 100) : 0,
+    ika: maxScores.ika > 0 ? Math.round((rawScores.ika / maxScores.ika) * 100) : 0,
+    fa: maxScores.fa > 0 ? Math.round((rawScores.fa / maxScores.fa) * 100) : 0,
+    ma: maxScores.ma > 0 ? Math.round((rawScores.ma / maxScores.ma) * 100) : 0
+  }
+}
+
+// Helper function to determine recommended approach based on percentage scores
+const getRecommendedApproachFromPercentages = (percentageScores) => {
+  const { ka, ika, fa, ma } = percentageScores
+  const maxPercentage = Math.max(ka, ika, fa, ma)
+
+  // Find the alignment with the highest percentage
+  // In case of ties, prioritize in order: KA, iKA, FA, MA
+  if (ka === maxPercentage) return 'KA'
+  if (ika === maxPercentage) return 'iKA'
+  if (fa === maxPercentage) return 'FA'
+  if (ma === maxPercentage) return 'MA'
+
+  // Fallback (shouldn't happen)
+  return 'KA'
+}
+ */
+
+// Helper function to get questions data and max scores
+const getQuestionsAndMaxScores = async () => {
+  const questionsData = await getQuestionsData()
+  const maxScores = calculateMaxScores(questionsData.questions)
+  return { questionsData, maxScores }
+}
+
+const { questionsData, maxScores } = await getQuestionsAndMaxScores()
+
 
 // Add logging middleware for this route
 router.use((req, res, next) => {
@@ -55,6 +182,10 @@ router.get('/', async (req, res) => {
         error: 'Authentication required'
       })
     }
+
+    // Load questions data for percentage calculations
+    const questions = await loadQuestionsData()
+    const maxScores = calculateMaxScores(questions.questions)
 
     const pool = dbConfig.getPool()
     let query, request
@@ -103,40 +234,58 @@ router.get('/', async (req, res) => {
     const result = await request.query(query)
     console.log(`Found ${result.recordset.length} conversations`)
 
-    // Process the results to ensure proper data formatting
-    const conversations = result.recordset.map(conv => ({
-      id: conv.id,
-      surgeon_name: conv.surgeon_name || '',
-      sales_rep_id: conv.sales_rep_id,
-      hospital_id: conv.hospital_id,
-      surgery_center_id: conv.surgery_center_id,
-      // Use the joined data from hospitals/surgery_centers tables
-      hospital_name: conv.hospital_name || '',
-      surgery_center_name: conv.surgery_center_name || '',
-      // New fields
-      surgeon_volume_per_year: conv.surgeon_volume_per_year || '',
-      uses_robotics: conv.uses_robotics,
-      current_alignment: conv.current_alignment || '',
-      // Other conversation fields
-      conversation_date: conv.conversation_date ? new Date(conv.conversation_date).toISOString() : null,
-      created_at: conv.created_at ? new Date(conv.created_at).toISOString() : null,
-      updated_at: conv.updated_at ? new Date(conv.updated_at).toISOString() : null,
-      status: conv.status || 'in_progress',
-      notes: conv.notes || '',
-      recommended_approach: conv.recommended_approach || '',
-      // Updated alignment scores with new field names (KA/iKA/FA/MA)
-      alignment_score_ka: conv.alignment_score_ka || 0,
-      alignment_score_ika: conv.alignment_score_ika || 0,
-      alignment_score_fa: conv.alignment_score_fa || 0,
-      alignment_score_ma: conv.alignment_score_ma || 0,
-      sales_rep_name: conv.sales_rep_name || '',
-      sales_rep_email: conv.sales_rep_email || '',
-    }))
+    // Process the results to ensure proper data formatting and calculate percentages
+    const conversations = result.recordset.map(conv => {
+      const rawScores = {
+        ka: conv.alignment_score_ka || 0,
+        ika: conv.alignment_score_ika || 0,
+        fa: conv.alignment_score_fa || 0,
+        ma: conv.alignment_score_ma || 0
+      }
+
+      const percentageScores = calculatePercentageScores(rawScores, maxScores)
+
+
+      return {
+        id: conv.id,
+        surgeon_name: conv.surgeon_name || '',
+        sales_rep_id: conv.sales_rep_id,
+        hospital_id: conv.hospital_id,
+        surgery_center_id: conv.surgery_center_id,
+        // Use the joined data from hospitals/surgery_centers tables
+        hospital_name: conv.hospital_name || '',
+        surgery_center_name: conv.surgery_center_name || '',
+        // New fields
+        surgeon_volume_per_year: conv.surgeon_volume_per_year || '',
+        uses_robotics: conv.uses_robotics,
+        current_alignment: conv.current_alignment || '',
+        // Other conversation fields
+        conversation_date: conv.conversation_date ? new Date(conv.conversation_date).toISOString() : null,
+        created_at: conv.created_at ? new Date(conv.created_at).toISOString() : null,
+        updated_at: conv.updated_at ? new Date(conv.updated_at).toISOString() : null,
+        status: conv.status || 'in_progress',
+        notes: conv.notes || '',
+        recommended_approach: conv.recommended_approach || '',
+        // Raw alignment scores
+        alignment_score_ka: rawScores.ka,
+        alignment_score_ika: rawScores.ika,
+        alignment_score_fa: rawScores.fa,
+        alignment_score_ma: rawScores.ma,
+        // Add percentage scores for frontend convenience
+        alignment_percentage_ka: percentageScores.ka,
+        alignment_percentage_ika: percentageScores.ika,
+        alignment_percentage_fa: percentageScores.fa,
+        alignment_percentage_ma: percentageScores.ma,
+        sales_rep_name: conv.sales_rep_name || '',
+        sales_rep_email: conv.sales_rep_email || '',
+      }
+    })
 
     res.json({
       success: true,
       conversations: conversations,
-      count: conversations.length
+      count: conversations.length,
+      maxScores: maxScores // Include max scores for frontend reference
     })
   } catch (error) {
     console.error('Error fetching conversations:', error)
@@ -166,6 +315,10 @@ router.get('/:id', async (req, res) => {
         error: 'Authentication required'
       })
     }
+
+    // Load questions data for percentage calculations
+    const questions = await loadQuestionsData()
+    const maxScores = calculateMaxScores(questions.questions)
 
     const pool = dbConfig.getPool()
 
@@ -216,6 +369,15 @@ router.get('/:id', async (req, res) => {
 
     const conversation = result.recordset[0]
 
+    // Calculate percentage scores
+    const rawScores = {
+      ka: conversation.alignment_score_ka || 0,
+      ika: conversation.alignment_score_ika || 0,
+      fa: conversation.alignment_score_fa || 0,
+      ma: conversation.alignment_score_ma || 0
+    }
+    const percentageScores = calculatePercentageScores(rawScores, maxScores)
+
     // Get conversation responses with updated field names (KA/iKA/FA/MA)
     const responsesQuery = `
       SELECT question_id, response_value, scores_ka, scores_ika,
@@ -236,8 +398,14 @@ router.get('/:id', async (req, res) => {
         // Use joined data
         hospital_name: conversation.hospital_name,
         surgery_center_name: conversation.surgery_center_name,
+        // Add percentage scores
+        alignment_percentage_ka: percentageScores.ka,
+        alignment_percentage_ika: percentageScores.ika,
+        alignment_percentage_fa: percentageScores.fa,
+        alignment_percentage_ma: percentageScores.ma,
         responses: responsesResult.recordset
-      }
+      },
+      maxScores: maxScores
     })
   } catch (error) {
     console.error('Error fetching conversation:', error)
@@ -436,7 +604,12 @@ router.post('/', async (req, res) => {
           alignment_score_ka: 0,
           alignment_score_ika: 0,
           alignment_score_fa: 0,
-          alignment_score_ma: 0
+          alignment_score_ma: 0,
+          // Initialize percentage scores to 0
+          alignment_percentage_ka: 0,
+          alignment_percentage_ika: 0,
+          alignment_percentage_fa: 0,
+          alignment_percentage_ma: 0
         }
       })
     } catch (transactionError) {
@@ -454,164 +627,7 @@ router.post('/', async (req, res) => {
   }
 })
 
-// Update conversation
-router.patch('/:id', async (req, res) => {
-  try {
-    const conversationId = parseInt(req.params.id)
-    if (isNaN(conversationId)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid conversation ID'
-      })
-    }
-
-    const currentUser = getCurrentUser(req)
-    if (!currentUser) {
-      return res.status(401).json({
-        success: false,
-        error: 'Authentication required'
-      })
-    }
-
-    // Validate request body
-    const { error, value } = updateConversationSchema.validate(req.body)
-    if (error) {
-      return res.status(400).json({
-        success: false,
-        error: error.details[0].message
-      })
-    }
-
-    const pool = dbConfig.getPool()
-
-    // Check if user has access to this conversation
-    let accessQuery, accessRequest
-    if (currentUser.role === 'sales_rep') {
-      accessQuery = 'SELECT id FROM conversations WHERE id = @conversationId AND sales_rep_id = @userId'
-      accessRequest = pool.request()
-        .input('conversationId', dbConfig.sql.Int, conversationId)
-        .input('userId', dbConfig.sql.Int, currentUser.id)
-    } else if (currentUser.role === 'surgeon') {
-      accessQuery = 'SELECT id FROM conversations WHERE id = @conversationId AND (surgeon_name = @surgeonName OR sales_rep_id IS NULL)'
-      accessRequest = pool.request()
-        .input('conversationId', dbConfig.sql.Int, conversationId)
-        .input('surgeonName', dbConfig.sql.VarChar, currentUser.name)
-    } else {
-      return res.status(403).json({
-        success: false,
-        error: 'Invalid user role'
-      })
-    }
-
-    const accessResult = await accessRequest.query(accessQuery)
-    if (accessResult.recordset.length === 0) {
-      return res.status(404).json({
-        success: false,
-        error: 'Conversation not found or access denied'
-      })
-    }
-
-    // Build update query dynamically
-    const updateFields = []
-    const request = pool.request()
-    request.input('conversationId', dbConfig.sql.Int, conversationId)
-
-    if (value.status !== undefined) {
-      updateFields.push('status = @status')
-      request.input('status', dbConfig.sql.VarChar, value.status)
-    }
-
-    // Notes can only be updated by sales reps
-    if (value.notes !== undefined) {
-      if (currentUser.role !== 'sales_rep') {
-        return res.status(403).json({
-          success: false,
-          error: 'Only sales representatives can update notes'
-        })
-      }
-      updateFields.push('notes = @notes')
-      request.input('notes', dbConfig.sql.Text, value.notes || '')
-    }
-
-    if (value.recommended_approach !== undefined) {
-      updateFields.push('recommended_approach = @recommendedApproach')
-      request.input('recommendedApproach', dbConfig.sql.VarChar, value.recommended_approach)
-    }
-
-    if (value.surgeon_volume_per_year !== undefined) {
-      updateFields.push('surgeon_volume_per_year = @surgeonVolumePerYear')
-      request.input('surgeonVolumePerYear', dbConfig.sql.VarChar, value.surgeon_volume_per_year)
-    }
-
-    if (value.uses_robotics !== undefined) {
-      updateFields.push('uses_robotics = @usesRobotics')
-      const roboticsValue = transformRoboticsValue(value.uses_robotics)
-      request.input('usesRobotics', dbConfig.sql.Bit, roboticsValue ? 1 : 0)
-    }
-
-    if (value.current_alignment !== undefined) {
-      updateFields.push('current_alignment = @currentAlignment')
-      request.input('currentAlignment', dbConfig.sql.VarChar, value.current_alignment)
-    }
-
-    // Handle alignment scores with new field names (KA/iKA/FA/MA)
-    if (value.alignment_scores) {
-      if (value.alignment_scores.ka !== undefined) {
-        updateFields.push('alignment_score_ka = @alignmentScoreKA')
-        request.input('alignmentScoreKA', dbConfig.sql.Int, value.alignment_scores.ka)
-      }
-      if (value.alignment_scores.ika !== undefined) {
-        updateFields.push('alignment_score_ika = @alignmentScoreiKA')
-        request.input('alignmentScoreiKA', dbConfig.sql.Int, value.alignment_scores.ika)
-      }
-      if (value.alignment_scores.fa !== undefined) {
-        updateFields.push('alignment_score_fa = @alignmentScoreFA')
-        request.input('alignmentScoreFA', dbConfig.sql.Int, value.alignment_scores.fa)
-      }
-      if (value.alignment_scores.ma !== undefined) {
-        updateFields.push('alignment_score_ma = @alignmentScoreMA')
-        request.input('alignmentScoreMA', dbConfig.sql.Int, value.alignment_scores.ma)
-      }
-    }
-
-    if (updateFields.length === 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'No valid fields to update'
-      })
-    }
-
-    // Add updated_at field
-    updateFields.push('updated_at = GETDATE()')
-
-    const updateQuery = `
-      UPDATE conversations
-      SET ${updateFields.join(', ')}
-      OUTPUT INSERTED.*
-      WHERE id = @conversationId
-    `
-
-    const result = await request.query(updateQuery)
-
-    res.json({
-      success: true,
-      message: 'Conversation updated successfully',
-      conversation: result.recordset[0]
-    })
-  } catch (error) {
-    console.error('Error updating conversation:', error)
-    res.status(500).json({
-      success: false,
-      error: 'Failed to update conversation',
-      details: process.env.NODE_ENV !== 'production' ? error.message : undefined
-    })
-  }
-})
-
-// Add this PUT endpoint to your backend/routes/conversations.js file
-// Place it after the PATCH endpoint
-
-// Update conversation (PUT - complete update)
+// Update conversation (PUT - complete update with percentage-based recommendation)
 router.put('/:id', async (req, res) => {
   try {
     const conversationId = parseInt(req.params.id)
@@ -635,6 +651,10 @@ router.put('/:id', async (req, res) => {
     console.log('Current user:', currentUser)
     console.log('Request body:', req.body)
 
+    // Load questions data for percentage calculations
+    const questions = await loadQuestionsData()
+    const maxScores = calculateMaxScores(questions.questions)
+
     // Validate request body using the same schema as PATCH
     const { error, value } = updateConversationSchema.validate(req.body)
     if (error) {
@@ -649,12 +669,12 @@ router.put('/:id', async (req, res) => {
     // Check if user has access to this conversation
     let accessQuery, accessRequest
     if (currentUser.role === 'sales_rep') {
-      accessQuery = 'SELECT id FROM conversations WHERE id = @conversationId AND sales_rep_id = @userId'
+      accessQuery = 'SELECT id, alignment_score_ka, alignment_score_ika, alignment_score_fa, alignment_score_ma FROM conversations WHERE id = @conversationId AND sales_rep_id = @userId'
       accessRequest = pool.request()
         .input('conversationId', dbConfig.sql.Int, conversationId)
         .input('userId', dbConfig.sql.Int, currentUser.id)
     } else if (currentUser.role === 'surgeon') {
-      accessQuery = 'SELECT id FROM conversations WHERE id = @conversationId AND (surgeon_name = @surgeonName OR sales_rep_id IS NULL)'
+      accessQuery = 'SELECT id, alignment_score_ka, alignment_score_ika, alignment_score_fa, alignment_score_ma FROM conversations WHERE id = @conversationId AND (surgeon_name = @surgeonName OR sales_rep_id IS NULL)'
       accessRequest = pool.request()
         .input('conversationId', dbConfig.sql.Int, conversationId)
         .input('surgeonName', dbConfig.sql.VarChar, currentUser.name)
@@ -673,6 +693,8 @@ router.put('/:id', async (req, res) => {
       })
     }
 
+    const currentConversation = accessResult.recordset[0]
+
     // Build update query dynamically
     const updateFields = []
     const request = pool.request()
@@ -681,6 +703,25 @@ router.put('/:id', async (req, res) => {
     if (value.status !== undefined) {
       updateFields.push('status = @status')
       request.input('status', dbConfig.sql.VarChar, value.status)
+
+      // If status is being set to 'completed', calculate recommended approach based on percentages
+      if (value.status === 'completed') {
+        const currentScores = {
+          ka: currentConversation.alignment_score_ka || 0,
+          ika: currentConversation.alignment_score_ika || 0,
+          fa: currentConversation.alignment_score_fa || 0,
+          ma: currentConversation.alignment_score_ma || 0
+        }
+
+        const percentageScores = calculatePercentageScores(currentScores, maxScores)
+        const recommendedApproach = getRecommendedApproachFromPercentages(percentageScores)
+
+        updateFields.push('recommended_approach = @autoRecommendedApproach')
+        request.input('autoRecommendedApproach', dbConfig.sql.VarChar, recommendedApproach)
+
+        console.log('Auto-calculated recommended approach:', recommendedApproach)
+        console.log('Based on percentage scores:', percentageScores)
+      }
     }
 
     // Handle recommendedApproach (camelCase from frontend) - normalize to uppercase
@@ -766,13 +807,31 @@ router.put('/:id', async (req, res) => {
     console.log('Update fields:', updateFields)
 
     const result = await request.query(updateQuery)
+    const updatedConversation = result.recordset[0]
 
-    console.log('Update result:', result.recordset[0])
+    console.log('Update result:', updatedConversation)
+
+    // Calculate percentage scores for the response
+    const rawScores = {
+      ka: updatedConversation.alignment_score_ka || 0,
+      ika: updatedConversation.alignment_score_ika || 0,
+      fa: updatedConversation.alignment_score_fa || 0,
+      ma: updatedConversation.alignment_score_ma || 0
+    }
+    const percentageScores = calculatePercentageScores(rawScores, maxScores)
 
     res.json({
       success: true,
       message: 'Conversation updated successfully',
-      conversation: result.recordset[0]
+      conversation: {
+        ...updatedConversation,
+        // Add percentage scores to response
+        alignment_percentage_ka: percentageScores.ka,
+        alignment_percentage_ika: percentageScores.ika,
+        alignment_percentage_fa: percentageScores.fa,
+        alignment_percentage_ma: percentageScores.ma
+      },
+      maxScores: maxScores
     })
   } catch (error) {
     console.error('Error updating conversation (PUT):', error)
@@ -784,7 +843,204 @@ router.put('/:id', async (req, res) => {
   }
 })
 
-// Add response to conversation
+// Update conversation (PATCH - partial update with percentage-based recommendation)
+router.patch('/:id', async (req, res) => {
+  try {
+    const conversationId = parseInt(req.params.id)
+    if (isNaN(conversationId)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid conversation ID'
+      })
+    }
+
+    const currentUser = getCurrentUser(req)
+    if (!currentUser) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      })
+    }
+
+    // Load questions data for percentage calculations
+    const questions = await loadQuestionsData()
+    const maxScores = calculateMaxScores(questions.questions)
+
+    // Validate request body
+    const { error, value } = updateConversationSchema.validate(req.body)
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        error: error.details[0].message
+      })
+    }
+
+    const pool = dbConfig.getPool()
+
+    // Check if user has access to this conversation
+    let accessQuery, accessRequest
+    if (currentUser.role === 'sales_rep') {
+      accessQuery = 'SELECT id, alignment_score_ka, alignment_score_ika, alignment_score_fa, alignment_score_ma FROM conversations WHERE id = @conversationId AND sales_rep_id = @userId'
+      accessRequest = pool.request()
+        .input('conversationId', dbConfig.sql.Int, conversationId)
+        .input('userId', dbConfig.sql.Int, currentUser.id)
+    } else if (currentUser.role === 'surgeon') {
+      accessQuery = 'SELECT id, alignment_score_ka, alignment_score_ika, alignment_score_fa, alignment_score_ma FROM conversations WHERE id = @conversationId AND (surgeon_name = @surgeonName OR sales_rep_id IS NULL)'
+      accessRequest = pool.request()
+        .input('conversationId', dbConfig.sql.Int, conversationId)
+        .input('surgeonName', dbConfig.sql.VarChar, currentUser.name)
+    } else {
+      return res.status(403).json({
+        success: false,
+        error: 'Invalid user role'
+      })
+    }
+
+    const accessResult = await accessRequest.query(accessQuery)
+    if (accessResult.recordset.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Conversation not found or access denied'
+      })
+    }
+
+    const currentConversation = accessResult.recordset[0]
+
+    // Build update query dynamically
+    const updateFields = []
+    const request = pool.request()
+    request.input('conversationId', dbConfig.sql.Int, conversationId)
+
+    if (value.status !== undefined) {
+      updateFields.push('status = @status')
+      request.input('status', dbConfig.sql.VarChar, value.status)
+
+      // If status is being set to 'completed', calculate recommended approach based on percentages
+      if (value.status === 'completed') {
+        const currentScores = {
+          ka: currentConversation.alignment_score_ka || 0,
+          ika: currentConversation.alignment_score_ika || 0,
+          fa: currentConversation.alignment_score_fa || 0,
+          ma: currentConversation.alignment_score_ma || 0
+        }
+
+        const percentageScores = calculatePercentageScores(currentScores, maxScores)
+        const recommendedApproach = getRecommendedApproachFromPercentages(percentageScores)
+
+        updateFields.push('recommended_approach = @autoRecommendedApproach')
+        request.input('autoRecommendedApproach', dbConfig.sql.VarChar, recommendedApproach)
+
+        console.log('Auto-calculated recommended approach:', recommendedApproach)
+        console.log('Based on percentage scores:', percentageScores)
+      }
+    }
+
+    // Notes can only be updated by sales reps
+    if (value.notes !== undefined) {
+      if (currentUser.role !== 'sales_rep') {
+        return res.status(403).json({
+          success: false,
+          error: 'Only sales representatives can update notes'
+        })
+      }
+      updateFields.push('notes = @notes')
+      request.input('notes', dbConfig.sql.Text, value.notes || '')
+    }
+
+    if (value.recommended_approach !== undefined) {
+      updateFields.push('recommended_approach = @recommendedApproach')
+      request.input('recommendedApproach', dbConfig.sql.VarChar, value.recommended_approach)
+    }
+
+    if (value.surgeon_volume_per_year !== undefined) {
+      updateFields.push('surgeon_volume_per_year = @surgeonVolumePerYear')
+      request.input('surgeonVolumePerYear', dbConfig.sql.VarChar, value.surgeon_volume_per_year)
+    }
+
+    if (value.uses_robotics !== undefined) {
+      updateFields.push('uses_robotics = @usesRobotics')
+      const roboticsValue = transformRoboticsValue(value.uses_robotics)
+      request.input('usesRobotics', dbConfig.sql.Bit, roboticsValue ? 1 : 0)
+    }
+
+    if (value.current_alignment !== undefined) {
+      updateFields.push('current_alignment = @currentAlignment')
+      request.input('currentAlignment', dbConfig.sql.VarChar, value.current_alignment)
+    }
+
+    // Handle alignment scores with new field names (KA/iKA/FA/MA)
+    if (value.alignment_scores) {
+      if (value.alignment_scores.ka !== undefined) {
+        updateFields.push('alignment_score_ka = @alignmentScoreKA')
+        request.input('alignmentScoreKA', dbConfig.sql.Int, value.alignment_scores.ka)
+      }
+      if (value.alignment_scores.ika !== undefined) {
+        updateFields.push('alignment_score_ika = @alignmentScoreiKA')
+        request.input('alignmentScoreiKA', dbConfig.sql.Int, value.alignment_scores.ika)
+      }
+      if (value.alignment_scores.fa !== undefined) {
+        updateFields.push('alignment_score_fa = @alignmentScoreFA')
+        request.input('alignmentScoreFA', dbConfig.sql.Int, value.alignment_scores.fa)
+      }
+      if (value.alignment_scores.ma !== undefined) {
+        updateFields.push('alignment_score_ma = @alignmentScoreMA')
+        request.input('alignmentScoreMA', dbConfig.sql.Int, value.alignment_scores.ma)
+      }
+    }
+
+    if (updateFields.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'No valid fields to update'
+      })
+    }
+
+    // Add updated_at field
+    updateFields.push('updated_at = GETDATE()')
+
+    const updateQuery = `
+      UPDATE conversations
+      SET ${updateFields.join(', ')}
+      OUTPUT INSERTED.*
+      WHERE id = @conversationId
+    `
+
+    const result = await request.query(updateQuery)
+    const updatedConversation = result.recordset[0]
+
+    // Calculate percentage scores for the response
+    const rawScores = {
+      ka: updatedConversation.alignment_score_ka || 0,
+      ika: updatedConversation.alignment_score_ika || 0,
+      fa: updatedConversation.alignment_score_fa || 0,
+      ma: updatedConversation.alignment_score_ma || 0
+    }
+    const percentageScores = calculatePercentageScores(rawScores, maxScores)
+
+    res.json({
+      success: true,
+      message: 'Conversation updated successfully',
+      conversation: {
+        ...updatedConversation,
+        // Add percentage scores to response
+        alignment_percentage_ka: percentageScores.ka,
+        alignment_percentage_ika: percentageScores.ika,
+        alignment_percentage_fa: percentageScores.fa,
+        alignment_percentage_ma: percentageScores.ma
+      },
+      maxScores: maxScores
+    })
+  } catch (error) {
+    console.error('Error updating conversation:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update conversation',
+      details: process.env.NODE_ENV !== 'production' ? error.message : undefined
+    })
+  }
+})
+
+// Add response to conversation with percentage-based recommendation updates
 router.post('/:id/responses', async (req, res) => {
   try {
     const conversationId = parseInt(req.params.id)
@@ -802,6 +1058,10 @@ router.post('/:id/responses', async (req, res) => {
         error: 'Authentication required'
       })
     }
+
+    // Load questions data for percentage calculations
+    const questions = await loadQuestionsData()
+    const maxScores = calculateMaxScores(questions.questions)
 
     // Validate request body
     const { error, value } = responseSchema.validate(req.body)
@@ -897,18 +1157,34 @@ router.post('/:id/responses', async (req, res) => {
           WHERE conversation_id = @conversationId
         ),
         updated_at = GETDATE()
+      OUTPUT INSERTED.alignment_score_ka, INSERTED.alignment_score_ika, INSERTED.alignment_score_fa, INSERTED.alignment_score_ma
       WHERE id = @conversationId
     `
 
-    await pool.request()
+    const totalScoresResult = await pool.request()
       .input('conversationId', dbConfig.sql.Int, conversationId)
       .query(totalScoresQuery)
+
+    // Calculate percentage scores for response
+    const updatedScores = totalScoresResult.recordset[0]
+    const rawScores = {
+      ka: updatedScores.alignment_score_ka || 0,
+      ika: updatedScores.alignment_score_ika || 0,
+      fa: updatedScores.alignment_score_fa || 0,
+      ma: updatedScores.alignment_score_ma || 0
+    }
+    const percentageScores = calculatePercentageScores(rawScores, maxScores)
 
     res.json({
       success: true,
       message: 'Response added successfully',
       response: responseResult.recordset[0],
-      action: responseResult.recordset[0].$action
+      action: responseResult.recordset[0].$action,
+      updatedScores: {
+        raw: rawScores,
+        percentages: percentageScores
+      },
+      maxScores: maxScores
     })
   } catch (error) {
     console.error('Error adding response:', error)
@@ -971,7 +1247,6 @@ router.delete('/:id', requireSalesRep, async (req, res) => {
     })
   }
 })
-
 
 // Get notes for a conversation
 router.get('/:id/notes', async (req, res) => {
