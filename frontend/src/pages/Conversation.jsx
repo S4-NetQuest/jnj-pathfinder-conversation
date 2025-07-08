@@ -30,6 +30,7 @@ import {
   ArrowBackIcon,
   ArrowForwardIcon,
   CheckCircleIcon,
+  CalendarIcon,
   EditIcon,
 } from '@chakra-ui/icons'
 import ReactQuill from 'react-quill'
@@ -39,6 +40,7 @@ import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Responsi
 import { useAuth } from '../contexts/AuthContext'
 import api from '../services/api'
 import questionsData from '../data/questions.json'
+import ScheduleFollowupModal from '../components/ScheduleFollowupModal'
 
 const Conversation = () => {
   const { id } = useParams()
@@ -46,7 +48,7 @@ const Conversation = () => {
   const { user } = useAuth()
   const toast = useToast()
   const { isOpen: isNotesOpen, onOpen: onNotesOpen, onClose: onNotesClose } = useDisclosure()
-
+  const [isScheduleOpen, setIsScheduleOpen] = useState(false)
   const [conversation, setConversation] = useState(null)
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [responses, setResponses] = useState({})
@@ -722,6 +724,14 @@ const Conversation = () => {
               >
                 Restart Assessment
               </Button>
+              <Button
+                leftIcon={<CalendarIcon />}
+                colorScheme="red"
+                variant="outline"
+                onClick={() => setIsScheduleOpen(true)}
+              >
+                Schedule Follow-up
+              </Button>
               {id ? (
                 <Button
                   bg="#eb1700"
@@ -745,6 +755,13 @@ const Conversation = () => {
           </VStack>
         )}
       </VStack>
+
+      <ScheduleFollowupModal
+        isOpen={isScheduleOpen}
+        onClose={() => setIsScheduleOpen(false)}
+        conversationData={conversation}
+        salesRep={salesRep}
+      />
 
       {/* Notes Modal */}
       <Modal isOpen={isNotesOpen} onClose={onNotesClose} size="xl">

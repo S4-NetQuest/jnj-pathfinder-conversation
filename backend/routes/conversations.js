@@ -700,12 +700,18 @@ router.put('/:id', async (req, res) => {
     const request = pool.request()
     request.input('conversationId', dbConfig.sql.Int, conversationId)
 
+    // Track if we're setting recommended_approach to avoid duplicates
+    let recommendedApproachSet = false
+
     if (value.status !== undefined) {
       updateFields.push('status = @status')
       request.input('status', dbConfig.sql.VarChar, value.status)
 
       // If status is being set to 'completed', calculate recommended approach based on percentages
-      if (value.status === 'completed') {
+      // BUT only if no explicit recommendedApproach is provided in the request
+      if (value.status === 'completed' &&
+          value.recommendedApproach === undefined &&
+          value.recommended_approach === undefined) {
         const currentScores = {
           ka: currentConversation.alignment_score_ka || 0,
           ika: currentConversation.alignment_score_ika || 0,
@@ -718,6 +724,7 @@ router.put('/:id', async (req, res) => {
 
         updateFields.push('recommended_approach = @autoRecommendedApproach')
         request.input('autoRecommendedApproach', dbConfig.sql.VarChar, recommendedApproach)
+        recommendedApproachSet = true
 
         console.log('Auto-calculated recommended approach:', recommendedApproach)
         console.log('Based on percentage scores:', percentageScores)
@@ -725,17 +732,21 @@ router.put('/:id', async (req, res) => {
     }
 
     // Handle recommendedApproach (camelCase from frontend) - normalize to uppercase
-    if (value.recommendedApproach !== undefined) {
+    // Only set if we haven't already set it from auto-calculation
+    if (value.recommendedApproach !== undefined && !recommendedApproachSet) {
       updateFields.push('recommended_approach = @recommendedApproach')
       const normalizedValue = validators.normalizeAlignment(value.recommendedApproach)
       request.input('recommendedApproach', dbConfig.sql.VarChar, normalizedValue)
+      recommendedApproachSet = true
     }
 
     // Also handle recommended_approach (snake_case) for consistency - normalize to uppercase
-    if (value.recommended_approach !== undefined) {
+    // Only set if we haven't already set it from auto-calculation or camelCase
+    if (value.recommended_approach !== undefined && !recommendedApproachSet) {
       updateFields.push('recommended_approach = @recommendedApproach')
       const normalizedValue = validators.normalizeAlignment(value.recommended_approach)
       request.input('recommendedApproach', dbConfig.sql.VarChar, normalizedValue)
+      recommendedApproachSet = true
     }
 
     // Notes can only be updated by sales reps
@@ -911,12 +922,18 @@ router.patch('/:id', async (req, res) => {
     const request = pool.request()
     request.input('conversationId', dbConfig.sql.Int, conversationId)
 
+    // Track if we're setting recommended_approach to avoid duplicates
+    let recommendedApproachSet = false
+
     if (value.status !== undefined) {
       updateFields.push('status = @status')
       request.input('status', dbConfig.sql.VarChar, value.status)
 
       // If status is being set to 'completed', calculate recommended approach based on percentages
-      if (value.status === 'completed') {
+      // BUT only if no explicit recommendedApproach is provided in the request
+      if (value.status === 'completed' &&
+          value.recommendedApproach === undefined &&
+          value.recommended_approach === undefined) {
         const currentScores = {
           ka: currentConversation.alignment_score_ka || 0,
           ika: currentConversation.alignment_score_ika || 0,
@@ -929,6 +946,7 @@ router.patch('/:id', async (req, res) => {
 
         updateFields.push('recommended_approach = @autoRecommendedApproach')
         request.input('autoRecommendedApproach', dbConfig.sql.VarChar, recommendedApproach)
+        recommendedApproachSet = true
 
         console.log('Auto-calculated recommended approach:', recommendedApproach)
         console.log('Based on percentage scores:', percentageScores)
@@ -947,9 +965,22 @@ router.patch('/:id', async (req, res) => {
       request.input('notes', dbConfig.sql.Text, value.notes || '')
     }
 
-    if (value.recommended_approach !== undefined) {
+    // Handle recommendedApproach (camelCase from frontend) - normalize to uppercase
+    // Only set if we haven't already set it from auto-calculation
+    if (value.recommendedApproach !== undefined && !recommendedApproachSet) {
       updateFields.push('recommended_approach = @recommendedApproach')
-      request.input('recommendedApproach', dbConfig.sql.VarChar, value.recommended_approach)
+      const normalizedValue = validators.normalizeAlignment(value.recommendedApproach)
+      request.input('recommendedApproach', dbConfig.sql.VarChar, normalizedValue)
+      recommendedApproachSet = true
+    }
+
+    // Also handle recommended_approach (snake_case) for consistency - normalize to uppercase
+    // Only set if we haven't already set it from auto-calculation or camelCase
+    if (value.recommended_approach !== undefined && !recommendedApproachSet) {
+      updateFields.push('recommended_approach = @recommendedApproach')
+      const normalizedValue = validators.normalizeAlignment(value.recommended_approach)
+      request.input('recommendedApproach', dbConfig.sql.VarChar, normalizedValue)
+      recommendedApproachSet = true
     }
 
     if (value.surgeon_volume_per_year !== undefined) {
@@ -1032,6 +1063,233 @@ router.patch('/:id', async (req, res) => {
     })
   } catch (error) {
     console.error('Error updating conversation:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update conversation',
+      details: process.env.NODE_ENV !== 'production' ? error.message : undefined
+    })
+  }
+})
+
+// Update conversation (PUT - complete update with percentage-based recommendation)
+router.put('/:id', async (req, res) => {
+  try {
+    const conversationId = parseInt(req.params.id)
+    if (isNaN(conversationId)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid conversation ID'
+      })
+    }
+
+    const currentUser = getCurrentUser(req)
+    if (!currentUser) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      })
+    }
+
+    console.log('=== UPDATE CONVERSATION (PUT) ===')
+    console.log('Conversation ID:', conversationId)
+    console.log('Current user:', currentUser)
+    console.log('Request body:', req.body)
+
+    // Load questions data for percentage calculations
+    const questions = await loadQuestionsData()
+    const maxScores = calculateMaxScores(questions.questions)
+
+    // Validate request body using the same schema as PATCH
+    const { error, value } = updateConversationSchema.validate(req.body)
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        error: error.details[0].message
+      })
+    }
+
+    const pool = dbConfig.getPool()
+
+    // Check if user has access to this conversation
+    let accessQuery, accessRequest
+    if (currentUser.role === 'sales_rep') {
+      accessQuery = 'SELECT id, alignment_score_ka, alignment_score_ika, alignment_score_fa, alignment_score_ma FROM conversations WHERE id = @conversationId AND sales_rep_id = @userId'
+      accessRequest = pool.request()
+        .input('conversationId', dbConfig.sql.Int, conversationId)
+        .input('userId', dbConfig.sql.Int, currentUser.id)
+    } else if (currentUser.role === 'surgeon') {
+      accessQuery = 'SELECT id, alignment_score_ka, alignment_score_ika, alignment_score_fa, alignment_score_ma FROM conversations WHERE id = @conversationId AND (surgeon_name = @surgeonName OR sales_rep_id IS NULL)'
+      accessRequest = pool.request()
+        .input('conversationId', dbConfig.sql.Int, conversationId)
+        .input('surgeonName', dbConfig.sql.VarChar, currentUser.name)
+    } else {
+      return res.status(403).json({
+        success: false,
+        error: 'Invalid user role'
+      })
+    }
+
+    const accessResult = await accessRequest.query(accessQuery)
+    if (accessResult.recordset.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Conversation not found or access denied'
+      })
+    }
+
+    const currentConversation = accessResult.recordset[0]
+
+    // Build update query dynamically
+    const updateFields = []
+    const request = pool.request()
+    request.input('conversationId', dbConfig.sql.Int, conversationId)
+
+    // Track if we're setting recommended_approach to avoid duplicates
+    let recommendedApproachSet = false
+
+    if (value.status !== undefined) {
+      updateFields.push('status = @status')
+      request.input('status', dbConfig.sql.VarChar, value.status)
+
+      // If status is being set to 'completed', calculate recommended approach based on percentages
+      // BUT only if no explicit recommendedApproach is provided in the request
+      if (value.status === 'completed' &&
+          value.recommendedApproach === undefined &&
+          value.recommended_approach === undefined) {
+        const currentScores = {
+          ka: currentConversation.alignment_score_ka || 0,
+          ika: currentConversation.alignment_score_ika || 0,
+          fa: currentConversation.alignment_score_fa || 0,
+          ma: currentConversation.alignment_score_ma || 0
+        }
+
+        const percentageScores = calculatePercentageScores(currentScores, maxScores)
+        const recommendedApproach = getRecommendedApproachFromPercentages(percentageScores)
+
+        updateFields.push('recommended_approach = @autoRecommendedApproach')
+        request.input('autoRecommendedApproach', dbConfig.sql.VarChar, recommendedApproach)
+        recommendedApproachSet = true
+
+        console.log('Auto-calculated recommended approach:', recommendedApproach)
+        console.log('Based on percentage scores:', percentageScores)
+      }
+    }
+
+    // Handle recommendedApproach (camelCase from frontend) - normalize to uppercase
+    // Only set if we haven't already set it from auto-calculation
+    if (value.recommendedApproach !== undefined && !recommendedApproachSet) {
+      updateFields.push('recommended_approach = @recommendedApproach')
+      const normalizedValue = validators.normalizeAlignment(value.recommendedApproach)
+      request.input('recommendedApproach', dbConfig.sql.VarChar, normalizedValue)
+      recommendedApproachSet = true
+    }
+
+    // Also handle recommended_approach (snake_case) for consistency - normalize to uppercase
+    // Only set if we haven't already set it from auto-calculation or camelCase
+    if (value.recommended_approach !== undefined && !recommendedApproachSet) {
+      updateFields.push('recommended_approach = @recommendedApproach')
+      const normalizedValue = validators.normalizeAlignment(value.recommended_approach)
+      request.input('recommendedApproach', dbConfig.sql.VarChar, normalizedValue)
+      recommendedApproachSet = true
+    }
+
+    // Notes can only be updated by sales reps
+    if (value.notes !== undefined) {
+      if (currentUser.role !== 'sales_rep') {
+        return res.status(403).json({
+          success: false,
+          error: 'Only sales representatives can update notes'
+        })
+      }
+      updateFields.push('notes = @notes')
+      request.input('notes', dbConfig.sql.Text, value.notes || '')
+    }
+
+    if (value.surgeon_volume_per_year !== undefined) {
+      updateFields.push('surgeon_volume_per_year = @surgeonVolumePerYear')
+      request.input('surgeonVolumePerYear', dbConfig.sql.VarChar, value.surgeon_volume_per_year)
+    }
+
+    if (value.uses_robotics !== undefined) {
+      updateFields.push('uses_robotics = @usesRobotics')
+      const roboticsValue = transformRoboticsValue(value.uses_robotics)
+      request.input('usesRobotics', dbConfig.sql.Bit, roboticsValue ? 1 : 0)
+    }
+
+    if (value.current_alignment !== undefined) {
+      updateFields.push('current_alignment = @currentAlignment')
+      request.input('currentAlignment', dbConfig.sql.VarChar, value.current_alignment)
+    }
+
+    // Handle alignment scores with new field names (KA/iKA/FA/MA)
+    if (value.alignment_scores) {
+      if (value.alignment_scores.ka !== undefined) {
+        updateFields.push('alignment_score_ka = @alignmentScoreKA')
+        request.input('alignmentScoreKA', dbConfig.sql.Int, value.alignment_scores.ka)
+      }
+      if (value.alignment_scores.ika !== undefined) {
+        updateFields.push('alignment_score_ika = @alignmentScoreiKA')
+        request.input('alignmentScoreiKA', dbConfig.sql.Int, value.alignment_scores.ika)
+      }
+      if (value.alignment_scores.fa !== undefined) {
+        updateFields.push('alignment_score_fa = @alignmentScoreFA')
+        request.input('alignmentScoreFA', dbConfig.sql.Int, value.alignment_scores.fa)
+      }
+      if (value.alignment_scores.ma !== undefined) {
+        updateFields.push('alignment_score_ma = @alignmentScoreMA')
+        request.input('alignmentScoreMA', dbConfig.sql.Int, value.alignment_scores.ma)
+      }
+    }
+
+    if (updateFields.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'No valid fields to update'
+      })
+    }
+
+    // Add updated_at field
+    updateFields.push('updated_at = GETDATE()')
+
+    const updateQuery = `
+      UPDATE conversations
+      SET ${updateFields.join(', ')}
+      OUTPUT INSERTED.*
+      WHERE id = @conversationId
+    `
+
+    console.log('Update query:', updateQuery)
+    console.log('Update fields:', updateFields)
+
+    const result = await request.query(updateQuery)
+    const updatedConversation = result.recordset[0]
+
+    console.log('Update result:', updatedConversation)
+
+    // Calculate percentage scores for the response
+    const rawScores = {
+      ka: updatedConversation.alignment_score_ka || 0,
+      ika: updatedConversation.alignment_score_ika || 0,
+      fa: updatedConversation.alignment_score_fa || 0,
+      ma: updatedConversation.alignment_score_ma || 0
+    }
+    const percentageScores = calculatePercentageScores(rawScores, maxScores)
+
+    res.json({
+      success: true,
+      message: 'Conversation updated successfully',
+      conversation: {
+        ...updatedConversation,
+        // Add percentage scores to response
+        alignment_percentage_ka: percentageScores.ka,
+        alignment_percentage_ika: percentageScores.ika,
+        alignment_percentage_fa: percentageScores.fa,
+        alignment_percentage_ma: percentageScores.ma
+      },
+      maxScores: maxScores
+    })
+  } catch (error) {
+    console.error('Error updating conversation (PUT):', error)
     res.status(500).json({
       success: false,
       error: 'Failed to update conversation',
