@@ -189,6 +189,7 @@ const QuestionCard = ({ question, categories }) => {
                 borderRadius="full"
                 px={2}
                 py={1}
+                userSelect={'none'}
               >
                 {categoryName}
               </Badge>
@@ -328,7 +329,7 @@ const SellingQuestions = () => {
                       <Button
                         size="sm"
                         variant="outline"
-                        colorScheme="blue"
+                        colorScheme="red"
                         onClick={handleSelectAll}
                         isDisabled={selectedCategories.length === categories.length}
                       >

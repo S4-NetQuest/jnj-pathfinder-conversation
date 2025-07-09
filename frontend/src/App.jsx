@@ -10,11 +10,13 @@ import ReviewContent from './pages/ReviewContent'
 import References from './pages/References'
 import ComparePhilosophies from './pages/ComparePhilosophies'
 import SellingQuestions from './pages/SellingQuestions'
+import ScrollToTop from './components/ScrollToTop'
 
 function App() {
   return (
     <AuthProvider>
       <Layout>
+        <ScrollToTop />
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/conversation" element={<Conversation />} />

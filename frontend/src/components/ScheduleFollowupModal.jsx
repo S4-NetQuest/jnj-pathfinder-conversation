@@ -32,7 +32,7 @@ import { CopyIcon, CheckIcon, CalendarIcon, EmailIcon } from '@chakra-ui/icons'
 const ScheduleFollowupModal = ({ isOpen, onClose, conversationData, salesRep }) => {
   const toast = useToast()
   const [customizations, setCustomizations] = useState({
-    doctorName: conversationData?.surgeonName || '',
+    doctorName: conversationData?.surgeon_name || '',
     meetingDuration: '30 minutes',
     preferredTime: 'Next week',
     additionalNotes: ''
@@ -114,13 +114,14 @@ Contact: ${salesRep?.email || '[Email]'} | ${salesRep?.phone || '[Phone]'}`
     <Modal isOpen={isOpen} onClose={onClose} size="xl" scrollBehavior="inside">
       <ModalOverlay />
       <ModalContent maxH="90vh">
-        <ModalHeader bg="red.500" color="white" borderRadius="md md 0 0">
+        <ModalHeader bg="#f1efed" borderBottom="1px solid" borderColor="#e8e6e3">
+
           <HStack spacing={2}>
-            <Icon as={CalendarIcon} />
-            <Text>Schedule Follow-up</Text>
+            <Icon as={CalendarIcon} color="red" />
+            <Text color="#eb1700" fontSize="lg" fontWeight="bold">Schedule Follow-up</Text>
           </HStack>
         </ModalHeader>
-        <ModalCloseButton color="white" />
+        <ModalCloseButton />
 
         <ModalBody>
           <VStack spacing={4} align="stretch">
@@ -173,6 +174,29 @@ Contact: ${salesRep?.email || '[Email]'} | ${salesRep?.phone || '[Phone]'}`
 
             <Divider />
 
+            {/* Always Visible Copy Buttons */}
+            <HStack spacing={3} justify="center" bg="#f1efed" p={3} borderRadius="md">
+              <Button
+                leftIcon={emailCopied ? <CheckIcon /> : <CopyIcon />}
+                colorScheme={emailCopied ? 'green' : 'red'}
+                onClick={() => handleCopy('email')}
+                size="sm"
+                flex={1}
+              >
+                {emailCopied ? 'Email Copied!' : 'Copy Email Template'}
+              </Button>
+
+              <Button
+                leftIcon={calendarCopied ? <CheckIcon /> : <CopyIcon />}
+                colorScheme={calendarCopied ? 'green' : 'red'}
+                onClick={() => handleCopy('calendar')}
+                size="sm"
+                flex={1}
+              >
+                {calendarCopied ? 'Calendar Copied!' : 'Copy Calendar Details'}
+              </Button>
+            </HStack>
+
             {/* Templates */}
             <Tabs variant="enclosed" colorScheme="red">
               <TabList>
@@ -215,15 +239,6 @@ Contact: ${salesRep?.email || '[Email]'} | ${salesRep?.phone || '[Phone]'}`
                         {emailTemplate}
                       </Text>
                     </Box>
-
-                    <Button
-                      leftIcon={emailCopied ? <CheckIcon /> : <CopyIcon />}
-                      colorScheme={emailCopied ? 'green' : 'red'}
-                      onClick={() => handleCopy('email')}
-                      size="sm"
-                    >
-                      {emailCopied ? 'Copied!' : 'Copy Email Template'}
-                    </Button>
                   </VStack>
                 </TabPanel>
 
@@ -251,15 +266,6 @@ Contact: ${salesRep?.email || '[Email]'} | ${salesRep?.phone || '[Phone]'}`
                         {calendarTemplate}
                       </Text>
                     </Box>
-
-                    <Button
-                      leftIcon={calendarCopied ? <CheckIcon /> : <CopyIcon />}
-                      colorScheme={calendarCopied ? 'green' : 'red'}
-                      onClick={() => handleCopy('calendar')}
-                      size="sm"
-                    >
-                      {calendarCopied ? 'Copied!' : 'Copy Calendar Details'}
-                    </Button>
                   </VStack>
                 </TabPanel>
               </TabPanels>

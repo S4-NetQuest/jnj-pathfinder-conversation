@@ -53,13 +53,14 @@ const Home = () => {
 
   const handleConversationSelected = (conversationId) => {
     onLoadClose()
-    toast({
+    /* toast({
       title: 'Conversation Loaded',
       description: `Loading conversation with ID: ${conversationId}`,
       status: 'info',
       duration: 3000,
       isClosable: true,
-    })
+    }) */
+
     // TODO: Navigate to conversation page when conversation component is built
     //console.log('Selected conversation:', conversationId)
     navigate(`/conversation/${conversationId}`)

@@ -523,7 +523,6 @@ const ParameterCategoryFilter = ({
               </WrapItem>
               ))}
             </Wrap>
-          ))}
         </CheckboxGroup>
 
         <Box pt={2} borderTop="1px solid" borderColor={borderColor}>

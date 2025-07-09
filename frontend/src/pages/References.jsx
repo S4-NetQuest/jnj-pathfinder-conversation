@@ -17,6 +17,7 @@ import {
   Icon,
   Collapse,
   useDisclosure,
+  Image,
   IconButton,
   Select,
   InputGroup,
@@ -37,6 +38,7 @@ import {
 } from '@chakra-ui/icons'
 
 import { referencesData, getStudyTypeColor, getTechnologyIcon } from '../data/referencesData'  // Adjust the path as necessary
+import roboticsIcon from '../assets/icons/JJMT_Icon_Robotics_RGB.svg'  // Adjust the path as necessary
 
 const References = () => {
   const [searchTerm, setSearchTerm] = useState('')
@@ -111,13 +113,13 @@ const References = () => {
               Comprehensive collection of kinematic alignment research
             </Text>
             <HStack justify="center" mt={3} spacing={4}>
-              <Badge colorScheme="blue" fontSize="sm" px={3} py={1}>
+              <Badge colorScheme="blue" fontSize="sm" px={3} py={1} userSelect={'none'}>
                 {referencesData.metadata.totalPapers} Papers
               </Badge>
-              <Badge colorScheme="green" fontSize="sm" px={3} py={1}>
+              <Badge colorScheme="green" fontSize="sm" px={3} py={1} userSelect={'none'}>
                 10 iKA Studies
               </Badge>
-              <Badge colorScheme="orange" fontSize="sm" px={3} py={1}>
+              <Badge colorScheme="orange" fontSize="sm" px={3} py={1} userSelect={'none'}>
                 17 KA Studies
               </Badge>
             </HStack>
@@ -165,7 +167,7 @@ const References = () => {
 
                 {/* Expandable Filters */}
                 <Collapse in={isFiltersOpen} animateOpacity>
-                  <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4} w="full">
+                  <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={4} w="full">
                     <Box>
                       <Text fontSize="sm" fontWeight="medium" mb={2}>Category</Text>
                       <Select
@@ -180,7 +182,7 @@ const References = () => {
                       </Select>
                     </Box>
 
-                    <Box>
+                    {/* <Box>
                       <Text fontSize="sm" fontWeight="medium" mb={2}>Study Type</Text>
                       <Select
                         value={selectedStudyType}
@@ -192,7 +194,7 @@ const References = () => {
                           <option key={type} value={type}>{type}</option>
                         ))}
                       </Select>
-                    </Box>
+                    </Box> */}
 
                     <Box>
                       <Text fontSize="sm" fontWeight="medium" mb={2}>Technology</Text>
@@ -222,7 +224,7 @@ const References = () => {
                       </Select>
                     </Box>
 
-                    <Box>
+                    {/* <Box>
                       <Text fontSize="sm" fontWeight="medium" mb={2}>Subcategory</Text>
                       <Select
                         value={selectedSubcategory}
@@ -234,7 +236,7 @@ const References = () => {
                           <option key={subcat} value={subcat}>{subcat}</option>
                         ))}
                       </Select>
-                    </Box>
+                    </Box> */}
 
                     <Box>
                       <Text fontSize="sm" fontWeight="medium" mb={2}>Sort By</Text>
@@ -293,15 +295,28 @@ const References = () => {
                           </Text>
                         </Box>
 
-                        <VStack align="end" spacing={1}>
+                        <HStack align="end" spacing={1}>
                           <Badge
                             colorScheme={paper.category === 'iKA' ? 'blue' : 'orange'}
                             fontSize="xs"
+                            userSelect={'none'}
                             px={2}
                             py={1}
                           >
                             {paper.category}
                           </Badge>
+                          {paper.technology === 'Robotic' ? (
+                            <Tooltip label="Robotics Technology" fontSize="md">
+                              <Image
+                                src={roboticsIcon}
+                                alt="Robotics Icon"
+                                boxSize="24px"
+                                objectFit="contain"
+                                ml={2}
+                              />
+                            </Tooltip>
+                          ) : null}
+                          {/*
                           <Badge
                             colorScheme={getStudyTypeColor(paper.studyType)}
                             variant="outline"
@@ -309,7 +324,8 @@ const References = () => {
                           >
                             {paper.studyType}
                           </Badge>
-                        </VStack>
+                          */}
+                        </HStack>
                       </Flex>
 
                       {/* Summary */}
@@ -320,24 +336,24 @@ const References = () => {
                       {/* Tags Row */}
                       <Wrap spacing={2}>
                         <WrapItem>
-                          <Badge colorScheme="purple" variant="subtle" fontSize="xs">
-                            📊 {paper.subcategory}
+                          <Badge colorScheme="purple" variant="subtle" fontSize="xs" userSelect="none">
+                            {paper.subcategory}
                           </Badge>
                         </WrapItem>
                         <WrapItem>
-                          <Badge colorScheme="gray" variant="subtle" fontSize="xs">
-                            {getTechnologyIcon(paper.technology)} {paper.technology}
+                          <Badge colorScheme="gray" variant="subtle" fontSize="xs" userSelect="none">
+                            {/* {getTechnologyIcon(paper.technology)} */} {paper.technology}
                           </Badge>
                         </WrapItem>
                         <WrapItem>
-                          <Badge colorScheme="cyan" variant="subtle" fontSize="xs">
-                            ⏱️ {paper.followUp}
+                          <Badge colorScheme="cyan" variant="subtle" fontSize="xs" userSelect="none">
+                            {paper.followUp}
                           </Badge>
                         </WrapItem>
                         {paper.outcomes.slice(0, 2).map(outcome => (
                           <WrapItem key={outcome}>
-                            <Badge colorScheme="green" variant="subtle" fontSize="xs">
-                              📈 {outcome}
+                            <Badge colorScheme="green" variant="subtle" fontSize="xs" userSelect="none">
+                              {outcome}
                             </Badge>
                           </WrapItem>
                         ))}

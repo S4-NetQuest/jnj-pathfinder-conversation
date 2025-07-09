@@ -322,17 +322,20 @@ router.get('/:id', async (req, res) => {
 
     const pool = dbConfig.getPool()
 
-    // Build query based on user role
+    // Build query based on user role - now includes sales rep information
     let query, request
 
     if (currentUser.role === 'sales_rep') {
       query = `
         SELECT c.*,
                h.name as hospital_name,
-               sc.name as surgery_center_name
+               sc.name as surgery_center_name,
+               u.name as sales_rep_name,
+               u.email as sales_rep_email
         FROM conversations c
         LEFT JOIN hospitals h ON c.hospital_id = h.id
         LEFT JOIN surgery_centers sc ON c.surgery_center_id = sc.id
+        LEFT JOIN users u ON c.sales_rep_id = u.id
         WHERE c.id = @conversationId AND c.sales_rep_id = @userId
       `
       request = pool.request()
@@ -342,10 +345,15 @@ router.get('/:id', async (req, res) => {
       query = `
         SELECT c.*,
                h.name as hospital_name,
-               sc.name as surgery_center_name
+               sc.name as surgery_center_name,
+               u.name as sales_rep_name,
+               u.email as sales_rep_email,
+               u.phone as sales_rep_phone,
+               u.title as sales_rep_title
         FROM conversations c
         LEFT JOIN hospitals h ON c.hospital_id = h.id
         LEFT JOIN surgery_centers sc ON c.surgery_center_id = sc.id
+        LEFT JOIN users u ON c.sales_rep_id = u.id
         WHERE c.id = @conversationId AND (c.surgeon_name = @surgeonName OR c.sales_rep_id IS NULL)
       `
       request = pool.request()
@@ -391,6 +399,14 @@ router.get('/:id', async (req, res) => {
       .input('conversationId', dbConfig.sql.Int, conversationId)
       .query(responsesQuery)
 
+    // Structure the sales rep data
+    const salesRep = conversation.sales_rep_name ? {
+      name: conversation.sales_rep_name,
+      email: conversation.sales_rep_email,
+      phone: conversation.sales_rep_phone,
+      title: conversation.sales_rep_title
+    } : null
+
     res.json({
       success: true,
       conversation: {
@@ -403,6 +419,8 @@ router.get('/:id', async (req, res) => {
         alignment_percentage_ika: percentageScores.ika,
         alignment_percentage_fa: percentageScores.fa,
         alignment_percentage_ma: percentageScores.ma,
+        // Add structured sales rep data
+        salesRep: salesRep,
         responses: responsesResult.recordset
       },
       maxScores: maxScores

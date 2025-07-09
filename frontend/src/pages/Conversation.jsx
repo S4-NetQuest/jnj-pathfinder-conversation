@@ -50,6 +50,7 @@ const Conversation = () => {
   const { isOpen: isNotesOpen, onOpen: onNotesOpen, onClose: onNotesClose } = useDisclosure()
   const [isScheduleOpen, setIsScheduleOpen] = useState(false)
   const [conversation, setConversation] = useState(null)
+  const [salesRep, setSalesRep] = useState(null)
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [responses, setResponses] = useState({})
   const [scores, setScores] = useState({
@@ -86,6 +87,10 @@ const Conversation = () => {
       const response = await api.get(`/conversations/${id}`)
       const conversationData = response.data.conversation
       setConversation(conversationData)
+
+      if (conversationData.salesRep) {
+        setSalesRep(conversationData.salesRep)
+      }
 
       // Check if conversation is completed
       const isCompleted = conversationData.status === 'completed'
@@ -758,9 +763,10 @@ const Conversation = () => {
 
       <ScheduleFollowupModal
         isOpen={isScheduleOpen}
-        onClose={() => setIsScheduleOpen(false)}
         conversationData={conversation}
-        salesRep={salesRep}
+        salesRep={conversation?.salesRep || salesRep}
+        onClose={() => setIsScheduleOpen(false)}
+
       />
 
       {/* Notes Modal */}

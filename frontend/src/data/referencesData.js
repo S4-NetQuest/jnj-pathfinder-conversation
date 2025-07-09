@@ -562,6 +562,3 @@ export const getCategoryDescription = (category) => {
   }
   return descriptions[category] || ''
 }
-
-// Usage example for the React component:
-// import { referencesData, getStudyTypeColor, getTechnologyIcon } from './referencesData'
