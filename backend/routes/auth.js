@@ -1,9 +1,9 @@
 // backend/routes/auth.js
-import express from 'express'
-import bcrypt from 'bcryptjs'
-import Joi from 'joi'
-import dbConfig from '../config/database.js'
-import { getCurrentUser } from '../middleware/auth.js'
+const express = require('express')
+const bcrypt = require('bcryptjs')
+const Joi = require('joi')
+const dbConfig = require('../config/database')
+const { getCurrentUser } = require('../middleware/auth')
 
 const router = express.Router()
 
@@ -11,8 +11,7 @@ const router = express.Router()
 let passport = null
 if (process.env.ENABLE_SAML === 'true') {
   try {
-    const passportModule = await import('passport')
-    passport = passportModule.default
+    passport = require('passport')
   } catch (error) {
     console.warn('Passport not available for SAML routes')
   }
@@ -192,4 +191,4 @@ router.get('/debug', (req, res) => {
   })
 })
 
-export default router
+module.exports = router

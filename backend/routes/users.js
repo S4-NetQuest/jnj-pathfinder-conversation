@@ -1,5 +1,5 @@
-import express from 'express'
-import dbConfig from '../config/database.js'
+const express = require('express')
+const dbConfig = require('../config/database')
 
 const router = express.Router()
 
@@ -14,7 +14,7 @@ const requireAuth = (req, res, next) => {
   else if (req.isAuthenticated()) {
     return next()
   }
-  
+
   return res.status(401).json({ error: 'Authentication required' })
 }
 
@@ -29,7 +29,7 @@ const requireSalesRep = (req, res, next) => {
   else if (req.isAuthenticated() && req.user.role === 'sales_rep') {
     return next()
   }
-  
+
   return res.status(403).json({ error: 'Sales representative access required' })
 }
 
@@ -39,14 +39,14 @@ router.get('/profile', requireAuth, async (req, res) => {
     const pool = dbConfig.getPool()
     const query = `
       SELECT id, email, name, first_name, last_name, role, department, company, created_at, updated_at
-      FROM users 
+      FROM users
       WHERE id = @userId
     `
-    
+
     const result = await pool.request()
       .input('userId', dbConfig.sql.Int, req.user.id)
       .query(query)
-    
+
     if (result.recordset.length === 0) {
       return res.status(404).json({ error: 'User not found' })
     }
@@ -62,10 +62,10 @@ router.get('/profile', requireAuth, async (req, res) => {
 router.put('/profile', requireAuth, async (req, res) => {
   try {
     const { name, firstName, lastName, department, company } = req.body
-    
+
     const pool = dbConfig.getPool()
     const query = `
-      UPDATE users 
+      UPDATE users
       SET name = @name,
           first_name = @firstName,
           last_name = @lastName,
@@ -75,7 +75,7 @@ router.put('/profile', requireAuth, async (req, res) => {
       OUTPUT INSERTED.*
       WHERE id = @userId
     `
-    
+
     const result = await pool.request()
       .input('userId', dbConfig.sql.Int, req.user.id)
       .input('name', dbConfig.sql.VarChar, name)
@@ -84,7 +84,7 @@ router.put('/profile', requireAuth, async (req, res) => {
       .input('department', dbConfig.sql.VarChar, department)
       .input('company', dbConfig.sql.VarChar, company)
       .query(query)
-    
+
     if (result.recordset.length === 0) {
       return res.status(404).json({ error: 'User not found' })
     }
@@ -101,7 +101,7 @@ router.get('/stats', requireSalesRep, async (req, res) => {
   try {
     const pool = dbConfig.getPool()
     const query = `
-      SELECT 
+      SELECT
         COUNT(*) as total_conversations,
         COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_conversations,
         COUNT(CASE WHEN status = 'in_progress' THEN 1 END) as in_progress_conversations,
@@ -111,14 +111,14 @@ router.get('/stats', requireSalesRep, async (req, res) => {
         COUNT(CASE WHEN recommended_approach = 'kinematic' THEN 1 END) as kinematic_recommendations,
         MIN(conversation_date) as first_conversation_date,
         MAX(conversation_date) as last_conversation_date
-      FROM conversations 
+      FROM conversations
       WHERE sales_rep_id = @userId
     `
-    
+
     const result = await pool.request()
       .input('userId', dbConfig.sql.Int, req.user.id)
       .query(query)
-    
+
     res.json(result.recordset[0])
   } catch (error) {
     console.error('Error fetching user statistics:', error)
@@ -132,10 +132,10 @@ router.get('/hospitals', async (req, res) => {
     const pool = dbConfig.getPool()
     const query = `
       SELECT id, name, size_category, city, state
-      FROM hospitals 
+      FROM hospitals
       ORDER BY name ASC
     `
-    
+
     const result = await pool.request().query(query)
     res.json(result.recordset)
   } catch (error) {
@@ -144,4 +144,4 @@ router.get('/hospitals', async (req, res) => {
   }
 })
 
-export default router
+module.exports = router

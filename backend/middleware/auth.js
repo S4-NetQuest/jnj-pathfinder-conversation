@@ -1,4 +1,4 @@
-export const requireSalesRep = (req, res, next) => {
+const requireSalesRep = (req, res, next) => {
   // Check session-based auth first
   if (req.session?.authenticated && req.session?.user?.role === 'sales_rep') {
     req.user = req.session.user // Set req.user for compatibility
@@ -14,7 +14,7 @@ export const requireSalesRep = (req, res, next) => {
 }
 
 // Helper function to check if user is authenticated (any method)
-export const isAuthenticated = (req) => {
+const isAuthenticated = (req) => {
   // Session-based auth
   if (req.session?.authenticated && req.session?.user) {
     return true
@@ -29,7 +29,7 @@ export const isAuthenticated = (req) => {
 }
 
 // Helper function to get current user
-export const getCurrentUser = (req) => {
+const getCurrentUser = (req) => {
   // Session-based auth
   if (req.session?.authenticated && req.session?.user) {
     return req.session.user
@@ -41,4 +41,10 @@ export const getCurrentUser = (req) => {
   }
 
   return null
+}
+
+module.exports = {
+  requireSalesRep,
+  isAuthenticated,
+  getCurrentUser
 }

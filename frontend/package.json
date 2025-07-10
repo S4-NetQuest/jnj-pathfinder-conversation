@@ -1,13 +1,17 @@
 {
   "name": "pathfinder-frontend",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "dev": "vite --mode development",
+    "build": "vite build --mode production",
+    "build:staging": "vite build --mode staging",
+    "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "preview:staging": "vite preview --mode staging --base /pathfinder/",
+    "serve:staging": "vite preview --port 3002 --base /pathfinder/"
   },
   "dependencies": {
     "@chakra-ui/icons": "^2.2.4",

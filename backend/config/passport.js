@@ -1,8 +1,6 @@
 // SAML SSO Configuration (Optional - only loads if dependencies are available)
-import { config } from 'dotenv'
-import dbConfig from './database.js'
-
-config()
+require('dotenv').config()
+const dbConfig = require('./database')
 
 let passport = null
 let SamlStrategy = null
@@ -10,14 +8,11 @@ let SamlStrategy = null
 // Only initialize SAML if explicitly enabled and dependencies are available
 if (process.env.ENABLE_SAML === 'true') {
   try {
-    const passportModule = await import('passport')
-    const samlModule = await import('passport-saml')
-    
-    passport = passportModule.default
-    SamlStrategy = samlModule.Strategy
+    passport = require('passport')
+    const { Strategy: SamlStrategy } = require('passport-saml')
 
     console.log('SAML authentication enabled')
-    
+
     // SAML Configuration
     const samlConfig = {
       callbackUrl: process.env.SAML_CALLBACK_URL || 'http://localhost:5000/api/auth/saml/callback',
@@ -56,10 +51,10 @@ if (process.env.ENABLE_SAML === 'true') {
           // Check if user exists in database, create if not
           const pool = dbConfig.getPool()
           const userQuery = `
-            SELECT * FROM users 
+            SELECT * FROM users
             WHERE email = @email AND role = 'sales_rep'
           `
-          
+
           let result = await pool.request()
             .input('email', dbConfig.sql.VarChar, userData.email)
             .query(userQuery)
@@ -71,7 +66,7 @@ if (process.env.ENABLE_SAML === 'true') {
               OUTPUT INSERTED.*
               VALUES (@email, @name, @firstName, @lastName, @role, @department, @company, GETDATE(), GETDATE())
             `
-            
+
             result = await pool.request()
               .input('email', dbConfig.sql.VarChar, userData.email)
               .input('name', dbConfig.sql.VarChar, userData.name)
@@ -84,13 +79,13 @@ if (process.env.ENABLE_SAML === 'true') {
           } else {
             // Update existing user
             const updateQuery = `
-              UPDATE users 
-              SET name = @name, first_name = @firstName, last_name = @lastName, 
+              UPDATE users
+              SET name = @name, first_name = @firstName, last_name = @lastName,
                   department = @department, company = @company, updated_at = GETDATE()
               OUTPUT INSERTED.*
               WHERE email = @email AND role = 'sales_rep'
             `
-            
+
             result = await pool.request()
               .input('email', dbConfig.sql.VarChar, userData.email)
               .input('name', dbConfig.sql.VarChar, userData.name)
@@ -120,7 +115,7 @@ if (process.env.ENABLE_SAML === 'true') {
       try {
         const pool = dbConfig.getPool()
         const query = 'SELECT * FROM users WHERE id = @id'
-        
+
         const result = await pool.request()
           .input('id', dbConfig.sql.Int, sessionUser.id)
           .query(query)
@@ -144,4 +139,4 @@ if (process.env.ENABLE_SAML === 'true') {
   console.log('SAML authentication disabled - using manual authentication only')
 }
 
-export default passport
+module.exports = passport

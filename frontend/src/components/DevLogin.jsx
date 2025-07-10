@@ -19,6 +19,7 @@ import {
 } from '@chakra-ui/react'
 import { useAuth } from '../contexts/AuthContext'
 import api from '../services/api'
+import config from '../config/config'
 
 const DevLogin = () => {
   const { login } = useAuth()
@@ -29,8 +30,8 @@ const DevLogin = () => {
     role: 'sales_rep'
   })
 
-  // Only show in development
-  if (process.env.NODE_ENV === 'production') {
+  // Only show in development or staging
+  if (config.isProduction) {
     return null
   }
 
@@ -73,9 +74,16 @@ const DevLogin = () => {
   return (
     <Box maxW="400px" mx="auto" mt={8}>
       <Card>
-        <CardHeader bg="yellow.100" borderBottom="1px solid" borderColor="yellow.300">
-          <Heading size="md" color="yellow.800">
-            🚧 Development Login
+        <CardHeader
+          bg={config.isStaging ? "orange.100" : "yellow.100"}
+          borderBottom="1px solid"
+          borderColor={config.isStaging ? "orange.300" : "yellow.300"}
+        >
+          <Heading
+            size="md"
+            color={config.isStaging ? "orange.800" : "yellow.800"}
+          >
+            🚧 {config.NODE_ENV.charAt(0).toUpperCase() + config.NODE_ENV.slice(1)} Login
           </Heading>
         </CardHeader>
 
@@ -83,7 +91,7 @@ const DevLogin = () => {
           <Alert status="warning" mb={4} borderRadius="md">
             <AlertIcon />
             <Text fontSize="sm">
-              This login is for development only and bypasses SAML authentication.
+              This login is for {config.NODE_ENV} only and bypasses SAML authentication.
             </Text>
           </Alert>
 
@@ -122,7 +130,7 @@ const DevLogin = () => {
               size="lg"
               mt={2}
             >
-              Dev Login
+              {config.NODE_ENV.charAt(0).toUpperCase() + config.NODE_ENV.slice(1)} Login
             </Button>
           </VStack>
         </CardBody>

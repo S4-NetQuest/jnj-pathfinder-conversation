@@ -1,5 +1,5 @@
 // backend/validation/schemas.js (Updated to allow future dates and improve error messages)
-import Joi from 'joi'
+const Joi = require('joi')
 
 // Volume options
 const VOLUME_OPTIONS = ['< 50', '< 100', '< 200', '> 200']
@@ -54,7 +54,7 @@ const normalizeAlignment = (alignment) => {
   }
 }
 
-export const createConversationSchema = Joi.object({
+const createConversationSchema = Joi.object({
   surgeon_name: Joi.string()
     .required()
     .min(2)
@@ -127,7 +127,7 @@ export const createConversationSchema = Joi.object({
     })
 })
 
-export const updateConversationSchema = Joi.object({
+const updateConversationSchema = Joi.object({
   status: Joi.string()
     .valid(...STATUS_OPTIONS)
     .messages({
@@ -203,7 +203,7 @@ export const updateConversationSchema = Joi.object({
   'object.min': 'At least one field must be provided for update'
 })
 
-export const responseSchema = Joi.object({
+const responseSchema = Joi.object({
   questionId: Joi.string()
     .required()
     .min(1)
@@ -276,7 +276,7 @@ export const responseSchema = Joi.object({
 })
 
 // User profile validation schemas
-export const updateUserProfileSchema = Joi.object({
+const updateUserProfileSchema = Joi.object({
   name: Joi.string().min(2).max(255).trim().messages({
     'string.min': 'Name must be at least 2 characters long',
     'string.max': 'Name cannot exceed 255 characters'
@@ -300,7 +300,7 @@ export const updateUserProfileSchema = Joi.object({
 })
 
 // Dev login validation schema
-export const devLoginSchema = Joi.object({
+const devLoginSchema = Joi.object({
   email: Joi.string().email().required().messages({
     'string.email': 'Please provide a valid email address',
     'any.required': 'Email is required'
@@ -312,39 +312,39 @@ export const devLoginSchema = Joi.object({
 })
 
 // Helper function to validate and transform robotics value
-export const transformRoboticsValue = (value) => {
+const transformRoboticsValue = (value) => {
   if (value === 'true' || value === true) return true
   if (value === 'false' || value === false) return false
   throw new Error('Invalid robotics value - must be true or false')
 }
 
 // Helper function to get alignment display name
-export const getAlignmentDisplayName = (alignment) => {
+const getAlignmentDisplayName = (alignment) => {
   return ALIGNMENT_DISPLAY_NAMES[alignment] || alignment
 }
 
 // Helper function to get alignment color scheme for UI
-export const getAlignmentColorScheme = (alignment) => {
+const getAlignmentColorScheme = (alignment) => {
   return ALIGNMENT_COLOR_SCHEMES[alignment] || 'gray'
 }
 
 // Helper function to validate alignment option
-export const isValidAlignment = (alignment) => {
+const isValidAlignment = (alignment) => {
   return ALIGNMENT_OPTIONS_ALL.includes(alignment)
 }
 
 // Helper function to validate volume option
-export const isValidVolume = (volume) => {
+const isValidVolume = (volume) => {
   return VOLUME_OPTIONS.includes(volume)
 }
 
 // Helper function to validate status option
-export const isValidStatus = (status) => {
+const isValidStatus = (status) => {
   return STATUS_OPTIONS.includes(status)
 }
 
 // Export constants for use in other files
-export const CONSTANTS = {
+const CONSTANTS = {
   VOLUME_OPTIONS,
   ALIGNMENT_OPTIONS: ALIGNMENT_OPTIONS_UPPER, // For backwards compatibility
   ALIGNMENT_OPTIONS_UPPER,
@@ -357,7 +357,7 @@ export const CONSTANTS = {
 }
 
 // Export validation helper functions
-export const validators = {
+const validators = {
   transformRoboticsValue,
   getAlignmentDisplayName,
   getAlignmentColorScheme,
@@ -367,15 +367,19 @@ export const validators = {
   normalizeAlignment
 }
 
-// Default exports for convenience
-export default {
-  schemas: {
-    createConversationSchema,
-    updateConversationSchema,
-    responseSchema,
-    updateUserProfileSchema,
-    devLoginSchema
-  },
-  constants: CONSTANTS,
+module.exports = {
+  createConversationSchema,
+  updateConversationSchema,
+  responseSchema,
+  updateUserProfileSchema,
+  devLoginSchema,
+  transformRoboticsValue,
+  getAlignmentDisplayName,
+  getAlignmentColorScheme,
+  isValidAlignment,
+  isValidVolume,
+  isValidStatus,
+  normalizeAlignment,
+  CONSTANTS,
   validators
 }

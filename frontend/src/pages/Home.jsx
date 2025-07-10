@@ -20,6 +20,7 @@ import { useAuth } from '../contexts/AuthContext'
 import ConversationModal from '../components/ConversationModal'
 import LoadConversationModal from '../components/LoadConversationModal'
 import DevLogin from '../components/DevLogin'
+import config from '../config/config' // Add this import
 
 const Home = () => {
   const { user, logout, isSalesRep, isSurgeon } = useAuth()
@@ -46,25 +47,12 @@ const Home = () => {
       duration: 3000,
       isClosable: true,
     })
-    // TODO: Navigate to conversation page when conversation component is built
     navigate(`/conversation/${conversationId}`)
-    //console.log('Created conversation:', conversationId)
   }
 
   const handleConversationSelected = (conversationId) => {
     onLoadClose()
-    /* toast({
-      title: 'Conversation Loaded',
-      description: `Loading conversation with ID: ${conversationId}`,
-      status: 'info',
-      duration: 3000,
-      isClosable: true,
-    }) */
-
-    // TODO: Navigate to conversation page when conversation component is built
-    //console.log('Selected conversation:', conversationId)
     navigate(`/conversation/${conversationId}`)
-
   }
 
   const handleExploreKinematicRestoration = () => {
@@ -182,22 +170,8 @@ const Home = () => {
           </Alert>
         )}
 
-        {isSalesRep && (
-          <Alert status="success" borderRadius="md">
-            <AlertIcon />
-            <VStack align="start" spacing={1}>
-              <Text fontSize="sm" fontWeight="medium">
-                Sales Representative Access
-              </Text>
-              <Text fontSize="sm">
-                You can create and manage conversations with surgeons, add notes, and access the comparison tools.
-              </Text>
-            </VStack>
-          </Alert>
-        )}
-
-        {/* Development Info */}
-        {process.env.NODE_ENV !== 'production' && (
+        {/* Development Info - Updated to use config */}
+        {config.showDevFeatures && (
           <Alert status="warning" borderRadius="md">
             <AlertIcon />
             <Text fontSize="sm">

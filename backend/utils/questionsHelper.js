@@ -1,26 +1,22 @@
 // backend/utils/questionsHelper.js
 // Utility functions for loading and processing questions data
 
-import { readFile } from 'fs/promises'
-import { fileURLToPath } from 'url'
-import { dirname, join } from 'path'
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
+const { readFile } = require('fs').promises
+const path = require('path')
 
 let questionsDataCache = null
 
 /**
  * Load questions data from JSON file with fallback to default values
  */
-export const loadQuestionsData = async () => {
+const loadQuestionsData = async () => {
   if (questionsDataCache) {
     return questionsDataCache
   }
 
   try {
     // Try to load from the data directory
-    const questionsPath = join(__dirname, '../data/questions.json')
+    const questionsPath = path.join(__dirname, '../data/questions.json')
     const questionsContent = await readFile(questionsPath, 'utf8')
     questionsDataCache = JSON.parse(questionsContent)
 
@@ -75,7 +71,7 @@ export const loadQuestionsData = async () => {
 /**
  * Calculate maximum possible scores for each alignment type
  */
-export const calculateMaxScores = (questions) => {
+const calculateMaxScores = (questions) => {
   if (!questions || !Array.isArray(questions) || questions.length === 0) {
     console.warn('No questions provided, using default max scores')
     return {
@@ -110,7 +106,7 @@ export const calculateMaxScores = (questions) => {
 /**
  * Calculate percentage scores based on raw scores and max possible scores
  */
-export const calculatePercentageScores = (rawScores, maxScores) => {
+const calculatePercentageScores = (rawScores, maxScores) => {
   return {
     ka: maxScores.ka > 0 ? Math.round((rawScores.ka / maxScores.ka) * 100) : 0,
     ika: maxScores.ika > 0 ? Math.round((rawScores.ika / maxScores.ika) * 100) : 0,
@@ -123,7 +119,7 @@ export const calculatePercentageScores = (rawScores, maxScores) => {
  * Determine recommended approach based on percentage scores
  * In case of ties, prioritize in order: KA, iKA, FA, MA
  */
-export const getRecommendedApproachFromPercentages = (percentageScores) => {
+const getRecommendedApproachFromPercentages = (percentageScores) => {
   const { ka, ika, fa, ma } = percentageScores
   const maxPercentage = Math.max(ka, ika, fa, ma)
 
@@ -142,7 +138,7 @@ export const getRecommendedApproachFromPercentages = (percentageScores) => {
 /**
  * Get alignment display information
  */
-export const getAlignmentInfo = (alignmentKey) => {
+const getAlignmentInfo = (alignmentKey) => {
   const alignmentMap = {
     'KA': { name: 'Kinematic Alignment', color: '#eb1700', colorScheme: 'red' },
     'ka': { name: 'Kinematic Alignment', color: '#eb1700', colorScheme: 'red' },
@@ -164,7 +160,7 @@ export const getAlignmentInfo = (alignmentKey) => {
 /**
  * Validate questions data structure
  */
-export const validateQuestionsData = (questionsData) => {
+const validateQuestionsData = (questionsData) => {
   if (!questionsData || typeof questionsData !== 'object') {
     throw new Error('Questions data must be an object')
   }
@@ -198,7 +194,7 @@ export const validateQuestionsData = (questionsData) => {
 /**
  * Get questions data with validation and caching
  */
-export const getQuestionsData = async () => {
+const getQuestionsData = async () => {
   try {
     const questionsData = await loadQuestionsData()
     validateQuestionsData(questionsData)
@@ -230,12 +226,11 @@ export const getQuestionsData = async () => {
 /**
  * Clear questions data cache (useful for testing or reloading)
  */
-export const clearQuestionsCache = () => {
+const clearQuestionsCache = () => {
   questionsDataCache = null
 }
 
-// Default export with all utility functions
-export default {
+module.exports = {
   loadQuestionsData,
   calculateMaxScores,
   calculatePercentageScores,

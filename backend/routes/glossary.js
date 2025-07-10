@@ -1,6 +1,6 @@
 // backend/routes/glossary.js
-import express from 'express'
-import dbConfig from '../config/database.js'
+const express = require('express')
+const dbConfig = require('../config/database')
 
 const router = express.Router()
 
@@ -93,4 +93,4 @@ router.get('/search/:query', async (req, res) => {
   }
 })
 
-export default router
+module.exports = router

@@ -1,7 +1,7 @@
-import express from 'express'
-import dbConfig from '../config/database.js'
-import { requireSalesRep, isAuthenticated, getCurrentUser } from '../middleware/auth.js'
-import {
+const express = require('express')
+const dbConfig = require('../config/database')
+const { requireSalesRep, isAuthenticated, getCurrentUser } = require('../middleware/auth')
+const {
   createConversationSchema,
   updateConversationSchema,
   responseSchema,
@@ -10,127 +10,16 @@ import {
   getAlignmentColorScheme,
   validators,
   CONSTANTS
-} from '../validation/schemas.js'
-import {
+} = require('../validation/schemas')
+const {
   loadQuestionsData,
   calculateMaxScores,
   calculatePercentageScores,
   getRecommendedApproachFromPercentages,
   getQuestionsData
-} from '../utils/questionsHelper.js'
+} = require('../utils/questionsHelper')
 
 const router = express.Router()
-
-// Helper function to load questions data for max score calculation
-/*
-let questionsData = null
-const loadQuestionsData = async () => {
-  if (!questionsData) {
-    try {
-      // In a real application, you might load this from a database or file
-      // For now, we'll use a placeholder structure
-      // You should replace this with your actual questions data loading logic
-      const { readFile } = await import('fs/promises')
-      const { fileURLToPath } = await import('url')
-      const { dirname, join } = await import('path')
-
-      const __filename = fileURLToPath(import.meta.url)
-      const __dirname = dirname(__filename)
-      const questionsPath = join(__dirname, '../data/questions.json')
-
-      try {
-        const questionsContent = await readFile(questionsPath, 'utf8')
-        questionsData = JSON.parse(questionsContent)
-      } catch (fileError) {
-        console.warn('Could not load questions.json file, using default max scores')
-        // Fallback to default max scores if file is not available
-        questionsData = {
-          questions: [],
-          metadata: {
-            maxScores: {
-              ka: 20,   // Default max scores - adjust based on your actual questions
-              ika: 20,
-              fa: 20,
-              ma: 20
-            }
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Error loading questions data:', error)
-      // Use fallback data
-      questionsData = {
-        questions: [],
-        metadata: {
-          maxScores: {
-            ka: 20,
-            ika: 20,
-            fa: 20,
-            ma: 20
-          }
-        }
-      }
-    }
-  }
-  return questionsData
-}
-
-// Helper function to calculate max possible score for each alignment
-const calculateMaxScores = (questions) => {
-  if (!questions || !Array.isArray(questions) || questions.length === 0) {
-    // Return default max scores if no questions available
-    return {
-      ka: 20,
-      ika: 20,
-      fa: 20,
-      ma: 20
-    }
-  }
-
-  return questions.reduce((totals, question) => {
-    if (question.options && Array.isArray(question.options)) {
-      const maxForQuestion = {
-        ka: Math.max(...question.options.map(opt => opt.scores?.ka || 0)),
-        ika: Math.max(...question.options.map(opt => opt.scores?.ika || 0)),
-        fa: Math.max(...question.options.map(opt => opt.scores?.fa || 0)),
-        ma: Math.max(...question.options.map(opt => opt.scores?.ma || 0))
-      }
-
-      totals.ka += maxForQuestion.ka
-      totals.ika += maxForQuestion.ika
-      totals.fa += maxForQuestion.fa
-      totals.ma += maxForQuestion.ma
-    }
-    return totals
-  }, { ka: 0, ika: 0, fa: 0, ma: 0 })
-}
-
-// Helper function to calculate percentage scores
-const calculatePercentageScores = (rawScores, maxScores) => {
-  return {
-    ka: maxScores.ka > 0 ? Math.round((rawScores.ka / maxScores.ka) * 100) : 0,
-    ika: maxScores.ika > 0 ? Math.round((rawScores.ika / maxScores.ika) * 100) : 0,
-    fa: maxScores.fa > 0 ? Math.round((rawScores.fa / maxScores.fa) * 100) : 0,
-    ma: maxScores.ma > 0 ? Math.round((rawScores.ma / maxScores.ma) * 100) : 0
-  }
-}
-
-// Helper function to determine recommended approach based on percentage scores
-const getRecommendedApproachFromPercentages = (percentageScores) => {
-  const { ka, ika, fa, ma } = percentageScores
-  const maxPercentage = Math.max(ka, ika, fa, ma)
-
-  // Find the alignment with the highest percentage
-  // In case of ties, prioritize in order: KA, iKA, FA, MA
-  if (ka === maxPercentage) return 'KA'
-  if (ika === maxPercentage) return 'iKA'
-  if (fa === maxPercentage) return 'FA'
-  if (ma === maxPercentage) return 'MA'
-
-  // Fallback (shouldn't happen)
-  return 'KA'
-}
- */
 
 // Helper function to get questions data and max scores
 const getQuestionsAndMaxScores = async () => {
@@ -138,9 +27,6 @@ const getQuestionsAndMaxScores = async () => {
   const maxScores = calculateMaxScores(questionsData.questions)
   return { questionsData, maxScores }
 }
-
-const { questionsData, maxScores } = await getQuestionsAndMaxScores()
-
 
 // Add logging middleware for this route
 router.use((req, res, next) => {
@@ -1767,4 +1653,4 @@ router.delete('/:id/notes', async (req, res) => {
   }
 })
 
-export default router
+module.exports = router

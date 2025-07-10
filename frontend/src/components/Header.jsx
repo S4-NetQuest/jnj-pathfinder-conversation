@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import {
@@ -17,11 +16,14 @@ import {
   MenuDivider,
   Button,
   useToast,
+  Badge,
+  Container,
 } from '@chakra-ui/react'
 import { ChevronDownIcon } from '@chakra-ui/icons'
 import { LuBookA } from "react-icons/lu";
 import { useAuth } from '../contexts/AuthContext'
 import GlossaryModal from './GlossaryModal'
+import config from '../config/config'
 
 // Import SVG assets
 import HomeIconSVG from '../assets/icons/JJ_Icon_Home_RGB.svg'
@@ -99,9 +101,44 @@ const Header = () => {
 
   return (
     <>
+      {/* Environment indicator for non-production */}
+      {config.showDevFeatures && (
+        <Box
+          bg={config.isStaging ? 'orange.500' : 'blue.500'}
+          color="white"
+          py={1}
+          fontSize="xs"
+          textAlign="center"
+          position="fixed"
+          top={0}
+          left={0}
+          right={0}
+          zIndex={1001}
+        >
+          <Container maxW="container.xl">
+            <HStack justify="space-between" spacing={2}>
+              <Badge
+                colorScheme={config.isStaging ? 'orange' : 'blue'}
+                variant="solid"
+                fontSize="xs"
+              >
+                {config.NODE_ENV.toUpperCase()}
+              </Badge>
+              <Text fontSize="xs" isTruncated>
+                {config.APP_TITLE}
+              </Text>
+              <Text fontSize="xs">
+                API: {config.API_URL}
+              </Text>
+            </HStack>
+          </Container>
+        </Box>
+      )}
+
+      {/* Main Header */}
       <Box
         position="fixed"
-        top={0}
+        top={config.showDevFeatures ? "24px" : "0"}
         left={0}
         right={0}
         bg="red.500"
@@ -171,8 +208,8 @@ const Header = () => {
               }}
             />
 
-            {/* User Profile Menu - Only for Sales Reps */}
-            {/* {user?.role === 'sales_rep' && ( */}
+            {/* User Profile Menu */}
+            {user && (
               <Menu>
                 <MenuButton
                   as={Button}
@@ -239,7 +276,17 @@ const Header = () => {
                   </MenuItem>
                 </MenuList>
               </Menu>
-            {/* )} */}
+            )}
+
+            {!user && (
+              <Button
+                colorScheme="red"
+                size="sm"
+                onClick={() => navigate('/')}
+              >
+                Login
+              </Button>
+            )}
           </HStack>
         </Flex>
       </Box>

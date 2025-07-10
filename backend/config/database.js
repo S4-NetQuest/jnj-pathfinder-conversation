@@ -1,7 +1,5 @@
-import sql from 'mssql'
-import { config } from 'dotenv'
-
-config()
+const sql = require('mssql')
+require('dotenv').config()
 
 const dbConfig = {
   user: process.env.DB_USER || 'pathfinder_user',
@@ -81,12 +79,10 @@ process.on('SIGTERM', async () => {
   process.exit(0)
 })
 
-export default {
+module.exports = {
   connectDB,
   closeDB,
   getPool,
   testConnection,
   sql,
 }
-
-export { sql }
