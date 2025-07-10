@@ -12,14 +12,18 @@ export default defineConfig(({ mode }) => {
       outDir: 'dist',
       assetsDir: 'assets',
       sourcemap: isDev,
+      // Simpler build options for IIS compatibility
+      target: 'es2015',
       rollupOptions: {
         output: {
-          manualChunks: {
-            vendor: ['react', 'react-dom'],
-            ui: ['@chakra-ui/react', '@emotion/react', '@emotion/styled'],
-            icons: ['@chakra-ui/icons', 'react-icons'],
-            router: ['react-router-dom'],
-            utils: ['axios', 'framer-motion']
+          // Reduce the number of chunks
+          manualChunks: (id) => {
+            // Put all node_modules into vendor chunk
+            if (id.includes('node_modules')) {
+              return 'vendor'
+            }
+            // Put all other code into main chunk
+            return 'main'
           }
         }
       }
