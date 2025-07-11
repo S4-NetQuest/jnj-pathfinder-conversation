@@ -66,25 +66,93 @@ const limiter = rateLimit({
   legacyHeaders: false,
 })
 
-// SIMPLIFIED CORS configuration to prevent duplicate headers
-const getStagingOrigin = () => {
-  // Extract just the origin from FRONTEND_URL if it exists
-  if (process.env.FRONTEND_URL) {
-    try {
-      const url = new URL(process.env.FRONTEND_URL)
-      return `${url.protocol}//${url.host}`
-    } catch (error) {
-      console.warn('Invalid FRONTEND_URL:', process.env.FRONTEND_URL)
-    }
-  }
+// Dynamic CORS configuration based on environment
+const getCorsOrigins = () => {
+  const nodeEnv = process.env.NODE_ENV || 'development'
 
-  // Default staging origin
-  return 'https://previews.s4stage.com'
+  switch (nodeEnv) {
+    case 'development':
+      return [
+        'http://localhost:3000',
+        'http://localhost:3001',
+        'http://localhost:5173', // Vite default
+        'http://127.0.0.1:3000',
+        'http://127.0.0.1:3001',
+        'http://127.0.0.1:5173'
+      ]
+
+    case 'staging':
+      const stagingOrigins = [
+        'https://previews.s4stage.com',
+        'http://previews.s4stage.com'
+      ]
+
+      // Add frontend URL if specified and different from defaults
+      if (process.env.FRONTEND_URL) {
+        try {
+          const frontendUrl = new URL(process.env.FRONTEND_URL)
+          const frontendOrigin = `${frontendUrl.protocol}//${frontendUrl.host}`
+
+          if (!stagingOrigins.includes(frontendOrigin)) {
+            stagingOrigins.push(frontendOrigin)
+          }
+        } catch (error) {
+          console.warn('Invalid FRONTEND_URL in staging:', process.env.FRONTEND_URL)
+        }
+      }
+
+      return stagingOrigins
+
+    case 'production':
+      const productionOrigins = []
+
+      // In production, only allow specified frontend URL
+      if (process.env.FRONTEND_URL) {
+        try {
+          const frontendUrl = new URL(process.env.FRONTEND_URL)
+          const frontendOrigin = `${frontendUrl.protocol}//${frontendUrl.host}`
+          productionOrigins.push(frontendOrigin)
+        } catch (error) {
+          console.error('Invalid FRONTEND_URL in production:', process.env.FRONTEND_URL)
+        }
+      }
+
+      // Fallback for production if no frontend URL specified
+      if (productionOrigins.length === 0) {
+        console.warn('No valid FRONTEND_URL specified for production, using default')
+        productionOrigins.push('https://your-production-domain.com')
+      }
+
+      return productionOrigins
+
+    default:
+      console.warn(`Unknown NODE_ENV: ${nodeEnv}, using development origins`)
+      return [
+        'http://localhost:3000',
+        'http://localhost:3001',
+        'http://localhost:5173'
+      ]
+  }
 }
 
-// Simple CORS configuration - single origin for staging
+// CORS configuration with environment-based origins
+const allowedOrigins = getCorsOrigins()
+
 const corsOptions = {
-  origin: getStagingOrigin(), // Single origin, not an array or function
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps, Postman, etc.)
+    if (!origin) {
+      return callback(null, true)
+    }
+
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true)
+    } else {
+      console.warn(`CORS: Origin not allowed: ${origin}`)
+      console.warn(`CORS: Allowed origins:`, allowedOrigins)
+      callback(new Error(`Origin ${origin} not allowed by CORS policy`))
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: [
@@ -92,13 +160,16 @@ const corsOptions = {
     'Authorization',
     'X-Requested-With',
     'Accept',
-    'Origin'
+    'Origin',
+    'Cache-Control'
   ],
   optionsSuccessStatus: 200
 }
 
 console.log('=== CORS CONFIGURATION ===')
-console.log('CORS Origin:', corsOptions.origin)
+console.log('Environment:', process.env.NODE_ENV || 'development')
+console.log('Allowed Origins:', allowedOrigins)
+console.log('Frontend URL:', process.env.FRONTEND_URL)
 console.log('===========================')
 
 // Apply CORS middleware
@@ -220,14 +291,15 @@ app.get('/api/test-cors', (req, res) => {
   })
 })
 
-// Simplified debug CORS endpoint
+// Enhanced debug CORS endpoint
 app.get('/api/debug-cors', (req, res) => {
   res.json({
-    message: 'Simplified CORS Debug',
-    configuredOrigin: corsOptions.origin,
+    message: 'Dynamic CORS Debug',
+    environment: process.env.NODE_ENV || 'development',
+    allowedOrigins: allowedOrigins,
     requestOrigin: req.get('Origin'),
-    nodeEnv: process.env.NODE_ENV,
     frontendUrlRaw: process.env.FRONTEND_URL,
+    corsOriginAllowed: allowedOrigins.includes(req.get('Origin')),
     timestamp: new Date().toISOString()
   })
 })
@@ -243,7 +315,7 @@ if (process.env.NODE_ENV !== 'production') {
       DB_NAME: process.env.DB_NAME,
       ENABLE_MANUAL_LOGIN: process.env.ENABLE_MANUAL_LOGIN,
       ENABLE_SAML: process.env.ENABLE_SAML,
-      corsOrigin: corsOptions.origin
+      allowedOrigins: allowedOrigins
     })
   })
 }
@@ -283,7 +355,7 @@ app.use((err, req, res, next) => {
       error: 'CORS Error',
       message: 'Cross-origin request blocked',
       origin: req.get('Origin'),
-      allowedOrigin: corsOptions.origin
+      allowedOrigins: allowedOrigins
     })
   }
 
@@ -351,6 +423,7 @@ const startServer = async () => {
       console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`)
       console.log(`🔗 Health check: http://localhost:${PORT}/health`)
       console.log(`🧪 CORS test: http://localhost:${PORT}/api/test-cors`)
+      console.log(`🔍 CORS debug: http://localhost:${PORT}/api/debug-cors`)
       if (process.env.FRONTEND_URL) {
         console.log(`🎯 Frontend URL: ${process.env.FRONTEND_URL}`)
       }
