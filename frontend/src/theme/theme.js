@@ -1,156 +1,231 @@
-// theme.js
-// Place this file in: frontend/src/theme/theme.js
-// Update your existing theme file
+// frontend/src/theme/index.js
+import { extendTheme } from '@chakra-ui/react'
 
-import { extendTheme } from '@chakra-ui/react';
+// J&J Color Palette
+const colors = {
+  // Override the default 'red' palette with J&J Red variations
+  red: {
+    50: '#fef2f2',   // Very light tint of J&J Red
+    100: '#fee2e2',  // Light tint
+    200: '#fecaca',  // Lighter tint
+    300: '#fca5a5',  // Light tint
+    400: '#f87171',  // Medium-light tint
+    500: '#eb1700',  // J&J Red (base color)
+    600: '#dc2626',  // Slightly darker
+    700: '#b91c1c',  // Darker
+    800: '#991b1b',  // Much darker
+    900: '#7f1d1d',  // Very dark
+  },
 
-const theme = extendTheme({
-  colors: {
-    jj: {
-      red: '#eb1700',
-      white: '#ffffff',
-      black: '#000000',
-    },
+  // Custom J&J color palette
+  jj: {
+    red: '#eb1700',
+    white: '#ffffff',
+    black: '#000000',
+
+    // Grays
     gray: {
-      50: '#f1efed',  // gray-01
-      100: '#e8e6e3', // gray-02
-      200: '#d5cfc9', // gray-03
-      300: '#cbc4bc', // gray-04
-      400: '#a39992', // gray-05
-      500: '#81766f', // gray-06
-      600: '#6e6259', // gray-07
-      700: '#312c2a', // gray-08
-      800: '#312c2a',
-      900: '#312c2a',
+      50: '#f1efed',   // Gray 01
+      100: '#e8e6e3',  // Gray 02
+      200: '#d5cfc9',  // Gray 03
+      300: '#cbc4bc',  // Gray 04
+      400: '#a39992',  // Gray 05
+      500: '#81766f',  // Gray 06
+      600: '#6e6259',  // Gray 07
+      700: '#312c2a',  // Gray 08
     },
-    brand: {
-      yellow: '#fbe058',
-      orange: '#ff6017',
-      maroon: '#9e0000',
-      violet: {
-        light: '#b19beb',
-        medium: '#8c3bbb',
-        dark: '#541981',
-      },
-      blue: {
-        light: '#69d0ff',
-        medium: '#0f68b2',
-        dark: '#004685',
-      },
-      green: {
-        light: '#53ce76',
-        medium: '#328714',
-        dark: '#3b5a0d',
-      },
-    },
-  },
-  fonts: {
-    heading: "'Johnson Display', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
-    body: "'Johnson Text', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
-  },
-  fontWeights: {
-    normal: 400,
-    medium: 500,
-    semibold: 500, // Map semibold to medium since we only have regular and medium
-    bold: 500,     // Map bold to medium
-  },
-  styles: {
-    global: {
-      body: {
-        bg: 'gray.50',
-        color: 'gray.700',
-        fontFamily: 'body',
-      },
-    },
-  },
-  components: {
-    Button: {
-      baseStyle: {
-        fontFamily: 'body',
-        fontWeight: 'medium',
-        borderRadius: 'md',
-      },
-      variants: {
-        solid: {
-          bg: 'jj.red',
-          color: 'white',
-          _hover: {
-            bg: '#d11400', // Darker red on hover
-          },
-        },
-        secondary: {
-          bg: 'brand.blue.medium',
-          color: 'white',
-          _hover: {
-            bg: '#0c5a9e', // Darker blue on hover
-          },
-        },
-        outline: {
-          borderColor: 'jj.red',
-          color: 'jj.red',
-          _hover: {
-            bg: 'jj.red',
-            color: 'white',
-          },
-        },
-      },
-      defaultProps: {
-        variant: 'solid',
-      },
-    },
-    Heading: {
-      baseStyle: {
-        fontFamily: 'heading',
-        fontWeight: 'medium',
-        color: 'gray.700',
-      },
-    },
-    Text: {
-      baseStyle: {
-        fontFamily: 'body',
-        color: 'gray.700',
-      },
-    },
-    Modal: {
-      baseStyle: {
-        dialog: {
-          borderRadius: 'lg',
-          boxShadow: 'xl',
-        },
-        header: {
-          fontFamily: 'heading',
-          fontWeight: 'medium',
-          color: 'gray.700',
-        },
-        body: {
-          fontFamily: 'body',
-        },
-      },
-    },
-    Card: {
-      baseStyle: {
-        container: {
-          borderRadius: 'lg',
-          boxShadow: 'md',
-          bg: 'white',
-        },
-        header: {
-          fontFamily: 'heading',
-          fontWeight: 'medium',
-        },
-        body: {
-          fontFamily: 'body',
-        },
-      },
-    },
-  },
-  breakpoints: {
-    sm: '480px',  // Mobile
-    md: '768px',  // Tablet
-    lg: '1024px', // Desktop
-    xl: '1200px',
-    '2xl': '1536px',
-  },
-});
 
-export default theme;
+    // Accent colors
+    yellow: '#fbe058',
+    orange: '#ff6017',
+    maroon: '#9e0000',
+
+    // Violets
+    violet: {
+      light: '#b19beb',
+      medium: '#8c3bbb',
+      dark: '#541981',
+    },
+
+    // Blues
+    blue: {
+      light: '#69d0ff',
+      medium: '#0f68b2',
+      dark: '#004685',
+    },
+
+    // Greens
+    green: {
+      light: '#53ce76',
+      medium: '#328714',
+      dark: '#3b5a0d',
+    },
+  }
+}
+
+// Component style overrides
+const components = {
+  Button: {
+    // Override base styles for ALL button variants
+    baseStyle: {
+      fontWeight: 'normal', // This sets font-weight: 400 instead of 600
+      // Or use 'medium' for font-weight: 500 if you prefer
+    },
+    variants: {
+      solid: {
+        bg: 'red.500',     // Uses J&J Red
+        color: 'white',
+        fontWeight: 'normal', // Explicitly set for solid variant
+        _hover: {
+          bg: 'red.600',   // Slightly darker on hover
+        },
+        _active: {
+          bg: 'red.700',   // Even darker when pressed
+        },
+      },
+      outline: {
+        borderColor: 'red.500',
+        color: 'red.500',
+        fontWeight: 'normal', // Explicitly set for outline variant
+        _hover: {
+          bg: 'red.50',    // Very light background on hover
+          borderColor: 'red.600',
+          color: 'red.600',
+        },
+      },
+    },
+  },
+
+  Checkbox: {
+    baseStyle: {
+      control: {
+        _checked: {
+          bg: 'red.500',
+          borderColor: 'red.500',
+          _hover: {
+            bg: 'red.600',
+            borderColor: 'red.600',
+          },
+        },
+      },
+    },
+  },
+
+  Radio: {
+    baseStyle: {
+      control: {
+        _checked: {
+          bg: 'red.500',
+          borderColor: 'red.500',
+          _hover: {
+            bg: 'red.600',
+            borderColor: 'red.600',
+          },
+        },
+      },
+    },
+  },
+
+  Input: {
+    variants: {
+      outline: {
+        field: {
+          _focus: {
+            borderColor: 'red.500',
+            boxShadow: '0 0 0 1px #eb1700',
+          },
+        },
+      },
+    },
+  },
+
+  Select: {
+    variants: {
+      outline: {
+        field: {
+          _focus: {
+            borderColor: 'red.500',
+            boxShadow: '0 0 0 1px #eb1700',
+          },
+        },
+      },
+    },
+  },
+
+  Textarea: {
+    variants: {
+      outline: {
+        _focus: {
+          borderColor: 'red.500',
+          boxShadow: '0 0 0 1px #eb1700',
+        },
+      },
+    },
+  },
+
+  Tabs: {
+    variants: {
+      line: {
+        tab: {
+          _selected: {
+            color: 'red.500',
+            borderColor: 'red.500',
+          },
+        },
+      },
+      enclosed: {
+        tab: {
+          _selected: {
+            color: 'red.500',
+            bg: 'white',
+            borderColor: 'red.500',
+            borderBottomColor: 'white',
+          },
+        },
+      },
+    },
+  },
+
+  Modal: {
+    baseStyle: {
+      header: {
+        bg: 'red.500',
+        color: 'white',
+      },
+    },
+  },
+}
+
+// Global styles
+const styles = {
+  global: {
+    body: {
+      bg: 'jj.gray.50',     // Gray 01 background
+      color: 'jj.gray.700', // Gray 08 text
+    },
+  },
+}
+
+// Responsive breakpoints
+const breakpoints = {
+  base: '0px',
+  sm: '480px',   // Mobile
+  md: '768px',   // Tablet
+  lg: '1024px',  // Desktop
+  xl: '1280px',
+  '2xl': '1536px',
+}
+
+// Create the custom theme
+const theme = extendTheme({
+  colors,
+  components,
+  styles,
+  breakpoints,
+  fonts: {
+    heading: '"Johnson Display", system-ui, sans-serif',
+    body: '"Johnson Text", system-ui, sans-serif',
+  },
+})
+
+export default theme

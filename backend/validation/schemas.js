@@ -5,9 +5,9 @@ const Joi = require('joi')
 const VOLUME_OPTIONS = ['< 50', '< 100', '< 200', '> 200']
 
 // Alignment options (uppercase for database storage)
-const ALIGNMENT_OPTIONS_UPPER = ['KA', 'iKA', 'FA', 'MA']
+const ALIGNMENT_OPTIONS_UPPER = ['KA', 'iKA', 'FA', 'MA', 'UNKNOWN']
 // Alignment options (lowercase for frontend compatibility)
-const ALIGNMENT_OPTIONS_LOWER = ['ka', 'ika', 'fa', 'ma']
+const ALIGNMENT_OPTIONS_LOWER = ['ka', 'ika', 'fa', 'ma', 'unknown']
 // Combined alignment options for validation
 const ALIGNMENT_OPTIONS_ALL = [...ALIGNMENT_OPTIONS_UPPER, ...ALIGNMENT_OPTIONS_LOWER]
 

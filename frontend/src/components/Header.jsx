@@ -1,3 +1,60 @@
+import React, { useState } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
+import {
+  Box,
+  Flex,
+  Text,
+  IconButton,
+  HStack,
+  useBreakpointValue,
+  Image,
+  Icon,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  MenuDivider,
+  Button,
+  useToast,
+  Badge,
+  Container,
+} from '@chakra-ui/react'
+import { ChevronDownIcon } from '@chakra-ui/icons'
+import { LuBookA } from "react-icons/lu";
+import { useAuth } from '../contexts/AuthContext'
+import GlossaryModal from './GlossaryModal'
+import config from '../config/config'
+
+// Import SVG assets
+import HomeIconSVG from '../assets/icons/JJ_Icon_Home_RGB.svg'
+import ProfileIconSVG from '../assets/icons/JJ_Icon_Web_Profile_RGB.svg'
+
+// Custom Home Icon Component (fallback if SVG doesn't load)
+const HomeIcon = (props) => (
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    {...props}
+  >
+    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+  </svg>
+)
+
+// Custom User Profile Icon Component (fallback if SVG doesn't load)
+const UserIcon = (props) => (
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    {...props}
+  >
+    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+  </svg>
+)
+
 const Header = () => {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
@@ -84,62 +141,27 @@ const Header = () => {
         top={config.showDevFeatures ? "24px" : "0"}
         left={0}
         right={0}
-        bg="red.500" // Changed back to red.500 for proper Chakra color
+        bg="red.500"
         borderBottom="1px solid"
         borderColor="gray.200"
         zIndex={1000}
         height="70px"
         shadow="sm"
       >
-        <Flex
+        <Box
           height="100%"
-          align="center"
           px={{ base: 4, md: 6 }}
           maxW="container.xl"
           mx="auto"
-          justify="space-between"
+          display="grid"
+          gridTemplateColumns="1fr auto 1fr"
+          alignItems="center"
+          gap={4}
         >
-          {/* Left spacer - invisible but takes up space equal to navigation */}
-          <Box visibility="hidden">
-            <HStack spacing={2}>
-              {/* Mirror your navigation structure here for spacing */}
-              <IconButton
-                aria-label="Spacer"
-                icon={<Icon as={LuBookA} />}
-                variant="ghost"
-                size="lg"
-              />
-              <IconButton
-                aria-label="Spacer"
-                variant="ghost"
-                size="lg"
-              />
-              {user && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  rightIcon={<ChevronDownIcon />}
-                  px={2}
-                >
-                  <HStack spacing={2}>
-                    <Box w="20px" h="20px" />
-                    {!isMobile && (
-                      <Text fontSize="sm">
-                        {getUserDisplayName()}
-                      </Text>
-                    )}
-                  </HStack>
-                </Button>
-              )}
-              {!user && (
-                <Button size="sm">
-                  Login
-                </Button>
-              )}
-            </HStack>
-          </Box>
+          {/* Left section - empty but takes up space */}
+          <Box />
 
-          {/* Logo/Title - truly centered */}
+          {/* Center section - Title */}
           <Box textAlign="center">
             <Text
               fontSize={{ base: '18px', md: '22px' }}
@@ -148,131 +170,134 @@ const Header = () => {
               color="white"
               cursor="pointer"
               onClick={handleHomeClick}
+              whiteSpace="nowrap"
             >
               Kinematic Restoration Conversation Guide
             </Text>
           </Box>
 
-          {/* Navigation Icons - actual visible ones */}
-          <HStack spacing={2}>
-            {/* Glossary Icon */}
-            <IconButton
-              aria-label="Open glossary"
-              icon={<Icon as={LuBookA} />}
-              variant="ghost"
-              color="white"
-              size="lg"
-              onClick={() => setShowGlossary(true)}
-              _hover={{
-                bg: 'whiteAlpha.200',
-                color: 'white'
-              }}
-            />
+          {/* Right section - Navigation Icons */}
+          <Box display="flex" justifyContent="flex-end">
+            <HStack spacing={2}>
+              {/* Glossary Icon */}
+              <IconButton
+                aria-label="Open glossary"
+                icon={<Icon as={LuBookA} />}
+                variant="ghost"
+                color="white"
+                size="lg"
+                onClick={() => setShowGlossary(true)}
+                _hover={{
+                  bg: 'whiteAlpha.200',
+                  color: 'white'
+                }}
+              />
 
-            {/* Home Icon */}
-            <IconButton
-              aria-label="Home"
-              icon={
-                <Image
-                  src={HomeIconSVG}
-                  alt="Home"
-                  w="20px"
-                  h="20px"
-                  fallback={<Icon as={HomeIcon} color="white" />}
-                />
-              }
-              variant="ghost"
-              size="lg"
-              onClick={handleHomeClick}
-              bg="transparent"
-              color="white"
-              _hover={{
-                bg: 'whiteAlpha.200'
-              }}
-            />
+              {/* Home Icon */}
+              <IconButton
+                aria-label="Home"
+                icon={
+                  <Image
+                    src={HomeIconSVG}
+                    alt="Home"
+                    w="20px"
+                    h="20px"
+                    fallback={<Icon as={HomeIcon} color="white" />}
+                  />
+                }
+                variant="ghost"
+                size="lg"
+                onClick={handleHomeClick}
+                bg="transparent"
+                color="white"
+                _hover={{
+                  bg: 'whiteAlpha.200'
+                }}
+              />
 
-            {/* User Profile Menu */}
-            {user && (
-              <Menu>
-                <MenuButton
-                  as={Button}
-                  variant="ghost"
-                  color="white"
-                  size="sm"
-                  rightIcon={<ChevronDownIcon />}
-                  _hover={{
-                    bg: 'whiteAlpha.200'
-                  }}
-                  _active={{
-                    bg: 'whiteAlpha.300'
-                  }}
-                  px={2}
-                >
-                  <HStack spacing={2}>
-                    <Image
-                      src={ProfileIconSVG}
-                      alt="Profile"
-                      w="20px"
-                      h="20px"
-                      fallback={<Icon as={UserIcon} color="white" />}
-                    />
-                    {!isMobile && (
-                      <Text fontSize="sm" fontWeight="medium" color="white">
-                        {getUserDisplayName()}
-                      </Text>
-                    )}
-                  </HStack>
-                </MenuButton>
-                <MenuList
-                  bg="white"
-                  borderColor="gray.200"
-                  boxShadow="lg"
-                  minW="180px"
-                >
-                  <MenuItem
-                    fontSize="sm"
-                    fontWeight="semibold"
-                    color="gray.700"
-                    _hover={{ bg: 'transparent' }}
-                    cursor="default"
-                  >
-                    {getUserDisplayName()}
-                  </MenuItem>
-
-                  <MenuDivider />
-
-                  <MenuItem
-                    onClick={handleLogout}
-                    fontSize="sm"
-                    color="red.600"
-                    _hover={{ bg: 'red.50' }}
+              {/* User Profile Menu */}
+              {user && (
+                <Menu>
+                  <MenuButton
+                    as={Button}
+                    variant="ghost"
+                    color="white"
+                    size="sm"
+                    rightIcon={<ChevronDownIcon />}
+                    _hover={{
+                      bg: 'whiteAlpha.200'
+                    }}
+                    _active={{
+                      bg: 'whiteAlpha.300'
+                    }}
+                    px={2}
                   >
                     <HStack spacing={2}>
-                      <Icon viewBox="0 0 24 24" boxSize={4}>
-                        <path
-                          fill="currentColor"
-                          d="M16 17v-3H9v-4h7V7l5 5-5 5M14 2a2 2 0 0 1 2 2v2h-2V4H3v16h11v-2h2v2a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h11Z"
-                        />
-                      </Icon>
-                      <Text>Logout</Text>
+                      <Image
+                        src={ProfileIconSVG}
+                        alt="Profile"
+                        w="20px"
+                        h="20px"
+                        fallback={<Icon as={UserIcon} color="white" />}
+                      />
+                      {!isMobile && (
+                        <Text fontSize="sm" fontWeight="medium" color="white">
+                          {getUserDisplayName()}
+                        </Text>
+                      )}
                     </HStack>
-                  </MenuItem>
-                </MenuList>
-              </Menu>
-            )}
+                  </MenuButton>
+                  <MenuList
+                    bg="white"
+                    borderColor="gray.200"
+                    boxShadow="lg"
+                    minW="180px"
+                  >
+                    <MenuItem
+                      fontSize="sm"
+                      fontWeight="semibold"
+                      color="gray.700"
+                      _hover={{ bg: 'transparent' }}
+                      cursor="default"
+                    >
+                      {getUserDisplayName()}
+                    </MenuItem>
 
-            {!user && (
-              <Button
-                colorScheme="red"
-                size="sm"
-                onClick={() => navigate('/')}
-              >
-                Login
-              </Button>
-            )}
-          </HStack>
-        </Flex>
-      </Box> {/* This closing tag was missing! */}
+                    <MenuDivider />
+
+                    <MenuItem
+                      onClick={handleLogout}
+                      fontSize="sm"
+                      color="red.600"
+                      _hover={{ bg: 'red.50' }}
+                    >
+                      <HStack spacing={2}>
+                        <Icon viewBox="0 0 24 24" boxSize={4}>
+                          <path
+                            fill="currentColor"
+                            d="M16 17v-3H9v-4h7V7l5 5-5 5M14 2a2 2 0 0 1 2 2v2h-2V4H3v16h11v-2h2v2a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h11Z"
+                          />
+                        </Icon>
+                        <Text>Logout</Text>
+                      </HStack>
+                    </MenuItem>
+                  </MenuList>
+                </Menu>
+              )}
+
+              {!user && (
+                <Button
+                  colorScheme="red"
+                  size="sm"
+                  onClick={() => navigate('/')}
+                >
+                  Login
+                </Button>
+              )}
+            </HStack>
+          </Box>
+        </Box>
+      </Box>
 
       {/* Glossary Modal */}
       <GlossaryModal
@@ -282,3 +307,5 @@ const Header = () => {
     </>
   )
 }
+
+export default Header

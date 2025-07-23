@@ -20,8 +20,8 @@ import JNJLogo from '../assets/logos/JNJ_MT_Logo_Shorthand_SingleLine_White_RGB.
 
 const Footer = () => {
   const isMobile = useBreakpointValue({ base: true, md: false })
-  const footerBg = useColorModeValue('gray.700', 'gray.900')
-  const textColor = useColorModeValue('white', 'gray.400')
+  const footerBg = useColorModeValue('jj.gray.700', 'jj.gray.700')
+  const textColor = useColorModeValue('white', 'white')
   const currentYear = new Date().getFullYear();
   // Calculate footer height based on environment and mobile/desktop
   const footerHeight = config.showDevFeatures

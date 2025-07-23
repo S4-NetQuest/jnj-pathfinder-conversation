@@ -253,7 +253,6 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
             <FormControl isRequired>
               <FormLabel fontSize="sm" fontWeight="medium" color="#312c2a">
                 {user?.role === 'surgeon' ? 'Your Name' : 'Surgeon Name(s)'}
-                <Text as="span" color="#eb1700" ml={1}>*</Text>
               </FormLabel>
               <Input
                 value={formData.surgeon_name}
@@ -269,7 +268,6 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
             <FormControl isRequired>
               <FormLabel fontSize="sm" fontWeight="medium" color="#312c2a">
                 Affiliated Hospital
-                <Text as="span" color="#eb1700" ml={1}>*</Text>
               </FormLabel>
               <Input
                 value={formData.hospital_name}
@@ -284,7 +282,6 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
             <FormControl isRequired>
               <FormLabel fontSize="sm" fontWeight="medium" color="#312c2a">
                 Affiliated Surgery Center
-                <Text as="span" color="#eb1700" ml={1}>*</Text>
               </FormLabel>
               <Input
                 value={formData.surgery_center_name}
@@ -299,7 +296,6 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
             <FormControl isRequired>
               <FormLabel fontSize="sm" fontWeight="medium" color="#312c2a">
                 Surgeon Knee Arthroplasty Volume / Year
-                <Text as="span" color="#eb1700" ml={1}>*</Text>
               </FormLabel>
               <Select
                 value={formData.surgeon_volume_per_year}
@@ -319,7 +315,6 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
             <FormControl isRequired>
               <FormLabel fontSize="sm" fontWeight="medium" color="#312c2a">
                 Is the surgeon currently using robotics?
-                <Text as="span" color="#eb1700" ml={1}>*</Text>
               </FormLabel>
               <RadioGroup
                 value={formData.uses_robotics}
@@ -340,7 +335,6 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
             <FormControl isRequired>
               <FormLabel fontSize="sm" fontWeight="medium" color="#312c2a">
                 Current Alignment Philosophy
-                <Text as="span" color="#eb1700" ml={1}>*</Text>
               </FormLabel>
               <Select
                 value={formData.current_alignment}
@@ -354,13 +348,13 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
                 <option value="iKA">iKA (Inverse Kinematic Alignment)</option>
                 <option value="FA">FA (Functional Alignment)</option>
                 <option value="MA">MA (Mechanical Alignment)</option>
+                <option value="Unknown">unknown</option>
               </Select>
             </FormControl>
 
             <FormControl isRequired>
               <FormLabel fontSize="sm" fontWeight="medium" color="#312c2a">
                 Conversation Date
-                <Text as="span" color="#eb1700" ml={1}>*</Text>
               </FormLabel>
               <Input
                 type="date"

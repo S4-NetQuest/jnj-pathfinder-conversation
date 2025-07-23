@@ -93,7 +93,7 @@ const Home = () => {
         {/* Welcome Message */}
         <Box textAlign="center" py={6}>
           <Text fontSize="lg" color="gray.700">
-            The Pathfinder Conversation Guide will help identify {isSalesRep ? "your customer's" : "your"} alignment philosophy in Total Knee Arthroplasty (TKA).
+            The Pathfinder Kinematic Restoration Conversation Guide will help identify {isSalesRep ? "your customer's" : "your"} alignment philosophy in Total Knee Arthroplasty (TKA).
           </Text>
         </Box>
 

@@ -395,6 +395,10 @@ const Conversation = () => {
     window.open('https://home.jnj.com/sites/velys-digital-surgery/SitePageModern/1892994/velys-robotic-assisted-solution-1-8', '_blank', 'noopener,noreferrer')
   }
 
+  const handleMedTechCalendar = () => {
+    window.open('https://xd.adobe.com/view/a1fbfe1c-30a5-426f-b03d-33106de07a5b-f4a8/?hints=off', '_blank', 'noopener,noreferrer')
+  }
+
   const handleComparePhilosophies = () => {
     navigate('/compare-philosophies')
   }
@@ -737,6 +741,16 @@ const Conversation = () => {
               >
                 Schedule Follow-up
               </Button>
+              <Button
+                leftIcon={<CalendarIcon />}
+                colorScheme="red"
+                variant="outline"
+                onClick={handleMedTechCalendar}
+              >
+                EdTech Training Calendar
+              </Button>
+
+              {/*
               {id ? (
                 <Button
                   bg="#eb1700"
@@ -756,6 +770,8 @@ const Conversation = () => {
                   Start New Assessment
                 </Button>
               )}
+              */}
+
             </HStack>
           </VStack>
         )}
