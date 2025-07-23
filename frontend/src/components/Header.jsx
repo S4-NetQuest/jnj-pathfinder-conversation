@@ -141,7 +141,7 @@ const Header = () => {
         top={config.showDevFeatures ? "24px" : "0"}
         left={0}
         right={0}
-        bg="red.500"
+        bg="red"
         borderBottom="1px solid"
         borderColor="gray.200"
         zIndex={1000}
@@ -171,7 +171,7 @@ const Header = () => {
           </Flex>
 
           {/* Navigation Icons */}
-          <HStack spacing={2}>
+          <HStack spacing={1}>
             {/* Glossary Icon */}
             <IconButton
               aria-label="Open glossary"
