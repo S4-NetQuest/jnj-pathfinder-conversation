@@ -620,46 +620,51 @@ const Conversation = () => {
               const result = recommendedData.result
 
               return recommendedAlignment && (
-                <Card>
-                  <CardBody>
-                    <VStack spacing={4} align="stretch">
-                      <Flex justify="space-between" align="center">
-                        <Text fontSize="lg" fontWeight="" color="#6e6259">
-                          Your approach suggests:
+                <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={4} align="start">
+                  <Card>
+                    <CardBody>
+                      <VStack spacing={4} align="stretch">
+                        <Flex justify="space-between" align="center">
+                          <Text fontSize="lg" fontWeight="" color="#6e6259">
+                            Your approach suggests:
+                          </Text>
+                          <Badge
+                            bg={recommendedAlignment.color}
+                            color="white"
+                            px={3}
+                            py={1}
+                            borderRadius="md"
+                            fontSize="sm"
+                            fontWeight="500"
+                          >
+                            {recommendedAlignment.name}
+                          </Badge>
+                        </Flex>
+
+                        {/* Show tie information if applicable */}
+                        {result && result.isTied && result.tied.length > 0 && (
+                          <Alert status="info" borderRadius="md">
+                            <AlertIcon />
+                            <Box>
+                              <Text fontSize="sm">
+                                <strong>Tie detected:</strong> This approach tied with{' '}
+                                {result.tied.map(key => alignmentTypes[key]?.abbreviation || key.toUpperCase()).join(', ')}{' '}
+                                (all scored {result.tiedScore} points). {recommendedAlignment.abbreviation} was selected based on clinical priority.
+                              </Text>
+                            </Box>
+                          </Alert>
+                        )}
+
+                        <Text color="#81766f" lineHeight="1.6">
+                          {recommendedAlignment.fullDescription}
                         </Text>
-                        <Badge
-                          bg={recommendedAlignment.color}
-                          color="white"
-                          px={3}
-                          py={1}
-                          borderRadius="md"
-                          fontSize="sm"
-                          fontWeight="500"
-                        >
-                          {recommendedAlignment.name}
-                        </Badge>
-                      </Flex>
-
-                      {/* Show tie information if applicable */}
-                      {result && result.isTied && result.tied.length > 0 && (
-                        <Alert status="info" borderRadius="md">
-                          <AlertIcon />
-                          <Box>
-                            <Text fontSize="sm">
-                              <strong>Tie detected:</strong> This approach tied with{' '}
-                              {result.tied.map(key => alignmentTypes[key]?.abbreviation || key.toUpperCase()).join(', ')}{' '}
-                              (all scored {result.tiedScore} points). {recommendedAlignment.abbreviation} was selected based on clinical priority.
-                            </Text>
-                          </Box>
-                        </Alert>
-                      )}
-
-                      <Text color="#81766f" lineHeight="1.6">
-                        {recommendedAlignment.fullDescription}
-                      </Text>
-                    </VStack>
-                  </CardBody>
-                </Card>
+                      </VStack>
+                    </CardBody>
+                  </Card>
+                  <Card>
+                    [PUT IMAGE HERE]
+                  </Card>
+                </SimpleGrid>
               )
             })()}
 
