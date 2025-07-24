@@ -29,6 +29,7 @@ import {
 import { SearchIcon, CalendarIcon, TimeIcon } from '@chakra-ui/icons'
 import { useAuth } from '../contexts/AuthContext'
 import api from '../services/api'
+import { getPhilosophyColor, getPhilosophyVariant } from '../theme/theme'
 import questionsData from '../data/questions.json'
 
 const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
@@ -263,7 +264,7 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
         <ModalHeader bg="#f1efed" borderBottom="1px solid" borderColor="#e8e6e3">
           <HStack spacing={3}>
             <Icon as={CalendarIcon} color="#eb1700" />
-            <Text color="#eb1700" fontSize="lg" fontWeight="bold">
+            <Text color="#eb1700" fontSize="lg" fontWeight="500">
               Load Existing Conversation
             </Text>
           </HStack>
@@ -348,7 +349,7 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
                       {/* Header */}
                       <Flex justify="space-between" align="start">
                         <Box flex={1}>
-                          <Text fontWeight="bold" fontSize="lg" color="#312c2a" mb={1}>
+                          <Text fontWeight="500" fontSize="lg" color="#312c2a" mb={1}>
                             {conversation.surgeon_name || 'Unknown Surgeon'}
                           </Text>
 
@@ -362,7 +363,7 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
                             </Text>
                           </VStack>
                         </Box>
-                        <Badge colorScheme={getStatusColor(conversation.status)} variant="subtle">
+                        <Badge colorScheme={getStatusColor(conversation.status)} variant="subtle" fontWeight={500} fontSize="xs">
                           {(conversation.status || 'unknown').replace('_', ' ')}
                         </Badge>
                       </Flex>
@@ -413,9 +414,12 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
                           <HStack spacing={2}>
                             <Text fontSize="sm" color="#6e6259">Current Alignment Philosophy:</Text>
                             <Badge
-                              colorScheme={getAlignmentColor(conversation.current_alignment)}
-                              variant="solid"
+                              /* colorScheme={getAlignmentColor(conversation.current_alignment)} */
+                              variant={getPhilosophyVariant(conversation.recommended_approach).toLowerCase()}
                               size="sm"
+                              px={2}
+                              py={1}
+                              fontWeight={500}
                             >
                               {conversation.current_alignment}
                             </Badge>
@@ -434,12 +438,14 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
                           </Text>
                           <HStack spacing={2}>
                             <Badge
-                              bg={getRecommendationColor(conversation.recommended_approach)}
+                              /* bg={getRecommendationColor(conversation.recommended_approach)} */
+                              variant={getPhilosophyVariant(conversation.recommended_approach).toLowerCase()}
                               color="white"
                               px={2}
                               py={1}
-                              borderRadius="md"
+                              borderRadius="xs"
                               fontSize="xs"
+                              fontWeight={500}
                             >
                               {conversation.recommended_approach}
                             </Badge>

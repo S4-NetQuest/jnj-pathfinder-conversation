@@ -242,7 +242,7 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
       <ModalOverlay />
       <ModalContent>
         <ModalHeader bg="#f1efed" borderBottom="1px solid" borderColor="#e8e6e3">
-          <Text color="#eb1700" fontSize="lg" fontWeight="bold">
+          <Text color="#eb1700" fontSize="lg" fontWeight="500">
             Create New Conversation
           </Text>
         </ModalHeader>

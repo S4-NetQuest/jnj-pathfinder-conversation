@@ -6,7 +6,6 @@ import {
   Text,
   Button,
   VStack,
-  HStack,
   useDisclosure,
   Alert,
   AlertIcon,
@@ -31,7 +30,8 @@ const Home = () => {
   const [imageLoaded, setImageLoaded] = useState(false)
 
   // Calculate available height accounting for header and footer
-  const headerHeight = config.showDevFeatures ? "94px" : "70px" // 24px env banner + 70px header OR just 70px
+  //const headerHeight = config.showDevFeatures ? "94px" : "70px" // 24px env banner + 70px header OR just 70px
+  const headerHeight = "40px"
   const footerHeight = "90px" // From Footer.jsx
   const availableHeight = `calc(100vh - ${headerHeight} - ${footerHeight})`
 
@@ -114,8 +114,8 @@ const Home = () => {
   if (!user) {
     return (
       <Box
-        minH="100vh"
-        maxH="100vh"
+        minH={availableHeight}
+        h={availableHeight} // Use calculated available height
         overflow="hidden"
         bgImage="url('/images/pathfinder-background.jpg')"
         bgSize="cover"
@@ -140,10 +140,10 @@ const Home = () => {
           maxW="container.md"
           position="relative"
           zIndex={2}
+          h={availableHeight} // Use height instead of minH
           display="flex"
           alignItems="center"
           justifyContent="center"
-          minH={availableHeight}
           py={0}
         >
           <Card
@@ -155,12 +155,6 @@ const Home = () => {
             w="full"
           >
             <CardBody textAlign="center" p={8}>
-              <Heading color="red.500" mb={4} className="font-display">
-                Pathfinder Conversation Guide
-              </Heading>
-              <Text color="gray.600" mb={6}>
-                Kinematic Restoration Conversation Guide
-              </Text>
               <DevLogin />
             </CardBody>
           </Card>
@@ -171,8 +165,8 @@ const Home = () => {
 
   return (
     <Box
-      minH="100vh"
-      maxH="100vh"
+      minH={availableHeight}
+      h={availableHeight} // Use calculated available height
       overflow="hidden"
       bgImage={imageLoaded ? `url('${getBackgroundImage()}')` : 'none'}
       bgSize={{
@@ -212,11 +206,12 @@ const Home = () => {
         maxW="container.lg"
         position="relative"
         zIndex={2}
+        h={availableHeight} // Use height instead of minH
+        py={{ base: 4, md: 8 }} // Add some padding for positioning
         display="flex"
+        flexDirection="column"
+        justifyContent={{ base: "flex-start", md: "flex-start" }} // Start from top instead of center
         alignItems="center"
-        justifyContent="center"
-        minH={availableHeight}
-        py={0}
       >
         {/* Main Content Card */}
         <Card
@@ -227,6 +222,7 @@ const Home = () => {
           className={imageLoaded ? 'fade-in' : ''}
           maxW={{ base: "90%", sm: "480px", md: "520px" }}
           w="full"
+          mt={{ base: 4, md: 12 }} // Add top margin to position higher
         >
           <CardBody p={{ base: 6, md: 8 }}>
             {/* Welcome Message */}
@@ -236,7 +232,7 @@ const Home = () => {
                 color="gray.700"
                 className="font-text"
               >
-                The Pathfinder Kinematic Restoration Conversation Guide will help identify {isSalesRep ? "your customer's" : "your"} alignment philosophy in Total Knee Arthroplasty (TKA).
+                The PATHFINDER Kinematic Restoration Conversation Guide will help identify {isSalesRep ? "your customer's" : "your"} alignment philosophy in Total Knee Arthroplasty (TKA).
               </Text>
             </Box>
 
