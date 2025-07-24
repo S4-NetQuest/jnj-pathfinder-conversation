@@ -42,6 +42,7 @@ import { useAuth } from '../contexts/AuthContext'
 import api from '../services/api'
 import questionsData from '../data/questions.json'
 import ScheduleFollowupModal from '../components/ScheduleFollowupModal'
+import AlignmentSummaryImage from '../components/AlignmentSummaryImage'
 
 const Conversation = () => {
   const { id } = useParams()
@@ -661,8 +662,10 @@ const Conversation = () => {
                       </VStack>
                     </CardBody>
                   </Card>
-                  <Card>
-                    [PUT IMAGE HERE]
+                  <Card h="100%">
+                    <CardBody p={0} display="flex" alignItems="center" justifyContent="center">
+                      <AlignmentSummaryImage alignment={recommendedAlignment} />
+                    </CardBody>
                   </Card>
                 </SimpleGrid>
               )
