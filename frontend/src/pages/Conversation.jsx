@@ -69,6 +69,33 @@ const Conversation = () => {
   const questions = questionsData.questions
   const alignmentTypes = questionsData.metadata.alignmentCategories
 
+  // Move determineResult function outside of calculateScores so it can be reused
+  const determineResult = (scores) => {
+    const maxScore = Math.max(...Object.values(scores))
+    const tiedApproaches = Object.entries(scores)
+      .filter(([, score]) => score === maxScore)
+      .map(([approach]) => approach)
+
+    if (tiedApproaches.length === 1) {
+      return {
+        primary: tiedApproaches[0],
+        tied: [],
+        isTied: false
+      }
+    }
+
+    // Use priority order from questionsData for ties
+    const priorityOrder = questionsData.scoringRules?.tieBreakingRules?.priorityOrder || ['ka', 'ika', 'fa', 'ma']
+    const winner = priorityOrder.find(approach => tiedApproaches.includes(approach))
+
+    return {
+      primary: winner || tiedApproaches[0],
+      tied: tiedApproaches.filter(approach => approach !== winner),
+      isTied: true,
+      tiedScore: maxScore
+    }
+  }
+
   useEffect(() => {
     if (id) {
       fetchConversation()
@@ -210,32 +237,6 @@ const Conversation = () => {
       }
     })
 
-    const determineResult = (scores) => {
-      const maxScore = Math.max(...Object.values(scores))
-      const tiedApproaches = Object.entries(scores)
-        .filter(([, score]) => score === maxScore)
-        .map(([approach]) => approach)
-
-      if (tiedApproaches.length === 1) {
-        return {
-          primary: tiedApproaches[0],
-          tied: [],
-          isTied: false
-        }
-      }
-
-      // Use priority order from questionsData for ties
-      const priorityOrder = questionsData.scoringRules?.tieBreakingRules?.priorityOrder || ['ka', 'ika', 'fa', 'ma']
-      const winner = priorityOrder.find(approach => tiedApproaches.includes(approach))
-
-      return {
-        primary: winner || tiedApproaches[0],
-        tied: tiedApproaches.filter(approach => approach !== winner),
-        isTied: true,
-        tiedScore: maxScore
-      }
-    }
-
     setScores(newScores)
   }
 
@@ -277,7 +278,7 @@ const Conversation = () => {
   }
 
   const handleComplete = async () => {
-    // Use the new determineResult method
+    // Use the determineResult method
     const result = determineResult(scores)
     const recommendedApproach = result.primary
 
@@ -471,7 +472,7 @@ const Conversation = () => {
                     </Text>
                     {/* Show completion status for completed conversations */}
                     {completed && (
-                      <Badge colorScheme="green" variant="solid">
+                      <Badge colorScheme="green" variant="solid" fontWeight="500">
                         Completed
                       </Badge>
                     )}
@@ -622,7 +623,7 @@ const Conversation = () => {
                   <CardBody>
                     <VStack spacing={4} align="stretch">
                       <Flex justify="space-between" align="center">
-                        <Text fontSize="lg" fontWeight="bold" color="#6e6259">
+                        <Text fontSize="lg" fontWeight="" color="#6e6259">
                           Your approach suggests:
                         </Text>
                         <Badge
@@ -632,6 +633,7 @@ const Conversation = () => {
                           py={1}
                           borderRadius="md"
                           fontSize="sm"
+                          fontWeight="500"
                         >
                           {recommendedAlignment.name}
                         </Badge>
@@ -664,7 +666,7 @@ const Conversation = () => {
               {/* Radar Chart */}
               <Card>
                 <CardBody>
-                  <Text fontSize="lg" fontWeight="bold" color="#6e6259" mb={4}>
+                  <Text fontSize="lg" fontWeight="" color="#6e6259" mb={4}>
                     Alignment Philosophy Scores
                   </Text>
                   <Box h="400px" w="100%">
@@ -698,7 +700,7 @@ const Conversation = () => {
               {/* Score Breakdown */}
               <Card>
                 <CardBody>
-                  <Text fontSize="lg" fontWeight="bold" color="#6e6259" mb={4}>
+                  <Text fontSize="lg" fontWeight="" color="#6e6259" mb={4}>
                     Score Breakdown
                   </Text>
                   <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
@@ -718,8 +720,8 @@ const Conversation = () => {
                               py={1}
                               borderRadius="md"
                               fontSize="xs"
+                              fontWeight="500"
                             >
-                              {/* {percentage}% ({scores[key]} / {maxForAlignment}) */}
                               {percentage}%
                             </Badge>
                           </Flex>
@@ -845,8 +847,8 @@ const Conversation = () => {
       <Modal isOpen={isNotesOpen} onClose={onNotesClose} size="xl">
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader color="#6e6259">Edit Notes</ModalHeader>
-          <ModalCloseButton />
+          <ModalHeader color="white" fontWeight="500">Edit Notes</ModalHeader>
+          <ModalCloseButton color="white" />
 
           <ModalBody>
             <ReactQuill

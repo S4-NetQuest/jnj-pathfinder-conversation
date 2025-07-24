@@ -17,6 +17,7 @@ import {
   Divider,
   Badge,
   useColorModeValue,
+  Flex,
 } from '@chakra-ui/react'
 import { SearchIcon } from '@chakra-ui/icons'
 import api from '../services/api'
@@ -26,7 +27,7 @@ const GlossaryModal = ({ isOpen, onClose }) => {
   const [filteredTerms, setFilteredTerms] = useState([])
   const [searchQuery, setSearchQuery] = useState('')
   const [loading, setLoading] = useState(false)
-  
+
   const bgColor = useColorModeValue('white', 'gray.800')
   const borderColor = useColorModeValue('jj.gray.200', 'gray.600')
 
@@ -68,9 +69,9 @@ const GlossaryModal = ({ isOpen, onClose }) => {
   }
 
   return (
-    <Modal 
-      isOpen={isOpen} 
-      onClose={handleClose} 
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
       size={{ base: 'full', md: 'xl' }}
       scrollBehavior="inside"
     >
@@ -82,7 +83,7 @@ const GlossaryModal = ({ isOpen, onClose }) => {
           </Text>
         </ModalHeader>
         <ModalCloseButton />
-        
+
         <ModalBody p={0}>
           <Box p={4} borderBottom="1px solid" borderColor={borderColor}>
             <InputGroup>
@@ -97,7 +98,7 @@ const GlossaryModal = ({ isOpen, onClose }) => {
               />
             </InputGroup>
           </Box>
-          
+
           <Box p={4}>
             {loading ? (
               <Text textAlign="center" color="jj.gray.500">
@@ -112,21 +113,22 @@ const GlossaryModal = ({ isOpen, onClose }) => {
                 {filteredTerms.map((term, index) => (
                   <Box key={term.id || index} p={4} borderRadius="md" bg={bgColor} borderWidth="1px" borderColor={borderColor}>
                     <VStack align="start" spacing={2}>
-                      <Box>
+                      {/* Header with term on left and badge on right */}
+                      <Flex width="100%" align="start" justify="space-between">
                         <Text fontWeight="bold" fontSize="lg" color="jj.red">
                           {term.term}
                         </Text>
                         {term.category && (
-                          <Badge colorScheme="blue" size="sm" mt={1}>
+                          <Badge colorScheme="blue" size="sm" fontWeight="500" flexShrink={0} ml={2}>
                             {term.category}
                           </Badge>
                         )}
-                      </Box>
-                      
+                      </Flex>
+
                       <Text color="jj.gray.700" lineHeight="1.6">
                         {term.definition}
                       </Text>
-                      
+
                       {term.synonyms && (
                         <Box>
                           <Text fontSize="sm" fontWeight="medium" color="jj.gray.600" mb={1}>
@@ -138,10 +140,6 @@ const GlossaryModal = ({ isOpen, onClose }) => {
                         </Box>
                       )}
                     </VStack>
-                    
-                    {index < filteredTerms.length - 1 && (
-                      <Divider mt={4} borderColor={borderColor} />
-                    )}
                   </Box>
                 ))}
               </VStack>

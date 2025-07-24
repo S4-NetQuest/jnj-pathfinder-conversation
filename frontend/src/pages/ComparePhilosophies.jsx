@@ -28,20 +28,9 @@ import {
   Heading,
   UnorderedList,
   ListItem,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
-  TableContainer,
-  Collapse,
-  Icon,
-  IconButton,
   Grid,
   GridItem
 } from '@chakra-ui/react'
-import { ChevronDownIcon, ChevronUpIcon, InfoIcon } from '@chakra-ui/icons'
 import { useAuth } from '../contexts/AuthContext'
 
 // Static data for the philosophies
@@ -51,7 +40,7 @@ const philosophiesData = {
       id: 'ma',
       name: 'Mechanical Alignment',
       abbreviation: 'MA',
-      color: 'blue',
+      color: 'green',
       parameters: {
         surgical_objective: 'Neutral mechanical axis (0° HKA)',
         femoral_cut_reference: 'Perpendicular to mechanical axis',
@@ -295,8 +284,6 @@ const ParameterComparisonCard = ({ parameter, selectedPhilosophies, philosophies
 
 const ClinicalTakeawaysCard = ({ philosophy }) => {
   const bgColor = useColorModeValue('white', 'gray.800')
-  const borderColor = useColorModeValue('gray.200', 'gray.600')
-
   return (
     <Card
       borderWidth="2px"

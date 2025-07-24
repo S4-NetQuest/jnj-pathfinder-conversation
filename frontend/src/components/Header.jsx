@@ -172,7 +172,7 @@ const Header = () => {
               onClick={handleHomeClick}
               whiteSpace="nowrap"
             >
-              Kinematic Restoration Conversation Guide
+              PATHFINDER Kinematic Restoration Conversation Guide
             </Text>
           </Box>
 

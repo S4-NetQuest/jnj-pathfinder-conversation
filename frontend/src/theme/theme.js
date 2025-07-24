@@ -1,4 +1,4 @@
-// frontend/src/theme/index.js
+// frontend/src/theme/theme.js
 import { extendTheme } from '@chakra-ui/react'
 
 // J&J Color Palette
@@ -92,6 +92,42 @@ const components = {
           borderColor: 'red.600',
           color: 'red.600',
         },
+      },
+    },
+  },
+
+  Badge: {
+    baseStyle: {
+      fontWeight: '500',  // Set default font weight to 600 instead of 700
+      fontSize: 'xs',     // Keep default size
+      px: 2,              // Keep default padding
+      textTransform: 'uppercase', // Keep default text transform
+    },
+    variants: {
+      // You can also customize specific variants if needed
+      solid: {
+        fontWeight: '600', // Ensure solid variant uses 600
+      },
+      subtle: {
+        fontWeight: '600', // Ensure subtle variant uses 600
+      },
+      outline: {
+        fontWeight: '600', // Ensure outline variant uses 600
+      },
+    },
+    // You can also customize different sizes
+    sizes: {
+      sm: {
+        fontSize: 'xs',
+        fontWeight: '500',
+      },
+      md: {
+        fontSize: 'sm',
+        fontWeight: '600',
+      },
+      lg: {
+        fontSize: 'md',
+        fontWeight: '600',
       },
     },
   },
