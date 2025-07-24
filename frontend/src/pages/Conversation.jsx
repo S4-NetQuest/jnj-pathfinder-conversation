@@ -26,6 +26,7 @@ import {
   ModalCloseButton,
   useDisclosure,
 } from '@chakra-ui/react'
+
 import {
   ArrowBackIcon,
   ArrowForwardIcon,

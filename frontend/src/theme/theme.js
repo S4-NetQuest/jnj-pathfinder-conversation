@@ -64,60 +64,60 @@ const colors = {
 
   // Philosophy-specific color palettes
   philosophy: {
-    // Mechanical Alignment (MA) - Using J&J Blues
-    ma: {
-      50: '#e6f3ff',   // Very light blue
-      100: '#b3d9ff',  // Light blue
-      200: '#80bfff',  // Lighter blue
-      300: '#4da6ff',  // Light blue
-      400: '#1a8cff',  // Medium-light blue
-      500: '#0f68b2',  // J&J Blue Medium (base)
-      600: '#0d5a9a',  // Slightly darker
-      700: '#0a4c82',  // Darker
-      800: '#083e6a',  // Much darker
-      900: '#053052',  // Very dark
-    },
-
-    // Kinematic Alignment (KA) - Using J&J Greens
+    // Kinematic Alignment (KA) - Maroon #9E0000
     ka: {
-      50: '#e8f9ec',   // Very light green
-      100: '#b8edc4',  // Light green
-      200: '#88e19c',  // Lighter green
-      300: '#58d574',  // Light green
-      400: '#53ce76',  // J&J Green Light (slightly adjusted)
-      500: '#328714',  // J&J Green Medium (base)
-      600: '#2c7611',  // Slightly darker
-      700: '#26650f',  // Darker
-      800: '#20540c',  // Much darker
-      900: '#1a430a',  // Very dark
+      50: '#fef2f2',   // Very light maroon
+      100: '#fde2e2',  // Light maroon
+      200: '#fbc5c5',  // Lighter maroon
+      300: '#f7a8a8',  // Light maroon
+      400: '#f18b8b',  // Medium-light maroon
+      500: '#9e0000',  // Primary KA color
+      600: '#8e0000',  // Slightly darker
+      700: '#7e0000',  // Darker
+      800: '#6e0000',  // Much darker
+      900: '#5e0000',  // Very dark
     },
 
-    // Restricted Kinematic Alignment (RKA) - Using J&J Violets
-    rka: {
-      50: '#f3effc',   // Very light violet
-      100: '#d9ccf5',  // Light violet
-      200: '#bfa9ee',  // Lighter violet
-      300: '#b19beb',  // J&J Violet Light (base for lighter tones)
-      400: '#9c7ce4',  // Medium-light violet
-      500: '#8c3bbb',  // J&J Violet Medium (base)
-      600: '#7d349f',  // Slightly darker
-      700: '#6e2d84',  // Darker
-      800: '#5f2668',  // Much darker
-      900: '#541981',  // J&J Violet Dark
-    },
-
-    // Inverse Kinematic Alignment (IKA) - Using J&J Orange/Maroon
+    // Inverse Kinematic Alignment (IKA) - Black #000000
     ika: {
-      50: '#fff1e6',   // Very light orange
-      100: '#ffd6b3',  // Light orange
-      200: '#ffbb80',  // Lighter orange
-      300: '#ffa04d',  // Light orange
-      400: '#ff851a',  // Medium-light orange
-      500: '#ff6017',  // J&J Orange (base)
-      600: '#e65515',  // Slightly darker
-      700: '#cc4a12',  // Darker
-      800: '#b33f10',  // Much darker
-      900: '#9a340d',  // Very dark
+      50: '#f7f7f7',   // Very light gray (near white)
+      100: '#e3e3e3',  // Light gray
+      200: '#c8c8c8',  // Lighter gray
+      300: '#a4a4a4',  // Light gray
+      400: '#717171',  // Medium-light gray
+      500: '#000000',  // Primary IKA color (black)
+      600: '#1a1a1a',  // Very dark gray (since black can't get darker)
+      700: '#333333',  // Dark gray
+      800: '#4d4d4d',  // Medium dark gray
+      900: '#666666',  // Medium gray
+    },
+
+    // Functional Alignment (FA) - Blue #004685
+    fa: {
+      50: '#e6f1ff',   // Very light blue
+      100: '#b3d4ff',  // Light blue
+      200: '#80b7ff',  // Lighter blue
+      300: '#4d9aff',  // Light blue
+      400: '#1a7dff',  // Medium-light blue
+      500: '#004685',  // Primary FA color
+      600: '#003f77',  // Slightly darker
+      700: '#003869',  // Darker
+      800: '#00315b',  // Much darker
+      900: '#002a4d',  // Very dark
+    },
+
+    // Mechanical Alignment (MA) - Gray #6E6259
+    ma: {
+      50: '#f9f8f7',   // Very light warm gray
+      100: '#f0eeec',  // Light warm gray
+      200: '#e1ddd8',  // Lighter warm gray
+      300: '#d2ccc4',  // Light warm gray
+      400: '#c3bbb0',  // Medium-light warm gray
+      500: '#6e6259',  // Primary MA color
+      600: '#625850',  // Slightly darker
+      700: '#564e47',  // Darker
+      800: '#4a443e',  // Much darker
+      900: '#3e3a35',  // Very dark
     },
   }
 }
@@ -151,17 +151,6 @@ const components = {
         },
       },
       // Philosophy-specific button variants
-      philosophyMA: {
-        bg: 'philosophy.ma.500',
-        color: 'white',
-        fontWeight: 'normal',
-        _hover: {
-          bg: 'philosophy.ma.600',
-        },
-        _active: {
-          bg: 'philosophy.ma.700',
-        },
-      },
       philosophyKA: {
         bg: 'philosophy.ka.500',
         color: 'white',
@@ -173,17 +162,6 @@ const components = {
           bg: 'philosophy.ka.700',
         },
       },
-      philosophyRKA: {
-        bg: 'philosophy.rka.500',
-        color: 'white',
-        fontWeight: 'normal',
-        _hover: {
-          bg: 'philosophy.rka.600',
-        },
-        _active: {
-          bg: 'philosophy.rka.700',
-        },
-      },
       philosophyIKA: {
         bg: 'philosophy.ika.500',
         color: 'white',
@@ -193,6 +171,28 @@ const components = {
         },
         _active: {
           bg: 'philosophy.ika.700',
+        },
+      },
+      philosophyFA: {
+        bg: 'philosophy.fa.500',
+        color: 'white',
+        fontWeight: 'normal',
+        _hover: {
+          bg: 'philosophy.fa.600',
+        },
+        _active: {
+          bg: 'philosophy.fa.700',
+        },
+      },
+      philosophyMA: {
+        bg: 'philosophy.ma.500',
+        color: 'white',
+        fontWeight: 'normal',
+        _hover: {
+          bg: 'philosophy.ma.600',
+        },
+        _active: {
+          bg: 'philosophy.ma.700',
         },
       },
     },
@@ -216,23 +216,23 @@ const components = {
         fontWeight: '600',
       },
       // Philosophy-specific badge variants
-      philosophyMA: {
-        bg: 'philosophy.ma.500',
-        color: 'white',
-        fontWeight: '600',
-      },
       philosophyKA: {
         bg: 'philosophy.ka.500',
         color: 'white',
         fontWeight: '600',
       },
-      philosophyRKA: {
-        bg: 'philosophy.rka.500',
+      philosophyIKA: {
+        bg: 'philosophy.ika.500',
         color: 'white',
         fontWeight: '600',
       },
-      philosophyIKA: {
-        bg: 'philosophy.ika.500',
+      philosophyFA: {
+        bg: 'philosophy.fa.500',
+        color: 'white',
+        fontWeight: '600',
+      },
+      philosophyMA: {
+        bg: 'philosophy.ma.500',
         color: 'white',
         fontWeight: '600',
       },
@@ -256,13 +256,6 @@ const components = {
   // Philosophy-specific Card component
   Card: {
     variants: {
-      philosophyMA: {
-        container: {
-          borderLeft: '4px solid',
-          borderLeftColor: 'philosophy.ma.500',
-          bg: 'philosophy.ma.50',
-        },
-      },
       philosophyKA: {
         container: {
           borderLeft: '4px solid',
@@ -270,18 +263,25 @@ const components = {
           bg: 'philosophy.ka.50',
         },
       },
-      philosophyRKA: {
-        container: {
-          borderLeft: '4px solid',
-          borderLeftColor: 'philosophy.rka.500',
-          bg: 'philosophy.rka.50',
-        },
-      },
       philosophyIKA: {
         container: {
           borderLeft: '4px solid',
           borderLeftColor: 'philosophy.ika.500',
           bg: 'philosophy.ika.50',
+        },
+      },
+      philosophyFA: {
+        container: {
+          borderLeft: '4px solid',
+          borderLeftColor: 'philosophy.fa.500',
+          bg: 'philosophy.fa.50',
+        },
+      },
+      philosophyMA: {
+        container: {
+          borderLeft: '4px solid',
+          borderLeftColor: 'philosophy.ma.500',
+          bg: 'philosophy.ma.50',
         },
       },
     },
@@ -410,10 +410,10 @@ const breakpoints = {
 // Helper function to get philosophy colors (optional utility)
 export const getPhilosophyColor = (philosophyId, shade = 500) => {
   const colorMap = {
-    ma: `philosophy.ma.${shade}`,
     ka: `philosophy.ka.${shade}`,
-    rka: `philosophy.rka.${shade}`,
     ika: `philosophy.ika.${shade}`,
+    fa: `philosophy.fa.${shade}`,
+    ma: `philosophy.ma.${shade}`,
   }
   return colorMap[philosophyId] || 'gray.500'
 }
@@ -421,10 +421,10 @@ export const getPhilosophyColor = (philosophyId, shade = 500) => {
 // Helper function to get philosophy variant name
 export const getPhilosophyVariant = (philosophyId) => {
   const variantMap = {
-    ma: 'philosophyMA',
     ka: 'philosophyKA',
-    rka: 'philosophyRKA',
     ika: 'philosophyIKA',
+    fa: 'philosophyFA',
+    ma: 'philosophyMA',
   }
   return variantMap[philosophyId] || 'solid'
 }

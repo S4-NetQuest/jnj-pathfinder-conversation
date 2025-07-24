@@ -250,12 +250,12 @@ const ParameterComparisonCard = ({ parameter, selectedPhilosophies, philosophies
               >
                 <VStack spacing={3} align="stretch" h="100%">
                   <Badge
-                    colorScheme={getPhilosophyColor(philosophy.abbreviation, 700)}
+                    variant={getPhilosophyVariant(philosophy.id)}  // Use variant instead of colorScheme
                     fontSize="xs"
-                    fontWeight="bold"
+                    fontWeight="normal"
                     px={2}
                     py={1}
-                    borderRadius="full"
+                    borderRadius="md"
                     alignSelf="center"
                   >
                     {philosophy.abbreviation}
