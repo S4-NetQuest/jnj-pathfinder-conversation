@@ -60,37 +60,139 @@ const colors = {
       medium: '#328714',
       dark: '#3b5a0d',
     },
+  },
+
+  // Philosophy-specific color palettes
+  philosophy: {
+    // Mechanical Alignment (MA) - Using J&J Blues
+    ma: {
+      50: '#e6f3ff',   // Very light blue
+      100: '#b3d9ff',  // Light blue
+      200: '#80bfff',  // Lighter blue
+      300: '#4da6ff',  // Light blue
+      400: '#1a8cff',  // Medium-light blue
+      500: '#0f68b2',  // J&J Blue Medium (base)
+      600: '#0d5a9a',  // Slightly darker
+      700: '#0a4c82',  // Darker
+      800: '#083e6a',  // Much darker
+      900: '#053052',  // Very dark
+    },
+
+    // Kinematic Alignment (KA) - Using J&J Greens
+    ka: {
+      50: '#e8f9ec',   // Very light green
+      100: '#b8edc4',  // Light green
+      200: '#88e19c',  // Lighter green
+      300: '#58d574',  // Light green
+      400: '#53ce76',  // J&J Green Light (slightly adjusted)
+      500: '#328714',  // J&J Green Medium (base)
+      600: '#2c7611',  // Slightly darker
+      700: '#26650f',  // Darker
+      800: '#20540c',  // Much darker
+      900: '#1a430a',  // Very dark
+    },
+
+    // Restricted Kinematic Alignment (RKA) - Using J&J Violets
+    rka: {
+      50: '#f3effc',   // Very light violet
+      100: '#d9ccf5',  // Light violet
+      200: '#bfa9ee',  // Lighter violet
+      300: '#b19beb',  // J&J Violet Light (base for lighter tones)
+      400: '#9c7ce4',  // Medium-light violet
+      500: '#8c3bbb',  // J&J Violet Medium (base)
+      600: '#7d349f',  // Slightly darker
+      700: '#6e2d84',  // Darker
+      800: '#5f2668',  // Much darker
+      900: '#541981',  // J&J Violet Dark
+    },
+
+    // Inverse Kinematic Alignment (IKA) - Using J&J Orange/Maroon
+    ika: {
+      50: '#fff1e6',   // Very light orange
+      100: '#ffd6b3',  // Light orange
+      200: '#ffbb80',  // Lighter orange
+      300: '#ffa04d',  // Light orange
+      400: '#ff851a',  // Medium-light orange
+      500: '#ff6017',  // J&J Orange (base)
+      600: '#e65515',  // Slightly darker
+      700: '#cc4a12',  // Darker
+      800: '#b33f10',  // Much darker
+      900: '#9a340d',  // Very dark
+    },
   }
 }
 
 // Component style overrides
 const components = {
   Button: {
-    // Override base styles for ALL button variants
     baseStyle: {
-      fontWeight: 'normal', // This sets font-weight: 400 instead of 600
-      // Or use 'medium' for font-weight: 500 if you prefer
+      fontWeight: 'normal',
     },
     variants: {
       solid: {
-        bg: 'red.500',     // Uses J&J Red
+        bg: 'red.500',
         color: 'white',
-        fontWeight: 'normal', // Explicitly set for solid variant
+        fontWeight: 'normal',
         _hover: {
-          bg: 'red.600',   // Slightly darker on hover
+          bg: 'red.600',
         },
         _active: {
-          bg: 'red.700',   // Even darker when pressed
+          bg: 'red.700',
         },
       },
       outline: {
         borderColor: 'red.500',
         color: 'red.500',
-        fontWeight: 'normal', // Explicitly set for outline variant
+        fontWeight: 'normal',
         _hover: {
-          bg: 'red.50',    // Very light background on hover
+          bg: 'red.50',
           borderColor: 'red.600',
           color: 'red.600',
+        },
+      },
+      // Philosophy-specific button variants
+      philosophyMA: {
+        bg: 'philosophy.ma.500',
+        color: 'white',
+        fontWeight: 'normal',
+        _hover: {
+          bg: 'philosophy.ma.600',
+        },
+        _active: {
+          bg: 'philosophy.ma.700',
+        },
+      },
+      philosophyKA: {
+        bg: 'philosophy.ka.500',
+        color: 'white',
+        fontWeight: 'normal',
+        _hover: {
+          bg: 'philosophy.ka.600',
+        },
+        _active: {
+          bg: 'philosophy.ka.700',
+        },
+      },
+      philosophyRKA: {
+        bg: 'philosophy.rka.500',
+        color: 'white',
+        fontWeight: 'normal',
+        _hover: {
+          bg: 'philosophy.rka.600',
+        },
+        _active: {
+          bg: 'philosophy.rka.700',
+        },
+      },
+      philosophyIKA: {
+        bg: 'philosophy.ika.500',
+        color: 'white',
+        fontWeight: 'normal',
+        _hover: {
+          bg: 'philosophy.ika.600',
+        },
+        _active: {
+          bg: 'philosophy.ika.700',
         },
       },
     },
@@ -98,24 +200,43 @@ const components = {
 
   Badge: {
     baseStyle: {
-      fontWeight: '500',  // Set default font weight to 600 instead of 700
-      fontSize: 'xs',     // Keep default size
-      px: 2,              // Keep default padding
-      textTransform: 'uppercase', // Keep default text transform
+      fontWeight: '500',
+      fontSize: 'xs',
+      px: 2,
+      textTransform: 'uppercase',
     },
     variants: {
-      // You can also customize specific variants if needed
       solid: {
-        fontWeight: '600', // Ensure solid variant uses 600
+        fontWeight: '600',
       },
       subtle: {
-        fontWeight: '600', // Ensure subtle variant uses 600
+        fontWeight: '600',
       },
       outline: {
-        fontWeight: '600', // Ensure outline variant uses 600
+        fontWeight: '600',
+      },
+      // Philosophy-specific badge variants
+      philosophyMA: {
+        bg: 'philosophy.ma.500',
+        color: 'white',
+        fontWeight: '600',
+      },
+      philosophyKA: {
+        bg: 'philosophy.ka.500',
+        color: 'white',
+        fontWeight: '600',
+      },
+      philosophyRKA: {
+        bg: 'philosophy.rka.500',
+        color: 'white',
+        fontWeight: '600',
+      },
+      philosophyIKA: {
+        bg: 'philosophy.ika.500',
+        color: 'white',
+        fontWeight: '600',
       },
     },
-    // You can also customize different sizes
     sizes: {
       sm: {
         fontSize: 'xs',
@@ -128,6 +249,40 @@ const components = {
       lg: {
         fontSize: 'md',
         fontWeight: '600',
+      },
+    },
+  },
+
+  // Philosophy-specific Card component
+  Card: {
+    variants: {
+      philosophyMA: {
+        container: {
+          borderLeft: '4px solid',
+          borderLeftColor: 'philosophy.ma.500',
+          bg: 'philosophy.ma.50',
+        },
+      },
+      philosophyKA: {
+        container: {
+          borderLeft: '4px solid',
+          borderLeftColor: 'philosophy.ka.500',
+          bg: 'philosophy.ka.50',
+        },
+      },
+      philosophyRKA: {
+        container: {
+          borderLeft: '4px solid',
+          borderLeftColor: 'philosophy.rka.500',
+          bg: 'philosophy.rka.50',
+        },
+      },
+      philosophyIKA: {
+        container: {
+          borderLeft: '4px solid',
+          borderLeftColor: 'philosophy.ika.500',
+          bg: 'philosophy.ika.50',
+        },
       },
     },
   },
@@ -236,8 +391,8 @@ const components = {
 const styles = {
   global: {
     body: {
-      bg: 'jj.gray.50',     // Gray 01 background
-      color: 'jj.gray.700', // Gray 08 text
+      bg: 'jj.gray.50',
+      color: 'jj.gray.700',
     },
   },
 }
@@ -250,6 +405,28 @@ const breakpoints = {
   lg: '1024px',  // Desktop
   xl: '1280px',
   '2xl': '1536px',
+}
+
+// Helper function to get philosophy colors (optional utility)
+export const getPhilosophyColor = (philosophyId, shade = 500) => {
+  const colorMap = {
+    ma: `philosophy.ma.${shade}`,
+    ka: `philosophy.ka.${shade}`,
+    rka: `philosophy.rka.${shade}`,
+    ika: `philosophy.ika.${shade}`,
+  }
+  return colorMap[philosophyId] || 'gray.500'
+}
+
+// Helper function to get philosophy variant name
+export const getPhilosophyVariant = (philosophyId) => {
+  const variantMap = {
+    ma: 'philosophyMA',
+    ka: 'philosophyKA',
+    rka: 'philosophyRKA',
+    ika: 'philosophyIKA',
+  }
+  return variantMap[philosophyId] || 'solid'
 }
 
 // Create the custom theme

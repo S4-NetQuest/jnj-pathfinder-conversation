@@ -32,7 +32,7 @@ import {
   GridItem
 } from '@chakra-ui/react'
 import { useAuth } from '../contexts/AuthContext'
-
+import { getPhilosophyColor, getPhilosophyVariant } from '../theme/theme'
 // Static data for the philosophies
 const philosophiesData = {
   philosophies: [
@@ -40,7 +40,6 @@ const philosophiesData = {
       id: 'ma',
       name: 'Mechanical Alignment',
       abbreviation: 'MA',
-      color: 'green',
       parameters: {
         surgical_objective: 'Neutral mechanical axis (0° HKA)',
         femoral_cut_reference: 'Perpendicular to mechanical axis',
@@ -62,7 +61,6 @@ const philosophiesData = {
       id: 'ika',
       name: 'Inverse Kinematic Alignment',
       abbreviation: 'iKA',
-      color: 'green',
       parameters: {
         surgical_objective: 'Restore native femoral joint line; neutral tibial base',
         femoral_cut_reference: 'Native distal femoral anatomy',
@@ -84,7 +82,6 @@ const philosophiesData = {
       id: 'ka',
       name: 'Kinematic Alignment',
       abbreviation: 'KA',
-      color: 'purple',
       parameters: {
         surgical_objective: 'Restore native joint line on both femur and tibia',
         femoral_cut_reference: 'Native distal femoral anatomy',
@@ -106,7 +103,6 @@ const philosophiesData = {
       id: 'fa',
       name: 'Functional Alignment',
       abbreviation: 'FA',
-      color: 'orange',
       parameters: {
         surgical_objective: 'Achieve symmetrical gaps based on soft tissue envelope',
         femoral_cut_reference: 'Modified based on soft tissue balance',
@@ -254,7 +250,7 @@ const ParameterComparisonCard = ({ parameter, selectedPhilosophies, philosophies
               >
                 <VStack spacing={3} align="stretch" h="100%">
                   <Badge
-                    colorScheme={philosophy.color}
+                    colorScheme={getPhilosophyColor(philosophy.abbreviation, 700)}
                     fontSize="xs"
                     fontWeight="bold"
                     px={2}
