@@ -33,6 +33,7 @@ import {
   CheckCircleIcon,
   CalendarIcon,
   EditIcon,
+  ViewIcon,
 } from '@chakra-ui/icons'
 import ReactQuill from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
@@ -43,6 +44,7 @@ import api from '../services/api'
 import questionsData from '../data/questions.json'
 import ScheduleFollowupModal from '../components/ScheduleFollowupModal'
 import AlignmentSummaryImage from '../components/AlignmentSummaryImage'
+import ReviewConversationModal from '../components/ReviewConversationModal'
 
 const Conversation = () => {
   const { id } = useParams()
@@ -50,6 +52,7 @@ const Conversation = () => {
   const { user } = useAuth()
   const toast = useToast()
   const { isOpen: isNotesOpen, onOpen: onNotesOpen, onClose: onNotesClose } = useDisclosure()
+  const { isOpen: isReviewOpen, onOpen: onReviewOpen, onClose: onReviewClose } = useDisclosure()
   const [isScheduleOpen, setIsScheduleOpen] = useState(false)
   const [conversation, setConversation] = useState(null)
   const [salesRep, setSalesRep] = useState(null)
@@ -481,10 +484,21 @@ const Conversation = () => {
                   </VStack>
                 )}
               </Box>
-
+              {/* buttons */}
               <HStack spacing={2}>
                 {user?.role === 'sales_rep' && id && (
                   <>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      leftIcon={<ViewIcon />}
+                      onClick={onReviewOpen}
+                      borderColor="#eb1700"
+                      color="#eb1700"
+                      _hover={{ bg: "#eb1700", color: "white" }}
+                    >
+                      {isMobile ? 'Review' : 'Review Conversation'}
+                    </Button>
                     <Button
                       size="sm"
                       variant="outline"
@@ -901,6 +915,16 @@ const Conversation = () => {
           </ModalFooter>
         </ModalContent>
       </Modal>
+
+      {/* Review Conversation Modal */}
+      <ReviewConversationModal
+        isOpen={isReviewOpen}
+        onClose={onReviewClose}
+        questions={questions}
+        responses={responses}
+        conversationData={conversation}
+        alignmentTypes={alignmentTypes}
+      />
     </Container>
   )
 }
