@@ -56,7 +56,7 @@ const philosophiesData = {
         surgical_objective: 'Neutral mechanical axis (0° HKA)',
         femoral_cut_reference: 'Perpendicular to mechanical axis',
         tibial_cut_reference: 'Perpendicular to mechanical axis',
-        resection_sequence: 'Femur first',
+        resection_sequence: 'Femur/Tibia first',
         soft_tissue_management: 'Releases common to achieve neutral alignment',
         technology_requirement: 'Optional (manual instrumentation sufficient)',
         joint_line_orientation: 'No — Creates a flat joint line by cutting both femur and tibia perpendicular to mechanical axes. Alters native obliquity, may affect soft tissue balance and joint kinematics.',
@@ -609,7 +609,6 @@ const ComparePhilosophies = () => {
             <Text
               fontSize={{ base: '24px', md: '32px' }}
               fontFamily="heading"
-              fontWeight="medium"
               color="jj.red"
               mb={2}
               lineHeight="1.2"

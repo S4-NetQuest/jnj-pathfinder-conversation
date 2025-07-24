@@ -102,7 +102,6 @@ const References = () => {
             <Text
               fontSize={{ base: '28px', md: '36px' }}
               fontFamily="heading"
-              fontWeight="bold"
               color="#eb1700"
               mb={2}
               lineHeight="1.2"
@@ -283,7 +282,6 @@ const References = () => {
                         <Box flex="1" minW="0">
                           <Text
                             fontSize={{ base: "lg", md: "xl" }}
-                            fontWeight="bold"
                             color="gray.800"
                             lineHeight="1.3"
                             mb={1}

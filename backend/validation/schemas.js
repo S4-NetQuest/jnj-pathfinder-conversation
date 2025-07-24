@@ -1,4 +1,4 @@
-// backend/validation/schemas.js (Updated to allow future dates and improve error messages)
+// backend/validation/schemas.js (Updated to handle "Unknown" case)
 const Joi = require('joi')
 
 // Volume options
@@ -8,8 +8,10 @@ const VOLUME_OPTIONS = ['< 50', '< 100', '< 200', '> 200']
 const ALIGNMENT_OPTIONS_UPPER = ['KA', 'iKA', 'FA', 'MA', 'UNKNOWN']
 // Alignment options (lowercase for frontend compatibility)
 const ALIGNMENT_OPTIONS_LOWER = ['ka', 'ika', 'fa', 'ma', 'unknown']
+// Alignment options (mixed case for frontend compatibility)
+const ALIGNMENT_OPTIONS_MIXED = ['Ka', 'iKa', 'Fa', 'Ma', 'Unknown']
 // Combined alignment options for validation
-const ALIGNMENT_OPTIONS_ALL = [...ALIGNMENT_OPTIONS_UPPER, ...ALIGNMENT_OPTIONS_LOWER]
+const ALIGNMENT_OPTIONS_ALL = [...ALIGNMENT_OPTIONS_UPPER, ...ALIGNMENT_OPTIONS_LOWER, ...ALIGNMENT_OPTIONS_MIXED]
 
 // Boolean string options for robotics
 const BOOLEAN_STRING_OPTIONS = ['true', 'false']
@@ -17,28 +19,42 @@ const BOOLEAN_STRING_OPTIONS = ['true', 'false']
 // Status options
 const STATUS_OPTIONS = ['in_progress', 'completed', 'abandoned']
 
-// Alignment display names (both cases)
+// Alignment display names (all cases)
 const ALIGNMENT_DISPLAY_NAMES = {
   'KA': 'Kinematic Alignment',
   'ka': 'Kinematic Alignment',
+  'Ka': 'Kinematic Alignment',
   'iKA': 'Inverse Kinematic Alignment',
   'ika': 'Inverse Kinematic Alignment',
+  'iKa': 'Inverse Kinematic Alignment',
   'FA': 'Functional Alignment',
   'fa': 'Functional Alignment',
+  'Fa': 'Functional Alignment',
   'MA': 'Mechanical Alignment',
-  'ma': 'Mechanical Alignment'
+  'ma': 'Mechanical Alignment',
+  'Ma': 'Mechanical Alignment',
+  'UNKNOWN': 'Unknown',
+  'unknown': 'Unknown',
+  'Unknown': 'Unknown'
 }
 
-// Alignment color schemes for UI (both cases)
+// Alignment color schemes for UI (all cases)
 const ALIGNMENT_COLOR_SCHEMES = {
   'KA': 'red',
   'ka': 'red',
+  'Ka': 'red',
   'iKA': 'orange',
   'ika': 'orange',
+  'iKa': 'orange',
   'FA': 'blue',
   'fa': 'blue',
+  'Fa': 'blue',
   'MA': 'green',
-  'ma': 'green'
+  'ma': 'green',
+  'Ma': 'green',
+  'UNKNOWN': 'gray',
+  'unknown': 'gray',
+  'Unknown': 'gray'
 }
 
 // Helper function to normalize alignment case (convert to uppercase for storage)
@@ -50,6 +66,7 @@ const normalizeAlignment = (alignment) => {
     case 'ika': return 'iKA'
     case 'fa': return 'FA'
     case 'ma': return 'MA'
+    case 'unknown': return 'UNKNOWN'
     default: return alignment.toUpperCase()
   }
 }
@@ -117,8 +134,8 @@ const createConversationSchema = Joi.object({
 
   conversation_date: Joi.date()
     .required()
-    .min('1900-01-01')  // Allow reasonable date range but not too far in the past
-    .max('2100-12-31')  // Allow future dates up to a reasonable limit
+    .min('1900-01-01')
+    .max('2100-12-31')
     .messages({
       'date.base': 'Please enter a valid date',
       'date.min': 'Conversation date cannot be before January 1, 1900',
@@ -349,6 +366,7 @@ const CONSTANTS = {
   ALIGNMENT_OPTIONS: ALIGNMENT_OPTIONS_UPPER, // For backwards compatibility
   ALIGNMENT_OPTIONS_UPPER,
   ALIGNMENT_OPTIONS_LOWER,
+  ALIGNMENT_OPTIONS_MIXED,
   ALIGNMENT_OPTIONS_ALL,
   BOOLEAN_STRING_OPTIONS,
   STATUS_OPTIONS,

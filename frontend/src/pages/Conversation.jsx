@@ -210,6 +210,32 @@ const Conversation = () => {
       }
     })
 
+    const determineResult = (scores) => {
+      const maxScore = Math.max(...Object.values(scores))
+      const tiedApproaches = Object.entries(scores)
+        .filter(([, score]) => score === maxScore)
+        .map(([approach]) => approach)
+
+      if (tiedApproaches.length === 1) {
+        return {
+          primary: tiedApproaches[0],
+          tied: [],
+          isTied: false
+        }
+      }
+
+      // Use priority order from questionsData for ties
+      const priorityOrder = questionsData.scoringRules?.tieBreakingRules?.priorityOrder || ['ka', 'ika', 'fa', 'ma']
+      const winner = priorityOrder.find(approach => tiedApproaches.includes(approach))
+
+      return {
+        primary: winner || tiedApproaches[0],
+        tied: tiedApproaches.filter(approach => approach !== winner),
+        isTied: true,
+        tiedScore: maxScore
+      }
+    }
+
     setScores(newScores)
   }
 
@@ -251,15 +277,20 @@ const Conversation = () => {
   }
 
   const handleComplete = async () => {
-    // Determine recommended approach
-    const maxScore = Math.max(...Object.values(scores))
-    const recommendedApproach = Object.entries(scores).find(([_, score]) => score === maxScore)?.[0]
+    // Use the new determineResult method
+    const result = determineResult(scores)
+    const recommendedApproach = result.primary
 
     if (id && user?.role === 'sales_rep') {
       try {
         await api.put(`/conversations/${id}`, {
           status: 'completed',
           recommendedApproach,
+          // Optionally store tie information
+          ...(result.isTied && {
+            tiedApproaches: result.tied,
+            tieBreakingUsed: true
+          })
         })
       } catch (error) {
         console.error('Error completing conversation:', error)
@@ -312,13 +343,18 @@ const Conversation = () => {
     // For completed conversations, use the stored recommended approach first
     if (completed && conversation?.recommended_approach) {
       const approach = conversation.recommended_approach.toLowerCase()
-      return alignmentTypes[approach] || null
+      return {
+        alignment: alignmentTypes[approach] || null,
+        result: null // We don't have tie info from stored conversations
+      }
     }
 
     // Otherwise calculate from current scores
-    const maxScore = Math.max(...Object.values(scores))
-    const recommendedKey = Object.entries(scores).find(([_, score]) => score === maxScore)?.[0]
-    return recommendedKey ? alignmentTypes[recommendedKey] : null
+    const result = determineResult(scores)
+    return {
+      alignment: result.primary ? alignmentTypes[result.primary] : null,
+      result: result
+    }
   }
 
   const getMaxPossibleScore = (alignmentKey) => {
@@ -419,7 +455,7 @@ const Conversation = () => {
           <CardBody>
             <Flex justify="space-between" align="start" mb={4}>
               <Box>
-                <Text fontSize="xl" fontWeight="bold" color="#eb1700" mb={2}>
+                <Text fontSize="xl" color="#eb1700" mb={2}>
                   {conversation ?
                     `Conversation with ${conversation.surgeon_name}` :
                     'Alignment Philosophy Assessment'
@@ -576,33 +612,53 @@ const Conversation = () => {
             </Alert>
 
             {/* Recommended Approach */}
-            {recommendedAlignment && (
-              <Card>
-                <CardBody>
-                  <VStack spacing={4} align="stretch">
-                    <Flex justify="space-between" align="center">
-                      <Text fontSize="lg" fontWeight="bold" color="#6e6259">
-                        Your approach suggests:
-                      </Text>
-                      <Badge
-                        bg={recommendedAlignment.color}
-                        color="white"
-                        px={3}
-                        py={1}
-                        borderRadius="md"
-                        fontSize="sm"
-                      >
-                        {recommendedAlignment.name}
-                      </Badge>
-                    </Flex>
+            {(() => {
+              const recommendedData = getRecommendedAlignment()
+              const recommendedAlignment = recommendedData.alignment
+              const result = recommendedData.result
 
-                    <Text color="#81766f" lineHeight="1.6">
-                      {recommendedAlignment.fullDescription}
-                    </Text>
-                  </VStack>
-                </CardBody>
-              </Card>
-            )}
+              return recommendedAlignment && (
+                <Card>
+                  <CardBody>
+                    <VStack spacing={4} align="stretch">
+                      <Flex justify="space-between" align="center">
+                        <Text fontSize="lg" fontWeight="bold" color="#6e6259">
+                          Your approach suggests:
+                        </Text>
+                        <Badge
+                          bg={recommendedAlignment.color}
+                          color="white"
+                          px={3}
+                          py={1}
+                          borderRadius="md"
+                          fontSize="sm"
+                        >
+                          {recommendedAlignment.name}
+                        </Badge>
+                      </Flex>
+
+                      {/* Show tie information if applicable */}
+                      {result && result.isTied && result.tied.length > 0 && (
+                        <Alert status="info" borderRadius="md">
+                          <AlertIcon />
+                          <Box>
+                            <Text fontSize="sm">
+                              <strong>Tie detected:</strong> This approach tied with{' '}
+                              {result.tied.map(key => alignmentTypes[key]?.abbreviation || key.toUpperCase()).join(', ')}{' '}
+                              (all scored {result.tiedScore} points). {recommendedAlignment.abbreviation} was selected based on clinical priority.
+                            </Text>
+                          </Box>
+                        </Alert>
+                      )}
+
+                      <Text color="#81766f" lineHeight="1.6">
+                        {recommendedAlignment.fullDescription}
+                      </Text>
+                    </VStack>
+                  </CardBody>
+                </Card>
+              )
+            })()}
 
             <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={4} align="start">
               {/* Radar Chart */}

@@ -428,6 +428,7 @@ router.post('/', async (req, res) => {
 
       // Transform robotics value
       const roboticsValue = transformRoboticsValue(uses_robotics)
+      const normalizedAlignment = validators.normalizeAlignment(current_alignment)
 
       // Create conversation with new fields
       console.log('Creating conversation for user role:', currentUser.role)
@@ -457,7 +458,7 @@ router.post('/', async (req, res) => {
           .input('surgeryCenterId', dbConfig.sql.Int, surgeryCenterId)
           .input('surgeonVolumePerYear', dbConfig.sql.VarChar, surgeon_volume_per_year)
           .input('usesRobotics', dbConfig.sql.Bit, roboticsValue ? 1 : 0)
-          .input('currentAlignment', dbConfig.sql.VarChar, current_alignment)
+          .input('currentAlignment', dbConfig.sql.VarChar, normalizedAlignment)
           .input('conversationDate', dbConfig.sql.Date, conversation_date)
           .query(insertQuery)
       } else if (currentUser.role === 'surgeon') {
@@ -483,7 +484,7 @@ router.post('/', async (req, res) => {
           .input('surgeryCenterId', dbConfig.sql.Int, surgeryCenterId)
           .input('surgeonVolumePerYear', dbConfig.sql.VarChar, surgeon_volume_per_year)
           .input('usesRobotics', dbConfig.sql.Bit, roboticsValue ? 1 : 0)
-          .input('currentAlignment', dbConfig.sql.VarChar, current_alignment)
+          .input('currentAlignment', dbConfig.sql.VarChar, normalizedAlignment)
           .input('conversationDate', dbConfig.sql.Date, conversation_date)
           .query(insertQuery)
       } else {
@@ -678,7 +679,8 @@ router.put('/:id', async (req, res) => {
 
     if (value.current_alignment !== undefined) {
       updateFields.push('current_alignment = @currentAlignment')
-      request.input('currentAlignment', dbConfig.sql.VarChar, value.current_alignment)
+        const normalizedAlignment = validators.normalizeAlignment(value.current_alignment)
+        request.input('currentAlignment', dbConfig.sql.VarChar, normalizedAlignment)
     }
 
     // Handle alignment scores with new field names (KA/iKA/FA/MA)
@@ -900,7 +902,8 @@ router.patch('/:id', async (req, res) => {
 
     if (value.current_alignment !== undefined) {
       updateFields.push('current_alignment = @currentAlignment')
-      request.input('currentAlignment', dbConfig.sql.VarChar, value.current_alignment)
+      const normalizedAlignment = validators.normalizeAlignment(value.current_alignment)
+      request.input('currentAlignment', dbConfig.sql.VarChar, normalizedAlignment)
     }
 
     // Handle alignment scores with new field names (KA/iKA/FA/MA)

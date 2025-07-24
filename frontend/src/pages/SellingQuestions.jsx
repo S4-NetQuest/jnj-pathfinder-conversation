@@ -220,7 +220,7 @@ const SellingQuestions = () => {
   const [filteredQuestions, setFilteredQuestions] = useState([])
   const [selectedCategories, setSelectedCategories] = useState([])
   const [loading, setLoading] = useState(true)
-  const isMobile = useBreakpointValue({ base: true, md: false })
+  //const isMobile = useBreakpointValue({ base: true, md: false })
   const bgColor = useColorModeValue('gray.50', 'gray.900')
   const cardBgColor = useColorModeValue('white', 'gray.800')
 
@@ -290,7 +290,7 @@ const SellingQuestions = () => {
             <Text
               fontSize={{ base: '24px', md: '32px' }}
               fontFamily="heading"
-              fontWeight="medium"
+              fontWeight=""
               color="jj.red"
               mb={2}
               lineHeight="1.2"
@@ -378,7 +378,7 @@ const SellingQuestions = () => {
                     <Text fontSize="sm" color="jj.gray.600">
                       Showing {filteredQuestions.length} of {questions.length} questions
                       {selectedCategories.length > 0 && selectedCategories.length < categories.length && (
-                        <Text as="span" ml={2} fontWeight="medium">
+                        <Text as="span" ml={2} fontWeight="">
                           • Filtered by: {selectedCategories.join(', ')}
                         </Text>
                       )}
