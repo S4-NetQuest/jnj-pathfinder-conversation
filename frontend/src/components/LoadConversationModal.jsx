@@ -415,10 +415,10 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
                             <Text fontSize="sm" color="#6e6259">Current Alignment Philosophy:</Text>
                             <Badge
                               /* colorScheme={getAlignmentColor(conversation.current_alignment)} */
-                              variant={getPhilosophyVariant(conversation.recommended_approach).toLowerCase()}
+                              variant={getPhilosophyVariant(conversation.current_alignment)}
                               size="sm"
                               px={2}
-                              py={1}
+                              py={0}
                               fontWeight={500}
                             >
                               {conversation.current_alignment}
@@ -439,10 +439,10 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
                           <HStack spacing={2}>
                             <Badge
                               /* bg={getRecommendationColor(conversation.recommended_approach)} */
-                              variant={getPhilosophyVariant(conversation.recommended_approach).toLowerCase()}
+                              variant={getPhilosophyVariant(conversation.recommended_approach)}
                               color="white"
                               px={2}
-                              py={1}
+                              py={0}
                               borderRadius="xs"
                               fontSize="xs"
                               fontWeight={500}
@@ -464,16 +464,16 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
                           </Text>
                           <HStack spacing={3} fontSize="xs" color="#6e6259">
                             <Text>
-                              <Text as="span" fontWeight="medium" color="#eb1700">KA:</Text> {calculatePercentage(conversation.alignment_score_ka || 0, 'ka')}%
+                              <Text as="span" fontWeight="medium" color={getPhilosophyColor("ka")}>KA:</Text> {calculatePercentage(conversation.alignment_score_ka || 0, 'ka')}%
                             </Text>
                             <Text>
-                              <Text as="span" fontWeight="medium" color="#ff6017">iKA:</Text> {calculatePercentage(conversation.alignment_score_ika || 0, 'ika')}%
+                              <Text as="span" fontWeight="medium" color={getPhilosophyColor("ika")}>iKA:</Text> {calculatePercentage(conversation.alignment_score_ika || 0, 'ika')}%
                             </Text>
                             <Text>
-                              <Text as="span" fontWeight="medium" color="#0f68b2">FA:</Text> {calculatePercentage(conversation.alignment_score_fa || 0, 'fa')}%
+                              <Text as="span" fontWeight="medium" color={getPhilosophyColor("fa")}>FA:</Text> {calculatePercentage(conversation.alignment_score_fa || 0, 'fa')}%
                             </Text>
                             <Text>
-                              <Text as="span" fontWeight="medium" color="#328714">MA:</Text> {calculatePercentage(conversation.alignment_score_ma || 0, 'ma')}%
+                              <Text as="span" fontWeight="medium" color={getPhilosophyColor("ma")}>MA:</Text> {calculatePercentage(conversation.alignment_score_ma || 0, 'ma')}%
                             </Text>
                           </HStack>
                         </Box>

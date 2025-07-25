@@ -409,24 +409,30 @@ const breakpoints = {
 
 // Helper function to get philosophy colors (optional utility)
 export const getPhilosophyColor = (philosophyId, shade = 500) => {
+  if (!philosophyId) return 'gray.500' // Handle null/undefined
+
+  const normalizedId = philosophyId.toLowerCase()
   const colorMap = {
     ka: `philosophy.ka.${shade}`,
     ika: `philosophy.ika.${shade}`,
     fa: `philosophy.fa.${shade}`,
     ma: `philosophy.ma.${shade}`,
   }
-  return colorMap[philosophyId] || 'gray.500'
+  return colorMap[normalizedId] || 'gray.500'
 }
 
 // Helper function to get philosophy variant name
 export const getPhilosophyVariant = (philosophyId) => {
+  if (!philosophyId) return 'solid' // Handle null/undefined
+
+  const normalizedId = philosophyId.toLowerCase()
   const variantMap = {
     ka: 'philosophyKA',
     ika: 'philosophyIKA',
     fa: 'philosophyFA',
     ma: 'philosophyMA',
   }
-  return variantMap[philosophyId] || 'solid'
+  return variantMap[normalizedId] || 'solid'
 }
 
 // Create the custom theme

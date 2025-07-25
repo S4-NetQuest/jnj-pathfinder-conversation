@@ -23,6 +23,15 @@ import LoadConversationModal from '../components/LoadConversationModal'
 import DevLogin from '../components/DevLogin'
 import config from '../config/config'
 
+// Import all background images
+import pathfinderBgMobile from '../assets/images/pathfinder-bg-mobile.jpg'
+import pathfinderBgTablet from '../assets/images/pathfinder-bg-tablet.jpg'
+import pathfinderBgDesktop from '../assets/images/pathfinder-bg-desktop.jpg'
+import pathfinderBgMobileWebp from '../assets/images/pathfinder-bg-mobile.webp'
+import pathfinderBgTabletWebp from '../assets/images/pathfinder-bg-tablet.webp'
+import pathfinderBgDesktopWebp from '../assets/images/pathfinder-bg-desktop.webp'
+import pathfinderBackground from '../assets/images/pathfinder-background.jpg'
+
 const Home = () => {
   const { user, logout, isSalesRep, isSurgeon } = useAuth()
   const navigate = useNavigate()
@@ -54,11 +63,11 @@ const Home = () => {
     // Use the appropriate size based on screen
     const screenWidth = window.innerWidth
     if (screenWidth <= 480) {
-      img.src = '/images/pathfinder-bg-mobile.jpg' // 1200x800
+      img.src = pathfinderBgMobile // 1200x800
     } else if (screenWidth <= 1024) {
-      img.src = '/images/pathfinder-bg-tablet.jpg' // 2000x1333
+      img.src = pathfinderBgTablet // 2000x1333
     } else {
-      img.src = '/images/pathfinder-bg-desktop.jpg' // 3000x2000
+      img.src = pathfinderBgDesktop // 3000x2000
     }
   }, [])
 
@@ -69,16 +78,16 @@ const Home = () => {
 
       if (screenWidth <= 480) {
         // Mobile: smaller image for faster loading
-        return '/images/pathfinder-bg-mobile.webp'
+        return pathfinderBgMobileWebp
       } else if (screenWidth <= 1024) {
         // Tablet: medium resolution
-        return '/images/pathfinder-bg-tablet.webp'
+        return pathfinderBgTabletWebp
       } else {
         // Desktop: full resolution for crisp display
-        return '/images/pathfinder-bg-desktop.webp'
+        return pathfinderBgDesktopWebp
       }
     }
-    return '/images/pathfinder-bg-desktop.webp'
+    return pathfinderBgDesktopWebp
   }
 
   const handleConversationCreated = (conversationId) => {
@@ -117,7 +126,7 @@ const Home = () => {
         minH={availableHeight}
         h={availableHeight} // Use calculated available height
         overflow="hidden"
-        bgImage="url('/images/pathfinder-background.jpg')"
+        bgImage={`url('${pathfinderBackground}')`}
         bgSize="cover"
         bgPosition="center"
         bgRepeat="no-repeat"

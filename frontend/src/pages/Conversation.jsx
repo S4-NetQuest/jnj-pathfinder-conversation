@@ -676,7 +676,7 @@ const Conversation = () => {
                       </VStack>
                     </CardBody>
                   </Card>
-                  <Card h="100%">
+                  <Card h="100%" bg="white">
                     <CardBody p={0} display="flex" alignItems="center" justifyContent="center">
                       <AlignmentSummaryImage alignment={recommendedAlignment} />
                     </CardBody>

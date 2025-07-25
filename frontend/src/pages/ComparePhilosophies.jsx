@@ -293,12 +293,13 @@ const ClinicalTakeawaysCard = ({ philosophy }) => {
       <CardHeader pb={2}>
         <VStack spacing={2} align="center">
           <Badge
-            colorScheme={philosophy.color}
-            fontSize="sm"
-            fontWeight="bold"
-            px={3}
+            variant={getPhilosophyVariant(philosophy.id)}  // Use variant instead of colorScheme
+            fontSize="xs"
+            fontWeight="normal"
+            px={2}
             py={1}
-            borderRadius="full"
+            borderRadius="md"
+            alignSelf="center"
           >
             {philosophy.abbreviation}
           </Badge>

@@ -39,7 +39,7 @@ const AlignmentSummaryImage = ({ alignment }) => {
       position="relative"
       overflow="hidden"
       borderRadius="md"
-      bg="#f1efed"
+      bg="#FFFFFF"
     >
       {/* Loading spinner */}
       {imageLoading && !imageError && (
@@ -51,7 +51,7 @@ const AlignmentSummaryImage = ({ alignment }) => {
           h="100%"
           alignItems="center"
           justifyContent="center"
-          bg="#f1efed"
+          bg="#FFFFFF"
           zIndex={2}
         >
           <Spinner
@@ -73,7 +73,7 @@ const AlignmentSummaryImage = ({ alignment }) => {
           alignItems="center"
           justifyContent="center"
           flexDirection="column"
-          bg="#f1efed"
+          bg="#FFFFFF"
           color="#81766f"
           textAlign="center"
           p={4}
