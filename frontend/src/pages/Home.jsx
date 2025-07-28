@@ -193,7 +193,7 @@ const Home = () => {
       bgRepeat="no-repeat"
       bgAttachment={{ base: "scroll", lg: "fixed" }} // Fixed only on desktop for performance
       position="relative"
-      backgroundColor="#f1efed" // Fallback while loading
+      backgroundColor="#FFFFFF" // Fallback while loading
       transition="background-image 0.3s ease-in-out"
       pt={headerHeight}
       pb={footerHeight}
@@ -204,23 +204,24 @@ const Home = () => {
         left: 0,
         right: 0,
         bottom: 0,
-        bg: imageLoaded
+/*         bg: imageLoaded
           ? "linear-gradient(135deg, rgba(235, 23, 0, 0.05) 0%, rgba(0, 0, 0, 0.25) 100%)"
-          : "linear-gradient(135deg, rgba(235, 23, 0, 0.1) 0%, rgba(0, 0, 0, 0.1) 100%)",
+          : "linear-gradient(135deg, rgba(235, 23, 0, 0.1) 0%, rgba(0, 0, 0, 0.1) 100%)", */
         zIndex: 1,
         transition: "background 0.3s ease-in-out"
       }}
     >
-      <Container
-        maxW="container.lg"
+      <Box
         position="relative"
         zIndex={2}
-        h={availableHeight} // Use height instead of minH
-        py={{ base: 4, md: 8 }} // Add some padding for positioning
+        h={availableHeight}
+        w="100vw" // Full viewport width
+        py={{ base: 4, md: 8 }}
         display="flex"
         flexDirection="column"
-        justifyContent={{ base: "flex-start", md: "flex-start" }} // Start from top instead of center
+        justifyContent={{ base: "flex-start", md: "flex-start" }}
         alignItems="center"
+        px={{ base: 4, md: 8 }} // Add horizontal padding instead of using Container
       >
         {/* Main Content Card */}
         <Card
@@ -372,7 +373,7 @@ const Home = () => {
           onClose={onLoadClose}
           onConversationSelected={handleConversationSelected}
         />
-      </Container>
+      </Box>
     </Box>
   )
 }

@@ -4,14 +4,24 @@ import react from '@vitejs/plugin-react'
 export default defineConfig(({ mode }) => {
   const isDev = mode === 'development'
   const isStaging = mode === 'staging'
+  const isProd = mode === 'production'
+
+  // Determine base path
+  let basePath = '/'
+  if (isStaging) {
+    basePath = '/pathfinder/'
+  } else if (isProd) {
+    // You might want different base for production
+    basePath = '/'
+  }
 
   return {
     plugins: [react()],
-    base: isStaging ? '/pathfinder/' : '/',
+    base: basePath,
     build: {
       outDir: 'dist',
       assetsDir: 'assets',
-      sourcemap: isDev,
+      sourcemap: isDev ? true : false,
       // Simpler build options for IIS compatibility
       target: 'es2015',
       rollupOptions: {

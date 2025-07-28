@@ -93,6 +93,12 @@ const References = () => {
     setSelectedFollowUp('all')
   }
 
+  const getPdfUrl = (filename) => {
+    const baseUrl = import.meta.env.BASE_URL || '/'
+    const cleanBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl
+    return `${cleanBase}/reference-papers/${filename}`
+  }
+
   return (
     <Box bg="gray.50" minH="100vh" pt="20px" pb="100px">
       <Container maxW="container.xl" py={4}>
@@ -371,7 +377,7 @@ const References = () => {
                       {/* Action Row */}
                       <Flex justify="space-between" align="center">
                         <Text fontSize="xs" color="gray.500">
-                          {paper.filename}
+                          {getPdfUrl(paper.filename)}
                         </Text>
 
                         <HStack spacing={2}>

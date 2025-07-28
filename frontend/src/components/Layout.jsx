@@ -10,7 +10,7 @@ const Layout = ({ children }) => {
   const footerHeight = config.showDevFeatures ? "90px" : "60px" // Extra height for dev info
 
   return (
-    <Box minH="100vh" bg="gray.50">
+    <Box minH="100vh" bg="white">
       <Header />
       <Box
         pt={headerHeight} // Account for fixed header (+ environment bar if present)

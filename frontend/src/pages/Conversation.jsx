@@ -14,6 +14,7 @@ import {
   Alert,
   AlertIcon,
   Flex,
+  Image,
   useToast,
   useBreakpointValue,
   SimpleGrid,
@@ -45,6 +46,11 @@ import questionsData from '../data/questions.json'
 import ScheduleFollowupModal from '../components/ScheduleFollowupModal'
 import AlignmentSummaryImage from '../components/AlignmentSummaryImage'
 import ReviewConversationModal from '../components/ReviewConversationModal'
+import kaSummaryImg from '../assets/images/ka-summary.png'
+import ikaSummaryImg from '../assets/images/ika-summary.png'
+import faSummaryImg from '../assets/images/fa-summary.png'
+import maSummaryImg from '../assets/images/ma-summary.png'
+
 
 const Conversation = () => {
   const { id } = useParams()
@@ -73,6 +79,12 @@ const Conversation = () => {
   const isMobile = useBreakpointValue({ base: true, md: false })
   const questions = questionsData.questions
   const alignmentTypes = questionsData.metadata.alignmentCategories
+  const alignmentImages = {
+    'KA': kaSummaryImg,
+    'iKA': ikaSummaryImg,
+    'FA': faSummaryImg,
+    'MA': maSummaryImg
+  }
 
   // Move determineResult function outside of calculateScores so it can be reused
   const determineResult = (scores) => {
@@ -678,7 +690,14 @@ const Conversation = () => {
                   </Card>
                   <Card h="100%" bg="white">
                     <CardBody p={0} display="flex" alignItems="center" justifyContent="center">
-                      <AlignmentSummaryImage alignment={recommendedAlignment} />
+                      <Image
+                        src={alignmentImages[recommendedAlignment?.abbreviation]}
+                        alt={`${recommendedAlignment?.name} Summary Diagram`}
+                        w="100%"
+                        h="100%"
+                        objectFit="contain"
+                        objectPosition="center"
+                      />
                     </CardBody>
                   </Card>
                 </SimpleGrid>
