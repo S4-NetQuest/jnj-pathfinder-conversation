@@ -9,19 +9,13 @@ import {
   ModalBody,
   ModalCloseButton,
   Button,
-  Input,
-  InputGroup,
-  InputLeftElement,
   VStack,
   Text,
   Box,
-  Divider,
-  Badge,
   useColorModeValue,
   Spinner,
   Center,
 } from '@chakra-ui/react'
-import api from '../services/api'
 
 const ComparePhilosophiesModal = ({ isOpen, onClose }) => {
   const [loading, setLoading] = useState(false)

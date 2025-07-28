@@ -233,7 +233,7 @@ const ParameterComparisonCard = ({ parameter, selectedPhilosophies, philosophies
       overflow="hidden"
     >
       <CardHeader bg={headerBgColor} py={3}>
-        <Heading size="sm" textAlign="center" color="gray.700">
+        <Heading size="sm" textAlign="center" fontWeight={500} color="gray.700">
           {parameter.name}
         </Heading>
       </CardHeader>

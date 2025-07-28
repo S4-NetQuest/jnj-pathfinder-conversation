@@ -78,7 +78,7 @@ const GlossaryModal = ({ isOpen, onClose }) => {
       <ModalOverlay />
       <ModalContent maxH="90vh">
         <ModalHeader bg="jj.gray.50" borderBottom="1px solid" borderColor={borderColor}>
-          <Text color="jj.red" fontSize="lg" fontWeight="bold">
+          <Text color="jj.red" fontSize="lg" fontWeight="500">
             Medical Glossary
           </Text>
         </ModalHeader>
@@ -115,7 +115,7 @@ const GlossaryModal = ({ isOpen, onClose }) => {
                     <VStack align="start" spacing={2}>
                       {/* Header with term on left and badge on right */}
                       <Flex width="100%" align="start" justify="space-between">
-                        <Text fontWeight="bold" fontSize="lg" color="jj.red">
+                        <Text fontWeight="500" fontSize="lg" color="jj.red">
                           {term.term}
                         </Text>
                         {term.category && (

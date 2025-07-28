@@ -186,6 +186,7 @@ const QuestionCard = ({ question, categories }) => {
               <Badge
                 colorScheme={getCategoryColor(categoryName)}
                 size="sm"
+                fontWeight={500}
                 borderRadius="full"
                 px={2}
                 py={1}

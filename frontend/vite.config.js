@@ -41,6 +41,25 @@ export default defineConfig(({ mode }) => {
       }
     },
     publicDir: 'public',
+    css: {
+      preprocessorOptions: {
+        scss: {
+          // Use modern Sass API instead of legacy
+          api: 'modern-compiler', // This eliminates the legacy-js-api warning
+
+          // Optionally suppress specific deprecation warnings during development
+          // Remove these once you migrate to @use syntax
+          silenceDeprecations: [
+            'legacy-js-api',
+            'import',           // for @import deprecations
+            'global-builtin',   // for global function deprecations like darken()
+          ],
+
+          // Alternative: Suppress all deprecations (not recommended for production)
+          // quietDeps: true,
+        }
+      }
+    },
     server: {
       port: 3001,
       // Ensure public files are served correctly in dev

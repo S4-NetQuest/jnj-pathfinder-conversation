@@ -1,21 +1,21 @@
 // main.scss
-// Place this file in: frontend/src/styles/main.scss
-// This replaces your current index.css
+// Updated to use modern Sass @use syntax instead of @import
 
-@import './variables';
-@import './fonts';
+@use './variables' as vars;
+@use './fonts';
+@use 'sass:color';
 
 // Global styles
 html, body {
   margin: 0;
   padding: 0;
   height: 100%;
-  font-family: $font-text;
-  font-weight: $font-weight-regular;
+  font-family: vars.$font-text;
+  font-weight: vars.$font-weight-regular;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: "white";
-  color: $gray-08;
+  background-color: vars.$white;
+  color: vars.$gray-08;
 }
 
 #root {
@@ -25,41 +25,41 @@ html, body {
 
 // Typography mixins
 @mixin heading-display {
-  font-family: $font-display;
-  font-weight: $font-weight-medium;
+  font-family: vars.$font-display;
+  font-weight: vars.$font-weight-medium;
 }
 
 @mixin heading-text {
-  font-family: $font-text;
-  font-weight: $font-weight-medium;
+  font-family: vars.$font-text;
+  font-weight: vars.$font-weight-medium;
 }
 
 @mixin body-text {
-  font-family: $font-text;
-  font-weight: $font-weight-regular;
+  font-family: vars.$font-text;
+  font-weight: vars.$font-weight-regular;
 }
 
 // Responsive mixins
 @mixin mobile {
-  @media (max-width: $breakpoint-mobile) {
+  @media (max-width: vars.$breakpoint-mobile) {
     @content;
   }
 }
 
 @mixin tablet {
-  @media (min-width: #{$breakpoint-mobile + 1px}) and (max-width: $breakpoint-tablet) {
+  @media (min-width: #{vars.$breakpoint-mobile + 1px}) and (max-width: vars.$breakpoint-tablet) {
     @content;
   }
 }
 
 @mixin tablet-and-up {
-  @media (min-width: #{$breakpoint-mobile + 1px}) {
+  @media (min-width: #{vars.$breakpoint-mobile + 1px}) {
     @content;
   }
 }
 
 @mixin desktop {
-  @media (min-width: #{$breakpoint-tablet + 1px}) {
+  @media (min-width: #{vars.$breakpoint-tablet + 1px}) {
     @content;
   }
 }
@@ -78,26 +78,28 @@ html, body {
 }
 
 .text-jj-red {
-  color: $jj-red;
+  color: vars.$jj-red;
 }
 
 // Custom Chakra UI overrides
 .chakra-button {
   &.primary {
-    background-color: $jj-red;
-    color: $white;
+    background-color: vars.$jj-red;
+    color: vars.$white;
 
     &:hover {
-      background-color: darken($jj-red, 10%);
+      // Use modern Sass color.adjust instead of darken()
+      background-color: color.adjust(vars.$jj-red, $lightness: -10%);
     }
   }
 
   &.secondary {
-    background-color: $blue-03;
-    color: $white;
+    background-color: vars.$blue-03;
+    color: vars.$white;
 
     &:hover {
-      background-color: darken($blue-03, 10%);
+      // Use modern Sass color.adjust instead of darken()
+      background-color: color.adjust(vars.$blue-03, $lightness: -10%);
     }
   }
 }
@@ -132,4 +134,3 @@ html, body {
 .slide-in-bottom {
   animation: slideInFromBottom 0.3s ease-out;
 }
-
