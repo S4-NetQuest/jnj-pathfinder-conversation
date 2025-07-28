@@ -145,6 +145,43 @@ const createConversationSchema = Joi.object({
 })
 
 const updateConversationSchema = Joi.object({
+
+  surgeon_name: Joi.string()
+    .min(2)
+    .max(255)
+    .trim()
+    .messages({
+      'string.min': 'Surgeon name must be at least 2 characters long',
+      'string.max': 'Surgeon name cannot exceed 255 characters'
+    }),
+
+  hospital_name: Joi.string()
+    .min(2)
+    .max(255)
+    .trim()
+    .messages({
+      'string.min': 'Hospital name must be at least 2 characters long',
+      'string.max': 'Hospital name cannot exceed 255 characters'
+    }),
+
+  surgery_center_name: Joi.string()
+    .min(2)
+    .max(255)
+    .trim()
+    .messages({
+      'string.min': 'Surgery center name must be at least 2 characters long',
+      'string.max': 'Surgery center name cannot exceed 255 characters'
+    }),
+
+  conversation_date: Joi.date()
+    .min('1900-01-01')
+    .max('2100-12-31')
+    .messages({
+      'date.base': 'Please enter a valid date',
+      'date.min': 'Conversation date cannot be before January 1, 1900',
+      'date.max': 'Conversation date cannot be after December 31, 2100'
+    }),
+
   status: Joi.string()
     .valid(...STATUS_OPTIONS)
     .messages({

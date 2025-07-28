@@ -25,8 +25,21 @@ import {
   Spinner,
   Center,
   useToast,
+  FormControl,
+  FormLabel,
+  IconButton,
+  Collapse,
+  Divider,
 } from '@chakra-ui/react'
-import { SearchIcon, CalendarIcon, TimeIcon } from '@chakra-ui/icons'
+import {
+  SearchIcon,
+  CalendarIcon,
+  TimeIcon,
+  EditIcon,
+  CheckIcon,
+  CloseIcon,
+  ExternalLinkIcon
+} from '@chakra-ui/icons'
 import { useAuth } from '../contexts/AuthContext'
 import api from '../services/api'
 import { getPhilosophyColor, getPhilosophyVariant } from '../theme/theme'
@@ -40,10 +53,27 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
   const [loading, setLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
-  const [selectedConversation, setSelectedConversation] = useState(null)
+
+  // Edit state
+  const [editingCard, setEditingCard] = useState(null)
+  const [editData, setEditData] = useState({})
+  const [saving, setSaving] = useState(false)
 
   const cardBg = useColorModeValue('white', 'gray.800')
   const hoverBg = useColorModeValue('gray.50', 'gray.700')
+  const editBg = useColorModeValue('#f8f9fa', 'gray.700')
+
+  // Volume options for dropdown
+  const volumeOptions = ['< 50', '< 100', '< 200', '> 200']
+
+  // Alignment options for dropdown
+  const alignmentOptions = [
+    { value: 'KA', label: 'KA - Kinematic Alignment' },
+    { value: 'iKA', label: 'iKA - Inverse Kinematic Alignment' },
+    { value: 'FA', label: 'FA - Functional Alignment' },
+    { value: 'MA', label: 'MA - Mechanical Alignment' },
+    { value: 'UNKNOWN', label: 'Unknown' }
+  ]
 
   useEffect(() => {
     if (isOpen && user) {
@@ -149,6 +179,16 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
     }
   }
 
+  const formatDateForInput = (dateString) => {
+    if (!dateString) return ''
+    try {
+      const date = new Date(dateString)
+      return date.toISOString().split('T')[0]
+    } catch (error) {
+      return ''
+    }
+  }
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'completed':
@@ -157,36 +197,6 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
         return 'blue'
       case 'abandoned':
         return 'red'
-      default:
-        return 'gray'
-    }
-  }
-
-  const getRecommendationColor = (approach) => {
-    switch (approach) {
-      case 'KA':
-        return '#eb1700'
-      case 'iKA':
-        return '#ff6017'
-      case 'FA':
-        return '#0f68b2'
-      case 'MA':
-        return '#328714'
-      default:
-        return '#6e6259'
-    }
-  }
-
-  const getAlignmentColor = (alignment) => {
-    switch (alignment) {
-      case 'KA':
-        return 'red'
-      case 'iKA':
-        return 'orange'
-      case 'FA':
-        return 'blue'
-      case 'MA':
-        return 'green'
       default:
         return 'gray'
     }
@@ -201,7 +211,7 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
       case 'FA':
         return 'Functional Alignment'
       case 'MA':
-        return 'Manual Alignment'
+        return 'Mechanical Alignment'
       default:
         return alignment
     }
@@ -213,19 +223,132 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
     return 'Unknown'
   }
 
-  const handleConversationClick = (conversation) => {
-    setSelectedConversation(conversation)
+  // Edit functions
+  const handleEditClick = (conversation) => {
+    setEditingCard(conversation.id)
+    // Initialize data for all editable fields
+    setEditData({
+      surgeon_name: conversation.surgeon_name || '',
+      hospital_name: conversation.hospital_name || '',
+      surgery_center_name: conversation.surgery_center_name || '',
+      conversation_date: formatDateForInput(conversation.conversation_date),
+      surgeon_volume_per_year: conversation.surgeon_volume_per_year || '',
+      uses_robotics: conversation.uses_robotics ? 'true' : 'false',
+      current_alignment: conversation.current_alignment || ''
+    })
   }
 
-  const handleLoadConversation = () => {
-    if (selectedConversation && onConversationSelected) {
-      onConversationSelected(selectedConversation.id)
+  const handleCancelEdit = () => {
+    setEditingCard(null)
+    setEditData({})
+  }
+
+  const handleSaveEdit = async (conversationId) => {
+    setSaving(true)
+    try {
+      // Prepare update data with proper formatting
+      // Note: hospital_name and surgery_center_name updates would require backend changes
+      // since they're stored as foreign keys. For now, we'll include them and let the backend
+      // handle them appropriately (they may be ignored or cause an error)
+      const updateData = {
+        surgeon_name: editData.surgeon_name?.trim(),
+        hospital_name: editData.hospital_name?.trim(),
+        surgery_center_name: editData.surgery_center_name?.trim(),
+        conversation_date: editData.conversation_date || null,
+        surgeon_volume_per_year: editData.surgeon_volume_per_year || null,
+        uses_robotics: editData.uses_robotics === 'true' ? true : false,
+        current_alignment: editData.current_alignment || null
+      }
+
+      // Remove empty/null values to avoid validation issues
+      const cleanedData = Object.entries(updateData).reduce((acc, [key, value]) => {
+        if (value !== null && value !== undefined && value !== '') {
+          acc[key] = value
+        }
+        return acc
+      }, {})
+
+      console.log('=== FRONTEND SAVE DEBUG ===')
+      console.log('Conversation ID:', conversationId)
+      console.log('Raw edit data:', editData)
+      console.log('Prepared update data:', updateData)
+      console.log('Cleaned data being sent:', cleanedData)
+      console.log('API URL:', `/conversations/${conversationId}`)
+      console.log('============================')
+
+      // Make the API call
+      console.log('Making API call...')
+      const response = await api.put(`/conversations/${conversationId}`, cleanedData)
+      console.log('API call successful:', response.data)
+
+      if (response.data.success) {
+        toast({
+          title: 'Conversation Updated',
+          description: 'Changes saved successfully',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        })
+
+        // Refresh conversations list
+        await fetchConversations()
+
+        // Exit edit mode
+        setEditingCard(null)
+        setEditData({})
+      }
+    } catch (error) {
+      console.log('=== FRONTEND ERROR DEBUG ===')
+      console.error('Full error object:', error)
+      console.error('Error name:', error.name)
+      console.error('Error message:', error.message)
+      console.error('Error code:', error.code)
+      console.error('Error response:', error.response)
+
+      if (error.response) {
+        console.error('Response status:', error.response.status)
+        console.error('Response statusText:', error.response.statusText)
+        console.error('Response data:', error.response.data)
+        console.error('Response headers:', error.response.headers)
+      }
+
+      if (error.request) {
+        console.error('Request config:', error.config)
+        console.error('Request object:', error.request)
+      }
+      console.log('=============================')
+
+      let errorMessage = 'Failed to save changes'
+      if (error.response?.data?.error) {
+        errorMessage = error.response.data.error
+      } else if (error.response?.data?.details) {
+        errorMessage = error.response.data.details
+      } else if (error.message) {
+        errorMessage = error.message
+      }
+
+      toast({
+        title: 'Error Saving Changes',
+        description: errorMessage,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleLoadConversation = (conversationId) => {
+    if (onConversationSelected) {
+      onConversationSelected(conversationId)
       handleClose()
     }
   }
 
   const handleClose = () => {
-    setSelectedConversation(null)
+    setEditingCard(null)
+    setEditData({})
     setSearchQuery('')
     setStatusFilter('all')
     onClose()
@@ -256,8 +379,9 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      size={{ base: 'full', md: 'xl' }}
+      size={{ base: 'full', md: 'xl', lg: '2xl' }}
       scrollBehavior="inside"
+      closeOnOverlayClick={editingCard === null} // Prevent closing when editing
     >
       <ModalOverlay />
       <ModalContent maxH="90vh">
@@ -269,7 +393,7 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
             </Text>
           </HStack>
         </ModalHeader>
-        <ModalCloseButton />
+        <ModalCloseButton isDisabled={editingCard !== null} />
 
         <ModalBody p={0}>
           {/* Filters */}
@@ -285,6 +409,7 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   focusBorderColor="#eb1700"
                   bg="white"
+                  isDisabled={editingCard !== null}
                 />
               </InputGroup>
 
@@ -293,6 +418,7 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
                 onChange={(e) => setStatusFilter(e.target.value)}
                 focusBorderColor="#eb1700"
                 bg="white"
+                isDisabled={editingCard !== null}
               >
                 <option value="all">All Conversations</option>
                 <option value="in_progress">In Progress</option>
@@ -332,89 +458,186 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
                   <Box
                     key={conversation.id}
                     p={4}
-                    bg={cardBg}
+                    bg={editingCard === conversation.id ? editBg : cardBg}
                     borderRadius="md"
                     borderWidth="2px"
-                    borderColor={selectedConversation?.id === conversation.id ? '#eb1700' : '#e8e6e3'}
-                    cursor="pointer"
+                    borderColor={editingCard === conversation.id ? '#eb1700' : '#e8e6e3'}
                     transition="all 0.2s"
-                    _hover={{
+                    opacity={editingCard !== null && editingCard !== conversation.id ? 0.5 : 1}
+                    _hover={editingCard === null ? {
                       bg: hoverBg,
                       borderColor: '#eb1700',
                       shadow: 'md'
-                    }}
-                    onClick={() => handleConversationClick(conversation)}
+                    } : {}}
                   >
                     <VStack align="stretch" spacing={3}>
-                      {/* Header */}
+                      {/* Header with Status Badge */}
                       <Flex justify="space-between" align="start">
                         <Box flex={1}>
-                          <Text fontWeight="500" fontSize="lg" color="#312c2a" mb={1}>
-                            {conversation.surgeon_name || 'Unknown Surgeon'}
-                          </Text>
-
-                          {/* Hospital and Surgery Center Information */}
-                          <VStack align="start" spacing={1}>
-                            <Text fontSize="sm" color="#6e6259" fontWeight="medium">
-                              Hospital: {conversation.hospital_name || 'Unknown Hospital'}
+                          {editingCard === conversation.id ? (
+                            <FormControl>
+                              <FormLabel fontSize="sm" color="#6e6259">Surgeon Name</FormLabel>
+                              <Input
+                                value={editData.surgeon_name}
+                                onChange={(e) => setEditData(prev => ({ ...prev, surgeon_name: e.target.value }))}
+                                focusBorderColor="#eb1700"
+                                size="sm"
+                              />
+                            </FormControl>
+                          ) : (
+                            <Text fontWeight="500" fontSize="lg" color="#312c2a" mb={1}>
+                              {conversation.surgeon_name || 'Unknown Surgeon'}
                             </Text>
-                            <Text fontSize="sm" color="#6e6259">
-                              Surgery Center: {conversation.surgery_center_name || 'Unknown Surgery Center'}
-                            </Text>
-                          </VStack>
+                          )}
                         </Box>
                         <Badge colorScheme={getStatusColor(conversation.status)} variant="subtle" fontWeight={500} fontSize="xs">
                           {(conversation.status || 'unknown').replace('_', ' ')}
                         </Badge>
                       </Flex>
 
-                      {/* Details */}
-                      <HStack spacing={4} fontSize="sm" color="#6e6259">
-                        <HStack spacing={1}>
-                          <Icon as={CalendarIcon} boxSize={3} />
-                          <Text>{formatDate(conversation.conversation_date)}</Text>
-                        </HStack>
-                        {conversation.updated_at && conversation.created_at !== conversation.updated_at && (
-                          <HStack spacing={1}>
-                            <Icon as={TimeIcon} boxSize={3} />
-                            <Text>Updated {formatDate(conversation.updated_at)}</Text>
-                          </HStack>
+                      {/* Hospital and Surgery Center Information */}
+                      <VStack align="start" spacing={2}>
+                        {editingCard === conversation.id ? (
+                          <>
+                            <FormControl>
+                              <FormLabel fontSize="sm" color="#6e6259">Hospital</FormLabel>
+                              <Input
+                                value={editData.hospital_name}
+                                onChange={(e) => setEditData(prev => ({ ...prev, hospital_name: e.target.value }))}
+                                focusBorderColor="#eb1700"
+                                size="sm"
+                              />
+                            </FormControl>
+                            <FormControl>
+                              <FormLabel fontSize="sm" color="#6e6259">Surgery Center</FormLabel>
+                              <Input
+                                value={editData.surgery_center_name}
+                                onChange={(e) => setEditData(prev => ({ ...prev, surgery_center_name: e.target.value }))}
+                                focusBorderColor="#eb1700"
+                                size="sm"
+                              />
+                            </FormControl>
+                            <FormControl>
+                              <FormLabel fontSize="sm" color="#6e6259">Conversation Date</FormLabel>
+                              <Input
+                                type="date"
+                                value={editData.conversation_date}
+                                onChange={(e) => setEditData(prev => ({ ...prev, conversation_date: e.target.value }))}
+                                focusBorderColor="#eb1700"
+                                size="sm"
+                              />
+                            </FormControl>
+                          </>
+                        ) : (
+                          <>
+                            <Text fontSize="sm" color="#6e6259" fontWeight="medium">
+                              Hospital: {conversation.hospital_name || 'Unknown Hospital'}
+                            </Text>
+                            <Text fontSize="sm" color="#6e6259">
+                              Surgery Center: {conversation.surgery_center_name || 'Unknown Surgery Center'}
+                            </Text>
+                          </>
                         )}
-                      </HStack>
 
-                      {/* Surgeon information */}
-                      <VStack align="stretch" spacing={2}>
-                        {/* Volume and Robotics */}
-                        <HStack spacing={4} fontSize="sm">
-                          {conversation.surgeon_volume_per_year && (
-                            <HStack spacing={2}>
-                              <Text color="#6e6259">Volume/Year:</Text>
-                              <Badge variant="outline" colorScheme="purple" size="sm">
-                                {conversation.surgeon_volume_per_year}
-                              </Badge>
+                        {/* Only show conversation date editor in edit mode */}
+                        {editingCard !== conversation.id && (
+                          <></>
+                        )}
+                      </VStack>
+
+                      {/* Date and Time Info */}
+                      {editingCard !== conversation.id && (
+                        <HStack spacing={4} fontSize="sm" color="#6e6259">
+                          <HStack spacing={1}>
+                            <Icon as={CalendarIcon} boxSize={3} />
+                            <Text>{formatDate(conversation.conversation_date)}</Text>
+                          </HStack>
+                          {conversation.updated_at && conversation.created_at !== conversation.updated_at && (
+                            <HStack spacing={1}>
+                              <Icon as={TimeIcon} boxSize={3} />
+                              <Text>Updated {formatDate(conversation.updated_at)}</Text>
                             </HStack>
                           )}
+                        </HStack>
+                      )}
 
-                          {conversation.uses_robotics !== undefined && conversation.uses_robotics !== null && (
-                            <HStack spacing={2}>
-                              <Text color="#6e6259">Robotics:</Text>
-                              <Badge
-                                variant="outline"
-                                colorScheme={formatRoboticsUsage(conversation.uses_robotics) === 'Yes' ? 'green' : 'orange'}
+                      {/* Surgeon Information */}
+                      <VStack align="stretch" spacing={2}>
+                        {editingCard === conversation.id ? (
+                          <HStack spacing={3}>
+                            <FormControl>
+                              <FormLabel fontSize="sm" color="#6e6259">Volume/Year</FormLabel>
+                              <Select
+                                value={editData.surgeon_volume_per_year}
+                                onChange={(e) => setEditData(prev => ({ ...prev, surgeon_volume_per_year: e.target.value }))}
+                                focusBorderColor="#eb1700"
                                 size="sm"
                               >
-                                {formatRoboticsUsage(conversation.uses_robotics)}
-                              </Badge>
-                            </HStack>
-                          )}
-                        </HStack>
+                                <option value="">Select volume...</option>
+                                {volumeOptions.map(option => (
+                                  <option key={option} value={option}>{option}</option>
+                                ))}
+                              </Select>
+                            </FormControl>
+                            <FormControl>
+                              <FormLabel fontSize="sm" color="#6e6259">Uses Robotics</FormLabel>
+                              <Select
+                                value={editData.uses_robotics}
+                                onChange={(e) => setEditData(prev => ({ ...prev, uses_robotics: e.target.value }))}
+                                focusBorderColor="#eb1700"
+                                size="sm"
+                              >
+                                <option value="true">Yes</option>
+                                <option value="false">No</option>
+                              </Select>
+                            </FormControl>
+                          </HStack>
+                        ) : (
+                          <HStack spacing={4} fontSize="sm">
+                            {conversation.surgeon_volume_per_year && (
+                              <HStack spacing={2}>
+                                <Text color="#6e6259">Volume/Year:</Text>
+                                <Badge variant="outline" colorScheme="purple" size="sm">
+                                  {conversation.surgeon_volume_per_year}
+                                </Badge>
+                              </HStack>
+                            )}
+
+                            {conversation.uses_robotics !== undefined && conversation.uses_robotics !== null && (
+                              <HStack spacing={2}>
+                                <Text color="#6e6259">Robotics:</Text>
+                                <Badge
+                                  variant="outline"
+                                  colorScheme={formatRoboticsUsage(conversation.uses_robotics) === 'Yes' ? 'green' : 'orange'}
+                                  size="sm"
+                                >
+                                  {formatRoboticsUsage(conversation.uses_robotics)}
+                                </Badge>
+                              </HStack>
+                            )}
+                          </HStack>
+                        )}
 
                         {/* Current Alignment */}
-                        {conversation.current_alignment && (
+                        {editingCard === conversation.id ? (
+                          <FormControl>
+                            <FormLabel fontSize="sm" color="#6e6259">Current Alignment Philosophy</FormLabel>
+                            <Select
+                              value={editData.current_alignment}
+                              onChange={(e) => setEditData(prev => ({ ...prev, current_alignment: e.target.value }))}
+                              focusBorderColor="#eb1700"
+                              size="sm"
+                            >
+                              <option value="">Select alignment...</option>
+                              {alignmentOptions.map(option => (
+                                <option key={option.value} value={option.value}>{option.label}</option>
+                              ))}
+                            </Select>
+                          </FormControl>
+                        ) : conversation.current_alignment && (
                           <HStack spacing={2}>
                             <Text fontSize="sm" color="#6e6259">Current Alignment Philosophy:</Text>
                             <Badge
-                              /* colorScheme={getAlignmentColor(conversation.current_alignment)} */
                               variant={getPhilosophyVariant(conversation.current_alignment)}
                               size="sm"
                               px={2}
@@ -431,14 +654,13 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
                       </VStack>
 
                       {/* Recommendation */}
-                      {conversation.recommended_approach && (
+                      {editingCard !== conversation.id && conversation.recommended_approach && (
                         <Flex align="center" justify="space-between">
                           <Text fontSize="sm" color="#6e6259">
                             Recommended Approach:
                           </Text>
                           <HStack spacing={2}>
                             <Badge
-                              /* bg={getRecommendationColor(conversation.recommended_approach)} */
                               variant={getPhilosophyVariant(conversation.recommended_approach)}
                               color="white"
                               px={2}
@@ -456,8 +678,8 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
                         </Flex>
                       )}
 
-                      {/* Scores Preview - Updated with Percentages */}
-                      {conversation.status === 'completed' && (
+                      {/* Scores Preview */}
+                      {editingCard !== conversation.id && conversation.status === 'completed' && (
                         <Box>
                           <Text fontSize="xs" color="#a39992" mb={2}>
                             Alignment Scores:
@@ -480,13 +702,66 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
                       )}
 
                       {/* Sales Rep Info (for surgeons viewing conversations) */}
-                      {user.role === 'surgeon' && conversation.sales_rep_name && (
+                      {editingCard !== conversation.id && user.role === 'surgeon' && conversation.sales_rep_name && (
                         <Box pt={2} borderTop="1px solid" borderColor="#f1efed">
                           <Text fontSize="xs" color="#a39992">
                             Sales Representative: <Text as="span" fontWeight="medium">{conversation.sales_rep_name}</Text>
                           </Text>
                         </Box>
                       )}
+
+                      {/* Action Buttons */}
+                      <Divider />
+                      <HStack justify="flex-end" spacing={2}>
+                        {editingCard === conversation.id ? (
+                          // Edit mode buttons
+                          <>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={handleCancelEdit}
+                              isDisabled={saving}
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              size="sm"
+                              bg="#eb1700"
+                              color="white"
+                              _hover={{ bg: "#9e0000" }}
+                              onClick={() => handleSaveEdit(conversation.id)}
+                              isLoading={saving}
+                              loadingText="Saving..."
+                              leftIcon={<CheckIcon />}
+                            >
+                              Save Changes
+                            </Button>
+                          </>
+                        ) : (
+                          // Display mode buttons
+                          <>
+                            <IconButton
+                              size="sm"
+                              variant="outline"
+                              icon={<EditIcon />}
+                              onClick={() => handleEditClick(conversation)}
+                              isDisabled={editingCard !== null}
+                              aria-label="Edit conversation"
+                            />
+                            <Button
+                              size="sm"
+                              bg="#eb1700"
+                              color="white"
+                              _hover={{ bg: "#9e0000" }}
+                              onClick={() => handleLoadConversation(conversation.id)}
+                              isDisabled={editingCard !== null}
+                              leftIcon={<ExternalLinkIcon />}
+                            >
+                              Load Conversation
+                            </Button>
+                          </>
+                        )}
+                      </HStack>
                     </VStack>
                   </Box>
                 ))}
@@ -498,20 +773,10 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
         <ModalFooter borderTop="1px solid" borderColor="#e8e6e3">
           <Button
             variant="outline"
-            mr={3}
             onClick={handleClose}
+            isDisabled={editingCard !== null}
           >
-            Cancel
-          </Button>
-          <Button
-            bg="#eb1700"
-            color="white"
-            _hover={{ bg: "#9e0000" }}
-            _active={{ bg: "#9e0000" }}
-            onClick={handleLoadConversation}
-            isDisabled={!selectedConversation}
-          >
-            Load Conversation
+            {editingCard !== null ? 'Complete editing to close' : 'Close'}
           </Button>
         </ModalFooter>
       </ModalContent>

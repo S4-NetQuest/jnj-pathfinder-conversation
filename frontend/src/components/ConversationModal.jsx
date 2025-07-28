@@ -139,15 +139,17 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
     setLoading(true)
 
     try {
+      /*
       console.log('Making API request to /api/conversations')
       console.log('Request payload:', formData)
-
+      */
       const response = await api.post('/conversations', formData)
 
+      /*
       console.log('API Response received:', response)
       console.log('Response status:', response.status)
       console.log('Response data:', response.data)
-
+      */
       if (response.data.success) {
         toast({
           title: 'Success!',

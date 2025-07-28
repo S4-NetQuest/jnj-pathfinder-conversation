@@ -28,6 +28,69 @@ const getQuestionsAndMaxScores = async () => {
   return { questionsData, maxScores }
 }
 
+// Helper function to hanble hospital and surgery center updates to an existing conversation
+const handleHospitalAndSurgeryCenter = async (pool, hospitalName, surgeryCenterName) => {
+  const transaction = pool.transaction()
+  await transaction.begin()
+
+  try {
+    let hospitalId = null
+    let surgeryCenterId = null
+
+    // Handle hospital
+    if (hospitalName) {
+      const hospitalQuery = 'SELECT id FROM hospitals WHERE name = @hospitalName'
+      const hospitalResult = await transaction.request()
+        .input('hospitalName', dbConfig.sql.VarChar, hospitalName.trim())
+        .query(hospitalQuery)
+
+      if (hospitalResult.recordset.length === 0) {
+        const insertHospitalQuery = `
+          INSERT INTO hospitals (name, created_at, updated_at)
+          OUTPUT INSERTED.id
+          VALUES (@hospitalName, GETDATE(), GETDATE())
+        `
+        const newHospitalResult = await transaction.request()
+          .input('hospitalName', dbConfig.sql.VarChar, hospitalName.trim())
+          .query(insertHospitalQuery)
+
+        hospitalId = newHospitalResult.recordset[0].id
+      } else {
+        hospitalId = hospitalResult.recordset[0].id
+      }
+    }
+
+    // Handle surgery center
+    if (surgeryCenterName) {
+      const surgeryCenterQuery = 'SELECT id FROM surgery_centers WHERE name = @surgeryCenterName'
+      const surgeryCenterResult = await transaction.request()
+        .input('surgeryCenterName', dbConfig.sql.VarChar, surgeryCenterName.trim())
+        .query(surgeryCenterQuery)
+
+      if (surgeryCenterResult.recordset.length === 0) {
+        const insertSurgeryCenterQuery = `
+          INSERT INTO surgery_centers (name, created_at, updated_at)
+          OUTPUT INSERTED.id
+          VALUES (@surgeryCenterName, GETDATE(), GETDATE())
+        `
+        const newSurgeryCenterResult = await transaction.request()
+          .input('surgeryCenterName', dbConfig.sql.VarChar, surgeryCenterName.trim())
+          .query(insertSurgeryCenterQuery)
+
+        surgeryCenterId = newSurgeryCenterResult.recordset[0].id
+      } else {
+        surgeryCenterId = surgeryCenterResult.recordset[0].id
+      }
+    }
+
+    await transaction.commit()
+    return { hospitalId, surgeryCenterId }
+  } catch (error) {
+    await transaction.rollback()
+    throw error
+  }
+}
+
 // Add logging middleware for this route
 router.use((req, res, next) => {
   console.log(`=== CONVERSATIONS ROUTE ===`)
@@ -683,6 +746,34 @@ router.put('/:id', async (req, res) => {
         request.input('currentAlignment', dbConfig.sql.VarChar, normalizedAlignment)
     }
 
+    if (value.surgeon_name !== undefined) {
+      updateFields.push('surgeon_name = @surgeonName')
+      request.input('surgeonName', dbConfig.sql.VarChar, value.surgeon_name.trim())
+    }
+
+    if (value.conversation_date !== undefined) {
+      updateFields.push('conversation_date = @conversationDate')
+      request.input('conversationDate', dbConfig.sql.Date, value.conversation_date)
+    }
+
+    if (value.hospital_name !== undefined || value.surgery_center_name !== undefined) {
+      const { hospitalId, surgeryCenterId } = await handleHospitalAndSurgeryCenter(
+        pool,
+        value.hospital_name,
+        value.surgery_center_name
+      )
+
+      if (hospitalId) {
+        updateFields.push('hospital_id = @hospitalId')
+        request.input('hospitalId', dbConfig.sql.Int, hospitalId)
+      }
+
+      if (surgeryCenterId) {
+        updateFields.push('surgery_center_id = @surgeryCenterId')
+        request.input('surgeryCenterId', dbConfig.sql.Int, surgeryCenterId)
+      }
+    }
+
     // Handle alignment scores with new field names (KA/iKA/FA/MA)
     if (value.alignment_scores) {
       if (value.alignment_scores.ka !== undefined) {
@@ -997,10 +1088,12 @@ router.put('/:id', async (req, res) => {
       })
     }
 
+    /*
     console.log('=== UPDATE CONVERSATION (PUT) ===')
     console.log('Conversation ID:', conversationId)
     console.log('Current user:', currentUser)
     console.log('Request body:', req.body)
+    */
 
     // Load questions data for percentage calculations
     const questions = await loadQuestionsData()
@@ -1077,8 +1170,8 @@ router.put('/:id', async (req, res) => {
         request.input('autoRecommendedApproach', dbConfig.sql.VarChar, recommendedApproach)
         recommendedApproachSet = true
 
-        console.log('Auto-calculated recommended approach:', recommendedApproach)
-        console.log('Based on percentage scores:', percentageScores)
+        //console.log('Auto-calculated recommended approach:', recommendedApproach)
+        //console.log('Based on percentage scores:', percentageScores)
       }
     }
 
@@ -1165,8 +1258,8 @@ router.put('/:id', async (req, res) => {
       WHERE id = @conversationId
     `
 
-    console.log('Update query:', updateQuery)
-    console.log('Update fields:', updateFields)
+    //console.log('Update query:', updateQuery)
+    //console.log('Update fields:', updateFields)
 
     const result = await request.query(updateQuery)
     const updatedConversation = result.recordset[0]
