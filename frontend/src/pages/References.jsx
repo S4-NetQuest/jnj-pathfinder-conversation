@@ -94,9 +94,33 @@ const References = () => {
   }
 
   const getPdfUrl = (filename) => {
-    const baseUrl = import.meta.env.BASE_URL || '/'
-    const cleanBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl
-    return `${cleanBase}/reference-papers/${filename}`
+    const mode = import.meta.env.MODE
+
+    // Use explicit environment variable as primary source, fallback to Vite's BASE_URL
+    const baseUrl = import.meta.env.VITE_BASE_URL || import.meta.env.BASE_URL || '/'
+
+    console.log('Mode:', mode)
+    console.log('VITE_BASE_URL:', import.meta.env.VITE_BASE_URL)
+    console.log('BASE_URL:', import.meta.env.BASE_URL)
+    console.log('Using baseUrl:', baseUrl)
+
+    // In development, use simple path
+    if (mode === 'development') {
+      return `/reference-papers/${filename}`
+    }
+
+    // For staging/production, construct the full path with base URL
+    let cleanBase = baseUrl
+    if (cleanBase.endsWith('/')) {
+      cleanBase = cleanBase.slice(0, -1)
+    }
+
+    // Construct the full path
+    const fullPath = `${cleanBase}/reference-papers/${filename}`
+
+    console.log('PDF URL constructed:', fullPath)
+
+    return fullPath
   }
 
   return (

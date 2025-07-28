@@ -24,6 +24,8 @@ export default defineConfig(({ mode }) => {
       sourcemap: isDev ? true : false,
       // Simpler build options for IIS compatibility
       target: 'es2015',
+      // Ensure public files are copied correctly
+      copyPublicDir: true,
       rollupOptions: {
         output: {
           // Reduce the number of chunks
@@ -38,8 +40,13 @@ export default defineConfig(({ mode }) => {
         }
       }
     },
+    publicDir: 'public',
     server: {
       port: 3001,
+      // Ensure public files are served correctly in dev
+      fs: {
+        strict: false
+      },
       proxy: isDev ? {
         '/api': {
           target: 'http://localhost:5000',
@@ -49,7 +56,13 @@ export default defineConfig(({ mode }) => {
       } : undefined
     },
     define: {
-      __APP_VERSION__: JSON.stringify(process.env.npm_package_version)
-    }
+      __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
+      // Make mode and environment info explicitly available
+      __DEV__: isDev,
+      __STAGING__: isStaging,
+      __PROD__: isProd,
+    },
+    // Make sure environment variables with VITE_ prefix are available
+    envPrefix: 'VITE_'
   }
 })
