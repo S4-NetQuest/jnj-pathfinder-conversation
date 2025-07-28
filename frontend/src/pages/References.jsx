@@ -10,7 +10,6 @@ import {
   Badge,
   Card,
   CardBody,
-  CardHeader,
   Flex,
   Wrap,
   WrapItem,
@@ -22,7 +21,6 @@ import {
   Select,
   InputGroup,
   InputLeftElement,
-  useBreakpointValue,
   SimpleGrid,
   Divider,
   Link,
@@ -34,11 +32,11 @@ import {
   ChevronUpIcon,
   DownloadIcon,
   ExternalLinkIcon,
-  InfoIcon
 } from '@chakra-ui/icons'
 
-import { referencesData, getStudyTypeColor, getTechnologyIcon } from '../data/referencesData'  // Adjust the path as necessary
+import { referencesData } from '../data/referencesData'  // Adjust the path as necessary
 import roboticsIcon from '../assets/icons/JJMT_Icon_Robotics_RGB.svg'  // Adjust the path as necessary
+import { getPhilosophyColor, getPhilosophyVariant } from '../theme/theme'
 
 const References = () => {
   const [searchTerm, setSearchTerm] = useState('')
@@ -49,8 +47,6 @@ const References = () => {
   const [selectedFollowUp, setSelectedFollowUp] = useState('all')
   const [sortBy, setSortBy] = useState('year-desc')
   const { isOpen: isFiltersOpen, onToggle: onFiltersToggle } = useDisclosure({ defaultIsOpen: false })
-
-  const isMobile = useBreakpointValue({ base: true, md: false })
 
   // Filter and sort papers
   const filteredAndSortedPapers = useMemo(() => {
@@ -99,10 +95,12 @@ const References = () => {
     // Use explicit environment variable as primary source, fallback to Vite's BASE_URL
     const baseUrl = import.meta.env.VITE_BASE_URL || import.meta.env.BASE_URL || '/'
 
+    /*
     console.log('Mode:', mode)
     console.log('VITE_BASE_URL:', import.meta.env.VITE_BASE_URL)
     console.log('BASE_URL:', import.meta.env.BASE_URL)
     console.log('Using baseUrl:', baseUrl)
+    */
 
     // In development, use simple path
     if (mode === 'development') {
@@ -142,13 +140,13 @@ const References = () => {
               Comprehensive collection of kinematic alignment research
             </Text>
             <HStack justify="center" mt={3} spacing={4}>
-              <Badge colorScheme="blue" fontSize="sm" px={3} py={1} userSelect={'none'}>
+              <Badge colorScheme="blue" fontSize="sm" fontWeight={"500"} px={3} py={1} userSelect={'none'}>
                 {referencesData.metadata.totalPapers} Papers
               </Badge>
-              <Badge colorScheme="green" fontSize="sm" px={3} py={1} userSelect={'none'}>
+              <Badge colorScheme="green" fontSize="sm" fontWeight={"500"} px={3} py={1} userSelect={'none'}>
                 10 iKA Studies
               </Badge>
-              <Badge colorScheme="orange" fontSize="sm" px={3} py={1} userSelect={'none'}>
+              <Badge colorScheme="orange" fontSize="sm" fontWeight={"500"} px={3} py={1} userSelect={'none'}>
                 17 KA Studies
               </Badge>
             </HStack>
@@ -325,11 +323,15 @@ const References = () => {
 
                         <HStack align="end" spacing={1}>
                           <Badge
-                            colorScheme={paper.category === 'iKA' ? 'blue' : 'orange'}
-                            fontSize="xs"
-                            userSelect={'none'}
-                            px={2}
-                            py={1}
+                            /* colorScheme={paper.category === 'iKA' ? 'blue' : 'orange'} */
+                            variant={getPhilosophyVariant(paper.category)}
+                              color="white"
+                              px={2}
+                              py={1}
+                              borderRadius="md"
+                              fontSize="xs"
+                              fontWeight={500}
+                              userSelect={'none'}
                           >
                             {paper.category}
                           </Badge>
@@ -344,15 +346,6 @@ const References = () => {
                               />
                             </Tooltip>
                           ) : null}
-                          {/*
-                          <Badge
-                            colorScheme={getStudyTypeColor(paper.studyType)}
-                            variant="outline"
-                            fontSize="xs"
-                          >
-                            {paper.studyType}
-                          </Badge>
-                          */}
                         </HStack>
                       </Flex>
 
@@ -364,23 +357,23 @@ const References = () => {
                       {/* Tags Row */}
                       <Wrap spacing={2}>
                         <WrapItem>
-                          <Badge colorScheme="purple" variant="subtle" fontSize="xs" userSelect="none">
+                          <Badge colorScheme="purple" variant="subtle" fontWeight={"500"} fontSize="xs" userSelect="none">
                             {paper.subcategory}
                           </Badge>
                         </WrapItem>
                         <WrapItem>
-                          <Badge colorScheme="gray" variant="subtle" fontSize="xs" userSelect="none">
-                            {/* {getTechnologyIcon(paper.technology)} */} {paper.technology}
+                          <Badge colorScheme="gray" variant="subtle" fontWeight={"500"} fontSize="xs" userSelect="none">
+                            {paper.technology}
                           </Badge>
                         </WrapItem>
                         <WrapItem>
-                          <Badge colorScheme="cyan" variant="subtle" fontSize="xs" userSelect="none">
+                          <Badge colorScheme="cyan" variant="subtle" fontWeight={"500"} fontSize="xs" userSelect="none">
                             {paper.followUp}
                           </Badge>
                         </WrapItem>
                         {paper.outcomes.slice(0, 2).map(outcome => (
                           <WrapItem key={outcome}>
-                            <Badge colorScheme="green" variant="subtle" fontSize="xs" userSelect="none">
+                            <Badge colorScheme="green" variant="subtle" fontWeight={"500"} fontSize="xs" userSelect="none">
                               {outcome}
                             </Badge>
                           </WrapItem>
@@ -388,7 +381,7 @@ const References = () => {
                         {paper.outcomes.length > 2 && (
                           <WrapItem>
                             <Tooltip label={paper.outcomes.slice(2).join(", ")}>
-                              <Badge colorScheme="green" variant="subtle" fontSize="xs">
+                              <Badge colorScheme="green" variant="subtle" fontWeight={"500"} fontSize="xs">
                                 +{paper.outcomes.length - 2} more
                               </Badge>
                             </Tooltip>
@@ -408,7 +401,7 @@ const References = () => {
                           <Tooltip label="View PDF">
                             <IconButton
                               as={Link}
-                              href={paper.url}
+                              href={getPdfUrl(paper.filename)}
                               target="_blank"
                               rel="noopener noreferrer"
                               icon={<ExternalLinkIcon />}
@@ -422,7 +415,7 @@ const References = () => {
                           <Tooltip label="Download PDF">
                             <IconButton
                               as={Link}
-                              href={paper.url}
+                              href={getPdfUrl(paper.filename)}
                               download
                               icon={<DownloadIcon />}
                               size="sm"
