@@ -118,7 +118,7 @@ Contact: ${salesRep?.email || '[Email]'} | ${salesRep?.phone || '[Phone]'}`
 
           <HStack spacing={2}>
             <Icon as={CalendarIcon} color="red" />
-            <Text color="#eb1700" fontSize="lg" fontWeight="bold">Schedule Follow-up</Text>
+            <Text color="#eb1700" fontSize="lg" fontWeight="500">Schedule Follow-up</Text>
           </HStack>
         </ModalHeader>
         <ModalCloseButton />

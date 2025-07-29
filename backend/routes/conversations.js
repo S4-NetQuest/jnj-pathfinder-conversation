@@ -22,11 +22,13 @@ const {
 const router = express.Router()
 
 // Helper function to get questions data and max scores
+/*
 const getQuestionsAndMaxScores = async () => {
   const questionsData = await getQuestionsData()
   const maxScores = calculateMaxScores(questionsData.questions)
   return { questionsData, maxScores }
 }
+ */
 
 // Helper function to hanble hospital and surgery center updates to an existing conversation
 const handleHospitalAndSurgeryCenter = async (pool, hospitalName, surgeryCenterName) => {

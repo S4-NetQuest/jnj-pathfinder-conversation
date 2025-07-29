@@ -44,7 +44,7 @@ import { useAuth } from '../contexts/AuthContext'
 import api from '../services/api'
 import questionsData from '../data/questions.json'
 import ScheduleFollowupModal from '../components/ScheduleFollowupModal'
-import AlignmentSummaryImage from '../components/AlignmentSummaryImage'
+import DownloadPDFButton from '../components/DownloadPDFButton'
 import ReviewConversationModal from '../components/ReviewConversationModal'
 import kaSummaryImg from '../assets/images/ka-summary.png'
 import ikaSummaryImg from '../assets/images/ika-summary.png'
@@ -522,6 +522,10 @@ const Conversation = () => {
                     >
                       {isMobile ? 'Notes' : 'Edit Notes'}
                     </Button>
+                    <DownloadPDFButton
+                      conversationId={id}
+                      conversationData={conversation}
+                    />
                   </>
                 )}
                 {!id && (
@@ -752,7 +756,7 @@ const Conversation = () => {
                       return (
                         <Box key={key} p={5} bg="#f1efed" borderRadius="md">
                           <Flex justify="space-between" align="start" mb={2}>
-                            <Text fontSize="sm" fontWeight="medium" color="#6e6259" pt={0.5} ml={2}>
+                            <Text fontSize="sm" fontWeight="medium" color="#6e6259" pt={0} ml={2} mr={2}>
                               {alignment.name}
                             </Text>
                             <Badge

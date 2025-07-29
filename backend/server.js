@@ -15,6 +15,7 @@ const authRoutes = require('./routes/auth')
 const conversationRoutes = require('./routes/conversations')
 const userRoutes = require('./routes/users')
 const glossaryRoutes = require('./routes/glossary')
+const pdfRoutes = require('./routes/pdf')
 
 // Import database configuration
 const dbConfig = require('./config/database')
@@ -325,6 +326,7 @@ app.use('/api/auth', authRoutes)
 app.use('/api/conversations', conversationRoutes)
 app.use('/api/users', userRoutes)
 app.use('/api/glossary', glossaryRoutes)
+app.use('/api/pdf', pdfRoutes)
 
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {
