@@ -1,51 +1,57 @@
+// Updated DownloadPDFButton.jsx - Handle both test and regular PDF generation
 import React, { useState } from 'react';
 import { Button, useToast } from '@chakra-ui/react';
 import { DownloadIcon } from '@chakra-ui/icons';
 
-const DownloadPDFButton = ({ conversationId, conversationData }) => {
-  console.log('DownloadPDFButton props:', { conversationId, conversationData });
+const DownloadPDFButton = ({ conversationId, conversationData, isTestMode = false }) => {
+  console.log('DownloadPDFButton props:', { conversationId, conversationData, isTestMode });
 
   const [isGenerating, setIsGenerating] = useState(false);
   const toast = useToast();
 
   const handleDownloadPDF = async () => {
-    // Validate required props
-    if (!conversationId) {
-      toast({
-        title: 'Error',
-        description: 'Conversation ID is missing',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
     setIsGenerating(true);
 
     try {
-      // Send conversation data to PDF endpoint
-      const apiUrl = `/api/pdf/test`;
-      console.log('Requesting PDF from:', apiUrl);
-      console.log('Sending conversation data:', conversationData);
+      let response;
 
-      const response = await fetch(apiUrl, {
-        method: 'GET',
-        credentials: 'include', // Include cookies for session-based auth
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/pdf',
-          // Use Authorization header if you have JWT tokens
-          // 'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          conversationId: conversationId,
-          conversationData: conversationData
-        })
-      });
+      if (isTestMode) {
+        // Test mode - GET request with no body
+        response = await fetch('/api/pdf/test', {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            'Accept': 'application/pdf',
+          }
+        });
+      } else {
+        // Regular mode - POST request with conversation data
+        if (!conversationId) {
+          toast({
+            title: 'Error',
+            description: 'Conversation ID is missing',
+            status: 'error',
+            duration: 3000,
+            isClosable: true,
+          });
+          return;
+        }
+
+        response = await fetch('/api/pdf/generate', {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/pdf',
+          },
+          body: JSON.stringify({
+            conversationId: conversationId,
+            conversationData: conversationData
+          })
+        });
+      }
 
       console.log('PDF Response status:', response.status);
-      console.log('PDF Response headers:', response.headers);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -55,32 +61,32 @@ const DownloadPDFButton = ({ conversationId, conversationData }) => {
 
       // Check if response is actually a PDF
       const contentType = response.headers.get('content-type');
-      console.log('Response content-type:', contentType);
-
       if (!contentType || !contentType.includes('application/pdf')) {
         console.error('Response is not a PDF:', contentType);
-        const responseText = await response.text();
-        console.error('Response body:', responseText.substring(0, 500));
         throw new Error('Server did not return a PDF file');
       }
 
       // Create blob and download
       const blob = await response.blob();
       console.log('PDF blob size:', blob.size, 'bytes');
-      console.log('PDF blob type:', blob.type);
 
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
 
-      // Generate filename - handle different possible property names
-      const surgeonName = conversationData?.surgeonName ||
-                         conversationData?.surgeon_name ||
-                         conversationData?.name ||
-                         'summary';
+      // Generate filename
+      let filename;
+      if (isTestMode) {
+        filename = `test-pdf-${new Date().toISOString().slice(0, 10)}.pdf`;
+      } else {
+        const surgeonName = conversationData?.surgeonName ||
+                           conversationData?.surgeon_name ||
+                           'summary';
+        const dateStr = new Date().toISOString().split('T')[0];
+        filename = `pathfinder-conversation-${surgeonName.replace(/\s+/g, '-')}-${dateStr}.pdf`;
+      }
 
-      const dateStr = new Date().toISOString().split('T')[0];
-      link.download = `pathfinder-conversation-${surgeonName.replace(/\s+/g, '-')}-${dateStr}.pdf`;
+      link.download = filename;
 
       // Trigger download
       document.body.appendChild(link);
@@ -90,7 +96,7 @@ const DownloadPDFButton = ({ conversationId, conversationData }) => {
 
       toast({
         title: 'PDF Downloaded',
-        description: 'Conversation summary has been downloaded successfully',
+        description: isTestMode ? 'Test PDF generated successfully' : 'Conversation summary has been downloaded successfully',
         status: 'success',
         duration: 3000,
         isClosable: true,
@@ -100,8 +106,6 @@ const DownloadPDFButton = ({ conversationId, conversationData }) => {
       console.error('PDF download error:', error);
 
       let errorMessage = 'Failed to generate PDF. Please try again.';
-
-      // Provide more specific error messages
       if (error.message.includes('404')) {
         errorMessage = 'PDF service not found. Please contact support.';
       } else if (error.message.includes('500')) {
@@ -127,17 +131,17 @@ const DownloadPDFButton = ({ conversationId, conversationData }) => {
       size="sm"
       variant="outline"
       leftIcon={<DownloadIcon />}
-      colorScheme="red"
+      colorScheme={isTestMode ? "blue" : "red"}
       onClick={handleDownloadPDF}
       isLoading={isGenerating}
-      loadingText="Generating PDF..."
-      borderColor="#eb1700"
-      color="#eb1700"
-      _hover={{ bg: "#eb1700", color: "white" }}
+      loadingText={isTestMode ? "Testing PDF..." : "Generating PDF..."}
+      borderColor={isTestMode ? "blue.500" : "#eb1700"}
+      color={isTestMode ? "blue.500" : "#eb1700"}
+      _hover={{ bg: isTestMode ? "blue.500" : "#eb1700", color: "white" }}
       _disabled={{ opacity: 0.6, cursor: 'not-allowed' }}
-      isDisabled={!conversationId}
+      isDisabled={!isTestMode && !conversationId}
     >
-      Download PDF
+      {isTestMode ? "Test PDF" : "Download PDF"}
     </Button>
   );
 };

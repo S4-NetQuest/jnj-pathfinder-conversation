@@ -1,465 +1,676 @@
-// routes/pdf.js - Complete implementation
+// backend/routes/pdf.js (clean version)
 const express = require('express');
 const puppeteer = require('puppeteer');
+const { PDFDocument } = require('pdf-lib');
 const router = express.Router();
 
-// You'll need to import your database connection/models
-// const db = require('../config/database'); // Adjust path as needed
+// Question text mapping based on question IDs (updated with your actual IDs)
+const getQuestionText = (questionId) => {
+  switch (questionId) {
+    case 'q1_femur_tibia_first':
+      return 'Do you prioritize femur or tibia first in your surgical workflow?';
+    case 'q2_tka_priority':
+      return 'What is your primary focus in TKA alignment?';
+    case 'q3_adjust_resections':
+      return 'Do you adjust resections based on soft tissue balance?';
+    case 'q4_deviate_mechanical_axis':
+      return 'Are you willing to deviate from mechanical axis?';
+    case 'q5_distal_femoral_resection':
+      return 'How do you approach distal femoral resection?';
+    case 'q6_tibial_resection':
+      return 'What is your approach to tibial resection?';
+    case 'q7_extension_gaps_priority':
+      return 'How do you prioritize extension gap management?';
+    case 'q8_posterior_femoral_resection':
+      return 'What is your approach to posterior femoral resection?';
+    case 'q9_coronal_boundaries':
+      return 'How do you handle coronal boundaries in alignment?';
+    // Add more cases as needed based on your actual question IDs
+    default:
+      return `Question ${questionId}`;
+  }
+};
 
-// Generate PDF endpoint - using POST to receive conversation data
-router.post('/generate', async (req, res) => {
-  try {
-    const { conversationId, conversationData } = req.body;
-    console.log('Generating PDF for conversation:', conversationId);
-    console.log('Received conversation data:', conversationData);
-
-    if (!conversationData) {
-      return res.status(400).json({ error: 'Conversation data is required' });
+// Get response text based on question ID and response value (updated mappings)
+const getResponseText = (questionId, responseValue) => {
+  const responseMapping = {
+    'q1_femur_tibia_first': {
+      'femur_first': 'I prioritize femur first in my workflow',
+      'tibia_first': 'I prioritize tibia first in my workflow',
+      'simultaneous': 'I approach both simultaneously'
+    },
+    'q2_tka_priority': {
+      'native_alignment': 'I prioritize native alignment restoration',
+      'mechanical_alignment': 'I prioritize mechanical alignment',
+      'functional_alignment': 'I prioritize functional alignment'
+    },
+    'q3_adjust_resections': {
+      'yes': 'Yes, I adjust resections based on soft tissue balance',
+      'no': 'No, I use standard resection techniques',
+      'sometimes': 'Sometimes, depending on the case'
+    },
+    'q4_deviate_mechanical_axis': {
+      'yes': 'Yes, I am willing to deviate from mechanical axis when appropriate',
+      'no': 'No, I prefer to maintain mechanical axis alignment',
+      'sometimes': 'Sometimes, depending on patient factors'
+    },
+    'q5_distal_femoral_resection': {
+      'anatomical': 'I use anatomical landmarks for distal femoral resection',
+      'mechanical': 'I use mechanical axis principles',
+      'balance': 'I balance anatomical and mechanical approaches'
+    },
+    'q6_tibial_resection': {
+      'perpendicular_mechanical': 'Perpendicular to mechanical axis',
+      'anatomical_slope': 'Based on anatomical tibial slope',
+      'patient_specific': 'Patient-specific approach'
+    },
+    'q7_extension_gaps_priority': {
+      'evenly_distribute': 'I prioritize even gap distribution',
+      'tight_extension': 'I prefer tighter extension gaps',
+      'loose_extension': 'I allow for looser extension gaps'
+    },
+    'q8_posterior_femoral_resection': {
+      'restore_medial_balance_lateral': 'Restore medial balance laterally',
+      'equal_resection': 'Equal posterior resection',
+      'anatomical_based': 'Based on anatomical landmarks'
+    },
+    'q9_coronal_boundaries': {
+      'no': 'No specific coronal boundary considerations',
+      'yes': 'Yes, I consider coronal boundaries',
+      'case_dependent': 'Depends on the specific case'
     }
+  };
 
-    // Generate PDF using the provided conversation data
-    const browser = await puppeteer.launch({
+  return responseMapping[questionId]?.[responseValue] || `Response: ${responseValue}`;
+};
+
+// Test PDF endpoint (existing functionality)
+router.get('/test', async (req, res) => {
+  console.log('PDF Test endpoint called');
+
+  let browser;
+  try {
+    browser = await puppeteer.launch({
       headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
     });
 
     const page = await browser.newPage();
     await page.setViewport({ width: 1200, height: 800 });
 
-    const htmlContent = generateConversationHTML(conversationData);
-    console.log('Generated HTML length:', htmlContent.length);
-
-    await page.setContent(htmlContent, {
-      waitUntil: 'networkidle0',
-      timeout: 30000
-    });
-
-    const pdf = await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      margin: {
-        top: '0.75in',
-        bottom: '0.75in',
-        left: '0.5in',
-        right: '0.5in'
-      },
-      displayHeaderFooter: true,
-      headerTemplate: `
-        <div style="font-size: 10px; color: #666; width: 100%; text-align: center; margin: 0 20px;">
-          <span>Pathfinder Conversation Guide - Kinematic Restoration</span>
-        </div>
-      `,
-      footerTemplate: `
-        <div style="font-size: 10px; color: #666; width: 100%; text-align: center; margin: 0 20px;">
-          <span>Johnson & Johnson MedTech | Page <span class="pageNumber"></span> of <span class="totalPages"></span></span>
-        </div>
-      `
-    });
-
-    await browser.close();
-
-    console.log('PDF generated successfully, size:', pdf.length, 'bytes');
-    console.log('PDF first few bytes:', pdf.slice(0, 10).toString('hex'));
-
-    // Validate PDF header
-    if (pdf.length === 0) {
-      throw new Error('Generated PDF is empty');
-    }
-
-    // Check if it starts with PDF header
-    const pdfHeader = pdf.slice(0, 4).toString();
-    if (pdfHeader !== '%PDF') {
-      console.error('Invalid PDF header:', pdfHeader);
-      throw new Error('Generated content is not a valid PDF');
-    }
-
-    // Set response headers for binary content
-    const surgeonName = (conversationData.surgeonName || conversationData.surgeon_name || 'summary')
-      .replace(/[^a-zA-Z0-9]/g, '-'); // Clean filename
-    const filename = `pathfinder-conversation-${surgeonName}.pdf`;
-
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-    res.setHeader('Content-Length', pdf.length);
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
-
-    // Send as buffer to ensure binary integrity
-    res.end(pdf, 'binary');
-
-  } catch (error) {
-    console.error('PDF generation error:', error);
-    res.status(500).json({ error: 'Failed to generate PDF', details: error.message });
-  }
-});
-
-// Simple test endpoint to verify PDF generation works
-router.get('/test', async (req, res) => {
-  try {
-    console.log('Testing basic PDF generation...');
-
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
-    });
-
-    const page = await browser.newPage();
-
-    const simpleHTML = `
+    // Generate a simple test PDF
+    const testHtml = `
       <!DOCTYPE html>
       <html>
       <head>
+        <meta charset="UTF-8">
         <title>Test PDF</title>
-        <style>body { font-family: Arial, sans-serif; padding: 20px; }</style>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            padding: 40px;
+            color: #333;
+          }
+          .header {
+            color: #eb1700;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+          }
+          .content {
+            line-height: 1.6;
+          }
+        </style>
       </head>
       <body>
-        <h1>PDF Generation Test</h1>
-        <p>This is a simple test to verify PDF generation is working.</p>
-        <p>Current time: ${new Date().toISOString()}</p>
+        <div class="header">Pathfinder PDF Test</div>
+        <div class="content">
+          <p>This is a test PDF generated on ${new Date().toLocaleString()}</p>
+          <p>PDF generation system is working correctly.</p>
+          <p>Johnson & Johnson MedTech - Pathfinder Conversation Guide</p>
+        </div>
       </body>
       </html>
     `;
 
-    await page.setContent(simpleHTML);
+    await page.setContent(testHtml, { waitUntil: 'networkidle0' });
 
-    const pdf = await page.pdf({
+    const pdfBuffer = await page.pdf({
       format: 'A4',
-      printBackground: true
+      printBackground: true,
+      margin: { top: '20px', bottom: '20px', left: '20px', right: '20px' }
     });
 
-    await browser.close();
-
-    console.log('Test PDF generated, size:', pdf.length, 'bytes');
-
-    // Ensure proper headers for binary content
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'attachment; filename="test.pdf"');
-    res.setHeader('Content-Length', pdf.length);
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
-
-    // Send as buffer to ensure binary integrity
-    res.end(pdf, 'binary');
+    res.setHeader('Content-Disposition', 'attachment; filename="pathfinder-test.pdf"');
+    res.send(pdfBuffer);
 
   } catch (error) {
     console.error('Test PDF generation error:', error);
-    res.status(500).json({ error: 'Test PDF generation failed', details: error.message });
+    res.status(500).json({ error: 'Failed to generate test PDF' });
+  } finally {
+    if (browser) {
+      await browser.close();
+    }
   }
 });
 
-// Mock data function - replace with your actual database query
-async function getMockConversationData(conversationId) {
-  // This should be replaced with your actual database query
-  // Example: return await db.query('SELECT * FROM conversations WHERE id = ?', [conversationId]);
+// Main PDF generation endpoint
+router.post('/generate', async (req, res) => {
+  console.log('PDF Generate endpoint called');
+  console.log('Request body keys:', Object.keys(req.body));
 
-  return {
-    id: conversationId,
-    surgeon_name: 'Cal Ripkin', // Use the property name that matches your database
-    hospital_name: 'JHU',
-    date: '2025-07-27T00:00:00.000Z',
-    status: 'completed',
-    recommended_approach: 'Kinematic Alignment',
-    approach_description: 'Kinematic Alignment prioritizes restoring the native joint line. The femur is resurfaced first. Next, the tibia is resurfaced. Femoral and tibial resection depths are planned as the implant thickness minus the estimated cartilage and bone wear values.',
-    alignment_scores: {
-      kinematic: { score: 18, percentage: 90 },
-      inverse_kinematic: { score: 5, percentage: 25 },
-      functional: { score: 7, percentage: 35 },
-      mechanical: { score: 7, percentage: 35 }
-    },
-    notes: 'This surgeon shows strong preference for kinematic alignment principles.',
-    responses: [
-      { question: 'Are you willing to deviate from mechanical axis (0° HKA)?', answer: 'Yes' },
-      // Add more responses as needed
-    ]
-  };
+  let browser;
+
+  try {
+    const { conversationId, conversationData } = req.body;
+
+    console.log('Conversation ID:', conversationId);
+    console.log('Conversation data available:', !!conversationData);
+    console.log('Conversation data keys:', conversationData ? Object.keys(conversationData) : 'none');
+
+    if (!conversationData) {
+      return res.status(400).json({ error: 'Conversation data is required' });
+    }
+
+    // Launch Puppeteer
+    browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
+    });
+
+    const page = await browser.newPage();
+    await page.setViewport({ width: 1200, height: 800 });
+
+    console.log('Generating PDF pages...');
+
+    // Create PDF with multiple pages
+    const pdf = await generateConversationPDF(page, conversationData);
+
+    console.log('PDF generated successfully, size:', pdf.length, 'bytes');
+
+    // Set response headers
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="conversation-${conversationId}.pdf"`);
+
+    res.send(pdf);
+
+  } catch (error) {
+    console.error('PDF generation error:', error);
+    res.status(500).json({
+      error: 'Failed to generate PDF',
+      details: error.message
+    });
+  } finally {
+    if (browser) {
+      await browser.close();
+    }
+  }
+});
+
+// Main PDF generation function - updated to screenshot actual conversation component
+async function generateConversationPDF(page, conversationData) {
+  const pages = [];
+
+  try {
+    // Log the conversation data structure for debugging
+    console.log('Conversation data keys:', Object.keys(conversationData));
+    console.log('Notes in conversation data:', conversationData.notes);
+    console.log('Has notes?', hasNotes(conversationData));
+
+    // Page 1: Screenshot of ACTUAL Conversation Component (without buttons)
+    console.log('Generating page 1: Conversation component screenshot');
+
+    // Navigate to a special route that serves the conversation component in PDF mode
+    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const conversationUrl = `${baseUrl}/conversation/pdf-view?data=${encodeURIComponent(JSON.stringify(conversationData))}`;
+
+    console.log('Navigating to:', conversationUrl);
+
+    // Navigate to the conversation component page
+    await page.goto(conversationUrl, {
+      waitUntil: 'networkidle0',
+      timeout: 30000
+    });
+
+    // Wait for the conversation component to render
+    await page.waitForSelector('[data-testid="conversation-pdf-content"]', { timeout: 15000 });
+
+    // Wait a bit more for any dynamic content to load
+    await new Promise(resolve => setTimeout(resolve, 3000));
+
+    // Take a screenshot and convert to PDF
+    const screenshot = await page.screenshot({
+      type: 'png',
+      fullPage: true,
+      clip: null // Full page screenshot
+    });
+
+    // Create a PDF page with the screenshot
+    const screenshotHtml = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <style>
+          body { margin: 0; padding: 0; }
+          img { width: 100%; height: auto; display: block; }
+        </style>
+      </head>
+      <body>
+        <img src="data:image/png;base64,${screenshot.toString('base64')}" alt="Conversation Screenshot" />
+      </body>
+      </html>
+    `;
+
+    await page.setContent(screenshotHtml, { waitUntil: 'networkidle0' });
+
+    const conversationPdf = await page.pdf({
+      format: 'A4',
+      printBackground: true,
+      margin: { top: '10px', bottom: '10px', left: '10px', right: '10px' }
+    });
+    pages.push(conversationPdf);
+
+    // Page 2: Questions and Responses
+    if (conversationData.responses && conversationData.responses.length > 0) {
+      console.log('Generating page 2: Questions and responses');
+      const questionsPageHtml = generateQuestionsPageHtml(conversationData);
+      await page.setContent(questionsPageHtml, { waitUntil: 'networkidle0' });
+
+      const questionsPdf = await page.pdf({
+        format: 'A4',
+        printBackground: true,
+        margin: { top: '20px', bottom: '20px', left: '20px', right: '20px' }
+      });
+      pages.push(questionsPdf);
+    }
+
+    // Page 3: Notes (if they exist)
+    if (hasNotes(conversationData)) {
+      console.log('Generating page 3: Notes');
+      const notesPageHtml = generateNotesPageHtml(conversationData);
+      await page.setContent(notesPageHtml, { waitUntil: 'networkidle0' });
+
+      const notesPdf = await page.pdf({
+        format: 'A4',
+        printBackground: true,
+        margin: { top: '20px', bottom: '20px', left: '20px', right: '20px' }
+      });
+      pages.push(notesPdf);
+    } else {
+      console.log('No notes found, skipping notes page');
+    }
+
+    console.log('Combining', pages.length, 'pages');
+
+    // Combine all pages
+    return await combinePDFs(pages);
+  } catch (error) {
+    console.error('Error in generateConversationPDF:', error);
+    throw error;
+  }
 }
 
-// HTML Template Generator
-function generateConversationHTML(conversationData) {
-  // Handle both possible property name formats
-  const surgeonName = conversationData.surgeonName || conversationData.surgeon_name || 'N/A';
-  const hospitalName = conversationData.hospitalName || conversationData.hospital_name || 'N/A';
-  const date = conversationData.date || conversationData.conversation_date || new Date().toISOString();
-  const status = conversationData.status || 'completed';
-  const recommendedApproach = conversationData.recommendedApproach || conversationData.recommended_approach;
-  const notes = conversationData.notes || '';
+// Generate HTML for questions and responses (Page 2)
+function generateQuestionsPageHtml(conversationData) {
+  const surgeonName = conversationData.surgeon_name || conversationData.surgeonName || 'Unknown Surgeon';
+  const hospitalName = conversationData.hospital_name || conversationData.hospitalName || 'Unknown Hospital';
 
-  // Handle alignment scores - could be in different formats
-  const alignmentScores = conversationData.alignmentScores || conversationData.alignment_scores || {};
+  const responsesHtml = conversationData.responses.map((response, index) => {
+    const questionText = getQuestionText(response.question_id);
+    const responseText = getResponseText(response.question_id, response.response_value);
+    const responseDate = new Date(response.created_at).toLocaleDateString();
+
+    return `
+      <div class="question-item">
+        <div class="question-header">
+          <div class="question-number">Question ${index + 1}</div>
+          <div class="response-date">${responseDate}</div>
+        </div>
+        <div class="question-text">${questionText}</div>
+        <div class="response-section">
+          <div class="response-label">Response:</div>
+          <div class="response-text">${responseText}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
 
   return `
     <!DOCTYPE html>
     <html>
     <head>
       <meta charset="UTF-8">
-      <title>Pathfinder Conversation Summary</title>
+      <title>Questions and Responses</title>
       <style>
-        * {
-          margin: 0;
-          padding: 0;
-          box-sizing: border-box;
-        }
-
         body {
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-          line-height: 1.6;
-          color: #2D3748;
-          background: #ffffff;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+          margin: 0;
+          padding: 20px;
+          background-color: #ffffff;
+          color: #333;
+          line-height: 1.5;
         }
-
         .header {
-          background: #eb1700;
-          color: white;
-          padding: 30px;
-          text-align: center;
+          border-bottom: 2px solid #eb1700;
+          padding-bottom: 20px;
           margin-bottom: 30px;
         }
-
-        .header h1 {
-          font-size: 28px;
-          margin-bottom: 8px;
-          font-weight: 600;
-        }
-
-        .header p {
-          font-size: 16px;
-          opacity: 0.9;
-        }
-
-        .container {
-          max-width: 800px;
-          margin: 0 auto;
-          padding: 0 20px;
-        }
-
-        .summary-section {
-          margin-bottom: 30px;
-          background: #f7fafc;
-          padding: 25px;
-          border-radius: 8px;
-          border-left: 4px solid #eb1700;
-        }
-
-        .summary-section h2 {
+        .title {
           color: #eb1700;
-          font-size: 20px;
-          margin-bottom: 15px;
-          font-weight: 600;
-        }
-
-        .info-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 20px;
-          margin-bottom: 20px;
-        }
-
-        .info-item {
-          background: white;
-          padding: 15px;
-          border-radius: 6px;
-          border: 1px solid #e2e8f0;
-        }
-
-        .info-label {
-          font-weight: 600;
-          color: #4a5568;
-          font-size: 14px;
-          margin-bottom: 5px;
-        }
-
-        .info-value {
-          color: #2d3748;
-          font-size: 16px;
-        }
-
-        .completion-badge {
-          display: inline-block;
-          background: #48bb78;
-          color: white;
-          padding: 6px 12px;
-          border-radius: 20px;
-          font-size: 14px;
-          font-weight: 500;
-        }
-
-        .approach-section {
-          background: #e6fffa;
-          border: 1px solid #81e6d9;
-          border-radius: 8px;
-          padding: 25px;
-          margin: 30px 0;
-        }
-
-        .approach-title {
-          font-size: 18px;
-          font-weight: 600;
-          color: #065f46;
+          font-size: 28px;
+          font-weight: bold;
           margin-bottom: 10px;
         }
-
-        .approach-description {
-          color: #047857;
-          line-height: 1.7;
+        .subtitle {
+          color: #81766f;
+          font-size: 16px;
+          margin-bottom: 5px;
         }
-
-        .scores-section {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 20px;
-          margin: 30px 0;
+        .stats-section {
+          background-color: #f1efed;
+          border-radius: 8px;
+          padding: 15px;
+          margin-bottom: 25px;
+          text-align: center;
         }
-
-        .score-card {
-          background: white;
+        .stats-value {
+          font-size: 24px;
+          font-weight: bold;
+          color: #eb1700;
+        }
+        .stats-label {
+          font-size: 14px;
+          color: #81766f;
+          margin-top: 5px;
+        }
+        .question-item {
+          background-color: #f7fafc;
           border: 1px solid #e2e8f0;
           border-radius: 8px;
           padding: 20px;
-          text-align: center;
+          margin-bottom: 20px;
+          break-inside: avoid;
         }
-
-        .score-title {
-          font-size: 14px;
-          font-weight: 600;
-          color: #4a5568;
-          margin-bottom: 10px;
-          text-transform: capitalize;
+        .question-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 12px;
         }
-
-        .score-value {
-          font-size: 32px;
-          font-weight: 700;
+        .question-number {
           color: #eb1700;
-          margin-bottom: 5px;
-        }
-
-        .score-percentage {
+          font-weight: bold;
           font-size: 14px;
-          color: #718096;
         }
-
-        .notes-section {
-          background: #fffbf0;
-          border: 1px solid #fed7aa;
-          border-radius: 8px;
-          padding: 25px;
-          margin: 30px 0;
-        }
-
-        .notes-title {
+        .question-text {
           font-size: 18px;
-          font-weight: 600;
-          color: #c05621;
+          font-weight: 500;
+          color: #2d3748;
           margin-bottom: 15px;
+          line-height: 1.4;
         }
-
-        .notes-content {
-          color: #744210;
-          line-height: 1.7;
-          white-space: pre-wrap;
+        .response-section {
+          background-color: #ffffff;
+          border-radius: 6px;
+          padding: 15px;
+          border-left: 4px solid #eb1700;
         }
-
-        .footer {
-          margin-top: 50px;
-          padding-top: 30px;
-          border-top: 2px solid #e2e8f0;
-          text-align: center;
-          color: #718096;
+        .response-label {
+          color: #81766f;
           font-size: 14px;
+          font-weight: 500;
+          margin-bottom: 8px;
         }
-
-        .jj-logo {
-          color: #eb1700;
-          font-weight: 700;
+        .response-text {
+          color: #2d3748;
           font-size: 16px;
+          line-height: 1.5;
         }
-
-        @media print {
-          .header, .approach-section, .notes-section {
-            -webkit-print-color-adjust: exact;
-            color-adjust: exact;
-          }
-
-          .score-value, .approach-title, .summary-section h2 {
-            -webkit-print-color-adjust: exact;
-            color-adjust: exact;
-          }
+        .response-date {
+          color: #81766f;
+          font-size: 12px;
+        }
+        .footer {
+          position: fixed; bottom: 20px;
+          padding-top: 20px;
+          border-top: 1px solid #e2e8f0;
+          text-align: center;
+          color: #81766f;
+          font-size: 14px;
         }
       </style>
     </head>
     <body>
       <div class="header">
-        <h1>Pathfinder Conversation Guide</h1>
-        <p>Kinematic Restoration Conversion Guide</p>
+        <div class="title">Questions and Responses</div>
+        <div class="subtitle">Conversation with ${surgeonName}</div>
+        <div class="subtitle">${hospitalName}</div>
       </div>
 
-      <div class="container">
-        <div class="summary-section">
-          <h2>Conversation Summary</h2>
-          <div class="info-grid">
-            <div class="info-item">
-              <div class="info-label">Surgeon</div>
-              <div class="info-value">${surgeonName}</div>
-            </div>
-            <div class="info-item">
-              <div class="info-label">Hospital</div>
-              <div class="info-value">${hospitalName}</div>
-            </div>
-            <div class="info-item">
-              <div class="info-label">Date</div>
-              <div class="info-value">${new Date(date).toLocaleDateString()}</div>
-            </div>
-            <div class="info-item">
-              <div class="info-label">Status</div>
-              <div class="info-value">
-                <span class="completion-badge">Assessment Completed</span>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div class="stats-section">
+        <div class="stats-value">${conversationData.responses.length}</div>
+        <div class="stats-label">Questions Answered</div>
+      </div>
 
-        ${recommendedApproach ? `
-        <div class="approach-section">
-          <div class="approach-title">Your approach suggests: ${recommendedApproach}</div>
-          <div class="approach-description">
-            Kinematic Alignment prioritizes restoring the native joint line. The femur is resurfaced first. Next, the tibia is resurfaced. Femoral and tibial resection depths are planned as the implant thickness minus the estimated cartilage and bone wear values.
-          </div>
-        </div>
-        ` : ''}
+      <div class="questions-section">
+        ${responsesHtml}
+      </div>
 
-        ${Object.keys(alignmentScores).length > 0 ? `
-        <div class="summary-section">
-          <h2>Alignment Philosophy Scores</h2>
-          <div class="scores-section">
-            ${Object.entries(alignmentScores).map(([alignment, data]) => `
-              <div class="score-card">
-                <div class="score-title">${alignment.replace(/_/g, ' ').replace(/([A-Z])/g, ' $1').trim()}</div>
-                <div class="score-value">${typeof data === 'object' ? data.score || data.value || 0 : data}</div>
-                <div class="score-percentage">${typeof data === 'object' ? (data.percentage || Math.round((data.score / 20) * 100) || 0) : Math.round((data / 20) * 100)}%</div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-        ` : ''}
-
-        ${notes && notes.trim() ? `
-        <div class="notes-section">
-          <div class="notes-title">Sales Rep Notes</div>
-          <div class="notes-content">${notes}</div>
-        </div>
-        ` : ''}
-
-        <div class="footer">
-          <div class="jj-logo">Johnson & Johnson MedTech</div>
-          <p>© ${new Date().getFullYear()} Johnson & Johnson. All rights reserved.</p>
-          <p style="margin-top: 10px; font-size: 12px;">CONFIDENTIAL. FOR INTERNAL USE ONLY. NOT FOR USE WITH ANY CUSTOMER OR FOR EXTERNAL DISTRIBUTION.</p>
-        </div>
+      <div class="footer">
+        <p>Assessment completed on ${new Date().toLocaleDateString()}</p>
+        <p>Johnson & Johnson MedTech - Pathfinder Conversation Guide</p>
       </div>
     </body>
     </html>
   `;
+}
+
+// Generate HTML for notes (Page 3) - improved
+function generateNotesPageHtml(conversationData) {
+  const surgeonName = conversationData.surgeon_name || conversationData.surgeonName || 'Unknown Surgeon';
+  const hospitalName = conversationData.hospital_name || conversationData.hospitalName || 'Unknown Hospital';
+
+  // Handle notes as either string or array
+  let notesContent = 'No notes available';
+  let notesDate = '';
+
+  if (typeof conversationData.notes === 'string' && conversationData.notes.trim() !== '') {
+    notesContent = conversationData.notes;
+    notesDate = new Date().toLocaleDateString(); // Use current date if no specific date
+  } else if (Array.isArray(conversationData.notes) && conversationData.notes.length > 0) {
+    const notes = conversationData.notes[0];
+    notesContent = notes ? notes.content : 'No notes available';
+    notesDate = notes ? new Date(notes.updated_at || notes.created_at).toLocaleDateString() : '';
+  }
+
+  // Clean up HTML content from ReactQuill
+  const cleanNotesContent = notesContent
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+    .replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
+    .replace(/<embed[^>]*>/gi, '')
+    .replace(/<link[^>]*>/gi, '')
+    .replace(/<meta[^>]*>/gi, '');
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Conversation Notes</title>
+      <style>
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+          margin: 0;
+          padding: 20px;
+          background-color: #ffffff;
+          color: #333;
+          line-height: 1.6;
+        }
+        .header {
+          border-bottom: 2px solid #eb1700;
+          padding-bottom: 20px;
+          margin-bottom: 30px;
+        }
+        .title {
+          color: #eb1700;
+          font-size: 28px;
+          font-weight: bold;
+          margin-bottom: 10px;
+        }
+        .subtitle {
+          color: #81766f;
+          font-size: 16px;
+          margin-bottom: 5px;
+        }
+        .notes-info {
+          background-color: #f1efed;
+          border-radius: 8px;
+          padding: 15px;
+          margin-bottom: 25px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        .notes-author {
+          font-weight: 500;
+          color: #2d3748;
+        }
+        .notes-date {
+          color: #81766f;
+          font-size: 14px;
+        }
+        .notes-section {
+          background-color: #f7fafc;
+          border: 1px solid #e2e8f0;
+          border-radius: 8px;
+          padding: 25px;
+          min-height: 300px;
+          margin-bottom: 60px; /* Add space for footer */
+        }
+        .notes-content {
+          color: #2d3748;
+          font-size: 16px;
+          line-height: 1.6;
+        }
+        .notes-content h1, .notes-content h2, .notes-content h3 {
+          color: #2d3748;
+          margin-top: 20px;
+          margin-bottom: 10px;
+        }
+        .notes-content ul, .notes-content ol {
+          padding-left: 20px;
+        }
+        .notes-content strong {
+          font-weight: 600;
+        }
+        .notes-content em {
+          font-style: italic;
+        }
+        .notes-content u {
+          text-decoration: underline;
+        }
+        .empty-notes {
+          text-align: center;
+          color: #81766f;
+          font-style: italic;
+          padding: 60px 20px;
+        }
+        .footer {
+          position: fixed;
+          bottom: 20px;
+          left: 20px;
+          right: 20px;
+          text-align: center;
+          color: #81766f;
+          font-size: 14px;
+          background-color: white;
+          border-top: 1px solid #e2e8f0;
+          padding-top: 10px;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <div class="title">Conversation Notes</div>
+        <div class="subtitle">Conversation with ${surgeonName}</div>
+        <div class="subtitle">${hospitalName}</div>
+      </div>
+
+      ${notesContent !== 'No notes available' ? `
+        <div class="notes-info">
+          <div class="notes-author">Notes by: ${conversationData.sales_rep_name || 'Sales Representative'}</div>
+          <div class="notes-date">${notesDate}</div>
+        </div>
+      ` : ''}
+
+      <div class="notes-section">
+        ${notesContent !== 'No notes available' ? `
+          <div class="notes-content">
+            ${cleanNotesContent}
+          </div>
+        ` : `
+          <div class="empty-notes">
+            <p>No notes have been added to this conversation.</p>
+          </div>
+        `}
+      </div>
+
+      <div class="footer">
+        <p>Johnson & Johnson MedTech - Pathfinder Conversation Guide</p>
+        <p>Generated on ${new Date().toLocaleDateString()}</p>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
+// Helper function to check if notes exist (improved)
+function hasNotes(conversationData) {
+  console.log('Checking for notes:', conversationData.notes);
+
+  // Check if notes exist as a string (direct notes content)
+  if (typeof conversationData.notes === 'string' && conversationData.notes.trim() !== '') {
+    return true;
+  }
+
+  // Check if notes exist as an array
+  if (Array.isArray(conversationData.notes) &&
+      conversationData.notes.length > 0 &&
+      conversationData.notes[0] &&
+      conversationData.notes[0].content &&
+      conversationData.notes[0].content.trim() !== '') {
+    return true;
+  }
+
+  return false;
+}
+
+// Helper function to get approach description
+function getApproachDescription(approach) {
+  const descriptions = {
+    'KA': 'Kinematic Alignment restores the pre-disease anatomy and joint line orientation of the patient.',
+    'iKA': 'Inverse Kinematic Alignment combines anatomical restoration with mechanical considerations.',
+    'FA': 'Functional Alignment prioritizes soft tissue balance and functional outcomes.',
+    'MA': 'Mechanical Alignment aims for neutral mechanical axis and standardized component positioning.'
+  };
+
+  return descriptions[approach] || 'Assessment results will be available once completed.';
+}
+
+// Function to combine multiple PDFs
+async function combinePDFs(pdfBuffers) {
+  const mergedPdf = await PDFDocument.create();
+
+  for (const pdfBuffer of pdfBuffers) {
+    const pdf = await PDFDocument.load(pdfBuffer);
+    const copiedPages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
+    copiedPages.forEach(page => mergedPdf.addPage(page));
+  }
+
+  return Buffer.from(await mergedPdf.save());
 }
 
 module.exports = router;

@@ -51,8 +51,7 @@ import ikaSummaryImg from '../assets/images/ika-summary.png'
 import faSummaryImg from '../assets/images/fa-summary.png'
 import maSummaryImg from '../assets/images/ma-summary.png'
 
-
-const Conversation = () => {
+const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
   const { id } = useParams()
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -75,6 +74,9 @@ const Conversation = () => {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [completed, setCompleted] = useState(false)
+
+  const effectiveConversationData = pdfMode ? pdfConversationData : conversation;
+  const effectiveCompleted = pdfMode ? (pdfConversationData?.status === 'completed') : completed;
 
   const isMobile = useBreakpointValue({ base: true, md: false })
   const questions = questionsData.questions
@@ -114,17 +116,26 @@ const Conversation = () => {
   }
 
   useEffect(() => {
+    if (pdfMode) {
+      // In PDF mode, don't fetch - use provided data
+      setLoading(false)
+      setCompleted(pdfConversationData?.status === 'completed')
+      return
+    }
+
     if (id) {
       fetchConversation()
     } else {
       // New conversation for surgeon
       setLoading(false)
     }
-  }, [id])
+  }, [id, pdfMode, pdfConversationData])
 
   useEffect(() => {
-    calculateScores()
-  }, [responses])
+    if (!pdfMode) {
+      calculateScores()
+    }
+  }, [responses, pdfMode])
 
   const fetchConversation = async () => {
     try {
@@ -214,16 +225,34 @@ const Conversation = () => {
         console.log('Setting notes content:', noteContent)
         setNotes(noteContent)
         setNotesContent(noteContent)
+
+        // Update conversation object with notes
+        setConversation(prev => ({
+          ...prev,
+          notes: noteContent
+        }))
       } else {
         console.log('No notes found, setting empty content')
         setNotes('')
         setNotesContent('')
+
+        // Update conversation object with empty notes
+        setConversation(prev => ({
+          ...prev,
+          notes: ''
+        }))
       }
     } catch (error) {
       console.error('Error fetching notes:', error)
       // Don't show error toast for missing notes, just set empty
       setNotes('')
       setNotesContent('')
+
+      // Update conversation object with empty notes
+      setConversation(prev => ({
+        ...prev,
+        notes: ''
+      }))
     }
   }
 
@@ -327,7 +356,15 @@ const Conversation = () => {
         content: notesContent,
       })
 
+      // Update local notes state
       setNotes(notesContent)
+
+      // Update the conversation object to include the updated notes
+      setConversation(prev => ({
+        ...prev,
+        notes: notesContent // Add this line to update the conversation object
+      }))
+
       onNotesClose()
 
       toast({
@@ -358,6 +395,15 @@ const Conversation = () => {
   }
 
   const getRecommendedAlignment = () => {
+    // For PDF mode, use the data directly
+    if (pdfMode && pdfConversationData) {
+      const approach = (pdfConversationData.recommended_approach || pdfConversationData.current_alignment || '').toLowerCase()
+      return {
+        alignment: alignmentTypes[approach] || null,
+        result: null
+      }
+    }
+
     // For completed conversations, use the stored recommended approach first
     if (completed && conversation?.recommended_approach) {
       const approach = conversation.recommended_approach.toLowerCase()
@@ -384,6 +430,14 @@ const Conversation = () => {
 
   // New helper function for percentage calculation
   const getPercentageScore = (alignmentKey) => {
+    if (pdfMode && pdfConversationData) {
+      // In PDF mode, use the stored percentage scores if available
+      const percentageKey = `alignment_percentage_${alignmentKey}`
+      if (pdfConversationData[percentageKey] !== undefined) {
+        return pdfConversationData[percentageKey]
+      }
+    }
+
     const maxForAlignment = getMaxPossibleScore(alignmentKey)
     return maxForAlignment > 0 ? Math.round((scores[alignmentKey] / maxForAlignment) * 100) : 0
   }
@@ -435,7 +489,7 @@ const Conversation = () => {
   let progress
   let progressText
 
-  if (completed) {
+  if (effectiveCompleted) {
     progress = 100
     progressText = 'Completed'
   } else {
@@ -443,7 +497,133 @@ const Conversation = () => {
     progressText = `${answeredQuestionsCount} of ${totalQuestionsCount} answered`
   }
 
-  const recommendedAlignment = getRecommendedAlignment()
+  const renderHeaderButtons = () => {
+    if (pdfMode) return null; // Hide buttons in PDF mode
+
+    return (
+      <HStack spacing={2}>
+        {user?.role === 'sales_rep' && id && (
+          <>
+            <Button
+              size="sm"
+              variant="outline"
+              leftIcon={<ViewIcon />}
+              onClick={onReviewOpen}
+              borderColor="#eb1700"
+              color="#eb1700"
+              _hover={{ bg: "#eb1700", color: "white" }}
+            >
+              {isMobile ? 'Review' : 'Review Conversation'}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              leftIcon={<EditIcon />}
+              onClick={handleNotesOpen}
+              borderColor="#eb1700"
+              color="#eb1700"
+              _hover={{ bg: "#eb1700", color: "white" }}
+            >
+              {isMobile ? 'Notes' : 'Edit Notes'}
+            </Button>
+            <DownloadPDFButton
+              conversationId={id}
+              conversationData={conversation}
+            />
+          </>
+        )}
+        {!id && (
+          <Button
+            size="sm"
+            variant="outline"
+            leftIcon={<ArrowBackIcon />}
+            onClick={() => navigate('/')}
+            borderColor="#eb1700"
+            color="#eb1700"
+            _hover={{ bg: "#eb1700", color: "white" }}
+          >
+            Back to Home
+          </Button>
+        )}
+      </HStack>
+    );
+  };
+
+  // Modify the action buttons in the results section
+  const renderActionButtons = () => {
+    if (pdfMode) return null; // Hide action buttons in PDF mode
+
+    return (
+      <>
+        {/* Buttons Section */}
+        <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={4} align="start">
+          <Button
+            colorScheme="red"
+            size="lg"
+            onClick={handleExploreKinematicRestoration}
+          >
+            Explore Kinematic Restoration
+          </Button>
+
+          <Button
+            colorScheme="red"
+            size="lg"
+            onClick={handleComparePhilosophies}
+          >
+            Compare Philosophies Tool
+          </Button>
+
+          <Button
+            colorScheme="red"
+            size="lg"
+            onClick={handleSellingQuestions}
+          >
+            Challenger Selling Philosophy Questions
+          </Button>
+
+          <Button
+            colorScheme="red"
+            size="lg"
+            onClick={handleReferences}
+          >
+            References / Citations
+          </Button>
+        </SimpleGrid>
+
+        {/* Actions */}
+        <HStack justify="center" spacing={4}>
+          <Button
+            variant="outline"
+            onClick={handleRestart}
+            borderColor="#eb1700"
+            color="#eb1700"
+            _hover={{ bg: "#eb1700", color: "white" }}
+          >
+            Restart Assessment
+          </Button>
+          <Button
+            leftIcon={<CalendarIcon />}
+            colorScheme="red"
+            variant="outline"
+            onClick={() => setIsScheduleOpen(true)}
+          >
+            Schedule Follow-up
+          </Button>
+          <Button
+            leftIcon={<CalendarIcon />}
+            colorScheme="red"
+            variant="outline"
+            onClick={handleMedTechCalendar}
+          >
+            EdTech Training Calendar
+          </Button>
+        </HStack>
+      </>
+    );
+  };
+
+  // Add data-testid for Puppeteer to find the content
+  const containerProps = pdfMode ? { 'data-testid': 'conversation-pdf-content' } : {};
 
   const handleExploreKinematicRestoration = () => {
     window.open('https://home.jnj.com/sites/velys-digital-surgery/SitePageModern/1892994/velys-robotic-assisted-solution-1-8', '_blank', 'noopener,noreferrer')
@@ -466,7 +646,7 @@ const Conversation = () => {
   }
 
   return (
-    <Container maxW="container.lg" py={8}>
+    <Container maxW="container.lg" py={8} {...containerProps}>
       <VStack spacing={6} align="stretch">
         {/* Header */}
         <Card>
@@ -474,21 +654,21 @@ const Conversation = () => {
             <Flex justify="space-between" align="start" mb={4}>
               <Box>
                 <Text fontSize="xl" color="#eb1700" mb={2}>
-                  {conversation ?
-                    `Conversation with ${conversation.surgeon_name}` :
+                  {effectiveConversationData ?
+                    `Conversation with ${effectiveConversationData.surgeon_name || effectiveConversationData.surgeonName}` :
                     'Alignment Philosophy Assessment'
                   }
                 </Text>
-                {conversation && (
+                {effectiveConversationData && (
                   <VStack align="start" spacing={1}>
                     <Text fontSize="sm" color="#81766f">
-                      {conversation.hospital_name}
+                      {effectiveConversationData.hospital_name || effectiveConversationData.hospitalName}
                     </Text>
                     <Text fontSize="sm" color="#81766f">
-                      Date: {new Date(conversation.conversation_date).toLocaleDateString()}
+                      Date: {new Date(effectiveConversationData.conversation_date || effectiveConversationData.conversationDate).toLocaleDateString()}
                     </Text>
                     {/* Show completion status for completed conversations */}
-                    {completed && (
+                    {effectiveCompleted && (
                       <Badge colorScheme="green" variant="solid" fontWeight="500">
                         Completed
                       </Badge>
@@ -496,79 +676,38 @@ const Conversation = () => {
                   </VStack>
                 )}
               </Box>
-              {/* buttons */}
-              <HStack spacing={2}>
-                {user?.role === 'sales_rep' && id && (
-                  <>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      leftIcon={<ViewIcon />}
-                      onClick={onReviewOpen}
-                      borderColor="#eb1700"
-                      color="#eb1700"
-                      _hover={{ bg: "#eb1700", color: "white" }}
-                    >
-                      {isMobile ? 'Review' : 'Review Conversation'}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      leftIcon={<EditIcon />}
-                      onClick={handleNotesOpen}
-                      borderColor="#eb1700"
-                      color="#eb1700"
-                      _hover={{ bg: "#eb1700", color: "white" }}
-                    >
-                      {isMobile ? 'Notes' : 'Edit Notes'}
-                    </Button>
-                    <DownloadPDFButton
-                      conversationId={id}
-                      conversationData={conversation}
-                    />
-                  </>
-                )}
-                {!id && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    leftIcon={<ArrowBackIcon />}
-                    onClick={() => navigate('/')}
-                    borderColor="#eb1700"
-                    color="#eb1700"
-                    _hover={{ bg: "#eb1700", color: "white" }}
-                  >
-                    Back to Home
-                  </Button>
-                )}
-              </HStack>
+              {/* buttons - conditionally rendered */}
+              {renderHeaderButtons()}
             </Flex>
 
             {/* Progress - Show different info for completed vs in-progress */}
-            <Box>
-              <Flex justify="space-between" mb={2}>
-                <Text fontSize="sm" color="#81766f">
-                  {completed ?
-                    'Assessment Results' :
-                    `Question ${currentQuestionIndex + 1} of ${questions.length}`
-                  }
-                </Text>
-                <Text fontSize="sm" color="#81766f">
-                  {progressText}
-                </Text>
-              </Flex>
-              <Progress
-                value={progress}
-                colorScheme={completed ? "green" : "red"}
-                bg="#e8e6e3"
-                borderRadius="full"
-                size="sm"
-              />
-            </Box>
+            {!pdfMode && (
+              <Box>
+                <Flex justify="space-between" mb={2}>
+                  <Text fontSize="sm" color="#81766f">
+                    {effectiveCompleted ?
+                      'Assessment Results' :
+                      `Question ${currentQuestionIndex + 1} of ${questions.length}`
+                    }
+                  </Text>
+                  <Text fontSize="sm" color="#81766f">
+                    {progressText}
+                  </Text>
+                </Flex>
+                <Progress
+                  value={progress}
+                  colorScheme={effectiveCompleted ? "green" : "red"}
+                  bg="#e8e6e3"
+                  borderRadius="full"
+                  size="sm"
+                />
+              </Box>
+            )}
           </CardBody>
         </Card>
 
-        {!completed ? (
+        {/* Show questions for non-PDF mode and not completed */}
+        {!pdfMode && !effectiveCompleted && currentQuestion && (
           /* Question Card */
           <Card>
             <CardBody>
@@ -634,8 +773,10 @@ const Conversation = () => {
               </VStack>
             </CardBody>
           </Card>
-        ) : (
-          /* Results */
+        )}
+
+        {/* Results - Show for completed conversations OR PDF mode with data */}
+        {(effectiveCompleted || (pdfMode && effectiveConversationData)) && (
           <VStack spacing={6} align="stretch">
             <Alert status="success" borderRadius="md">
               <AlertIcon />
@@ -751,7 +892,6 @@ const Conversation = () => {
                   </Text>
                   <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
                     {Object.entries(alignmentTypes).map(([key, alignment]) => {
-                      const maxForAlignment = getMaxPossibleScore(key)
                       const percentage = getPercentageScore(key)
                       return (
                         <Box key={key} p={5} bg="#f1efed" borderRadius="md">
@@ -790,166 +930,95 @@ const Conversation = () => {
               </Card>
             </SimpleGrid>
 
-            {/* Buttons Section */}
-            <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={4} align="start">
-              <Button
-                colorScheme="red"
-                size="lg"
-                onClick={handleExploreKinematicRestoration}
-              >
-                Explore Kinematic Restoration
-              </Button>
-
-              <Button
-                colorScheme="red"
-                size="lg"
-                onClick={handleComparePhilosophies}
-              >
-                Compare Philosophies Tool
-              </Button>
-
-              <Button
-                colorScheme="red"
-                size="lg"
-                onClick={handleSellingQuestions}
-              >
-                Challenger Selling Philosophy Questions
-              </Button>
-
-              <Button
-                colorScheme="red"
-                size="lg"
-                onClick={handleReferences}
-              >
-                References / Citations
-              </Button>
-
-            </SimpleGrid>
-
-            {/* Actions */}
-            <HStack justify="center" spacing={4}>
-              <Button
-                variant="outline"
-                onClick={handleRestart}
-                borderColor="#eb1700"
-                color="#eb1700"
-                _hover={{ bg: "#eb1700", color: "white" }}
-              >
-                Restart Assessment
-              </Button>
-              <Button
-                leftIcon={<CalendarIcon />}
-                colorScheme="red"
-                variant="outline"
-                onClick={() => setIsScheduleOpen(true)}
-              >
-                Schedule Follow-up
-              </Button>
-              <Button
-                leftIcon={<CalendarIcon />}
-                colorScheme="red"
-                variant="outline"
-                onClick={handleMedTechCalendar}
-              >
-                EdTech Training Calendar
-              </Button>
-
-              {/*
-              {id ? (
-                <Button
-                  bg="#eb1700"
-                  color="white"
-                  _hover={{ bg: "#9e0000" }}
-                  onClick={() => navigate('/')}
-                >
-                  Back to Home
-                </Button>
-              ) : (
-                <Button
-                  bg="#eb1700"
-                  color="white"
-                  _hover={{ bg: "#9e0000" }}
-                  onClick={() => navigate('/')}
-                >
-                  Start New Assessment
-                </Button>
-              )}
-              */}
-
-            </HStack>
+            {/* Action buttons - conditionally rendered */}
+            {renderActionButtons()}
           </VStack>
         )}
       </VStack>
 
-      <ScheduleFollowupModal
-        isOpen={isScheduleOpen}
-        conversationData={conversation}
-        salesRep={conversation?.salesRep || salesRep}
-        onClose={() => setIsScheduleOpen(false)}
+      {/* Modals - hide in PDF mode */}
+      {!pdfMode && (
+        <>
+          <ScheduleFollowupModal
+            isOpen={isScheduleOpen}
+            conversationData={effectiveConversationData}
+            salesRep={effectiveConversationData?.salesRep || salesRep}
+            onClose={() => setIsScheduleOpen(false)}
+          />
 
-      />
+          {/* Notes Modal */}
+          <Modal isOpen={isNotesOpen} onClose={onNotesClose} size="xl">
+            <ModalOverlay />
+            <ModalContent>
+              <ModalHeader color="white" fontWeight="500">Edit Notes</ModalHeader>
+              <ModalCloseButton color="white" />
 
-      {/* Notes Modal */}
-      <Modal isOpen={isNotesOpen} onClose={onNotesClose} size="xl">
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader color="white" fontWeight="500">Edit Notes</ModalHeader>
-          <ModalCloseButton color="white" />
+              <ModalBody>
+                <ReactQuill
+                  theme="snow"
+                  value={notesContent}
+                  onChange={setNotesContent}
+                  style={{ height: '300px', marginBottom: '50px' }}
+                  placeholder="Add your notes about this conversation..."
+                  modules={{
+                    toolbar: [
+                      [{ 'header': [1, 2, false] }],
+                      ['bold', 'italic', 'underline'],
+                      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                      ['clean']
+                    ],
+                  }}
+                />
+              </ModalBody>
 
-          <ModalBody>
-            <ReactQuill
-              theme="snow"
-              value={notesContent}
-              onChange={setNotesContent}
-              style={{ height: '300px', marginBottom: '50px' }}
-              placeholder="Add your notes about this conversation..."
-              modules={{
-                toolbar: [
-                  [{ 'header': [1, 2, false] }],
-                  ['bold', 'italic', 'underline'],
-                  [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                  ['clean']
-                ],
-              }}
-            />
-          </ModalBody>
+              <ModalFooter>
+                <Button
+                  variant="outline"
+                  mr={3}
+                  onClick={onNotesClose}
+                  borderColor="#eb1700"
+                  color="#eb1700"
+                  _hover={{ bg: "#eb1700", color: "white" }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  bg="#eb1700"
+                  color="white"
+                  _hover={{ bg: "#9e0000" }}
+                  onClick={handleSaveNotes}
+                  isLoading={saving}
+                  loadingText="Saving..."
+                >
+                  Save Notes
+                </Button>
+              </ModalFooter>
+            </ModalContent>
+          </Modal>
 
-          <ModalFooter>
-            <Button
-              variant="outline"
-              mr={3}
-              onClick={onNotesClose}
-              borderColor="#eb1700"
-              color="#eb1700"
-              _hover={{ bg: "#eb1700", color: "white" }}
-            >
-              Cancel
-            </Button>
-            <Button
-              bg="#eb1700"
-              color="white"
-              _hover={{ bg: "#9e0000" }}
-              onClick={handleSaveNotes}
-              isLoading={saving}
-              loadingText="Saving..."
-            >
-              Save Notes
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-
-      {/* Review Conversation Modal */}
-      <ReviewConversationModal
-        isOpen={isReviewOpen}
-        onClose={onReviewClose}
-        questions={questions}
-        responses={responses}
-        conversationData={conversation}
-        alignmentTypes={alignmentTypes}
-      />
+          {/* Review Conversation Modal */}
+          <ReviewConversationModal
+            isOpen={isReviewOpen}
+            onClose={onReviewClose}
+            questions={questions}
+            responses={responses}
+            conversationData={effectiveConversationData}
+            alignmentTypes={alignmentTypes}
+          />
+        </>
+      )}
     </Container>
   )
 }
+
+// Export a specific PDF wrapper component if needed
+export const ConversationPDFView = ({ conversationData }) => {
+  return (
+    <Conversation
+      pdfMode={true}
+      pdfConversationData={conversationData}
+    />
+  );
+};
 
 export default Conversation
