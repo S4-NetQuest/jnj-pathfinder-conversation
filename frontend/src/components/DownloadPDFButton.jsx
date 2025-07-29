@@ -25,12 +25,12 @@ const DownloadPDFButton = ({ conversationId, conversationData }) => {
 
     try {
       // Send conversation data to PDF endpoint
-      const apiUrl = `/api/pdf/generate`;
+      const apiUrl = `/api/pdf/test`;
       console.log('Requesting PDF from:', apiUrl);
       console.log('Sending conversation data:', conversationData);
 
       const response = await fetch(apiUrl, {
-        method: 'POST',
+        method: 'GET',
         credentials: 'include', // Include cookies for session-based auth
         headers: {
           'Content-Type': 'application/json',
