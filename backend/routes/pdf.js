@@ -209,108 +209,160 @@ router.post('/generate', async (req, res) => {
 });
 
 // Main PDF generation function - updated to screenshot actual conversation component
-async function generateConversationPDF(page, conversationData) {
-  const pages = [];
-
+const generateConversationPDF = async (conversationData, salesRep) => {
   try {
-    // Log the conversation data structure for debugging
-    console.log('Conversation data keys:', Object.keys(conversationData));
-    console.log('Notes in conversation data:', conversationData.notes);
-    console.log('Has notes?', hasNotes(conversationData));
+    setIsGeneratingPDF(true);
 
-    // Page 1: Screenshot of ACTUAL Conversation Component (without buttons)
-    console.log('Generating page 1: Conversation component screenshot');
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+    });
 
-    // Navigate to a special route that serves the conversation component in PDF mode
-    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const page = await browser.newPage();
+
+    // Set viewport for consistent rendering
+    await page.setViewport({ width: 1200, height: 800 });
+
+    // Disable animations and transitions for consistent rendering
+    await page.evaluateOnNewDocument(() => {
+      const css = `
+        *, *::before, *::after {
+          animation-duration: 0s !important;
+          animation-delay: 0s !important;
+          transition-duration: 0s !important;
+          transition-delay: 0s !important;
+        }
+
+        /* Ensure charts are visible */
+        .recharts-wrapper {
+          opacity: 1 !important;
+        }
+
+        /* Ensure progress bars show final state */
+        .chakra-progress__filled-track {
+          transition: none !important;
+        }
+      `;
+      const style = document.createElement('style');
+      style.appendChild(document.createTextNode(css));
+      document.head.appendChild(style);
+    });
+
+    const baseUrl = process.env.NODE_ENV === 'production'
+      ? 'https://your-production-url.com'
+      : 'http://localhost:3000';
+
     const conversationUrl = `${baseUrl}/conversation/pdf-view?data=${encodeURIComponent(JSON.stringify(conversationData))}`;
 
     console.log('Navigating to:', conversationUrl);
 
-    // Navigate to the conversation component page
+    // Navigate with extended timeout
     await page.goto(conversationUrl, {
       waitUntil: 'networkidle0',
-      timeout: 30000
+      timeout: 45000
     });
 
-    // Wait for the conversation component to render
-    await page.waitForSelector('[data-testid="conversation-pdf-content"]', { timeout: 15000 });
-
-    // Wait a bit more for any dynamic content to load
-    await new Promise(resolve => setTimeout(resolve, 3000));
-
-    // Take a screenshot and convert to PDF
-    const screenshot = await page.screenshot({
-      type: 'png',
-      fullPage: true,
-      clip: null // Full page screenshot
+    // Wait for the main content
+    await page.waitForSelector('[data-testid="conversation-pdf-content"]', {
+      timeout: 20000
     });
 
-    // Create a PDF page with the screenshot
-    const screenshotHtml = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="UTF-8">
-        <style>
-          body { margin: 0; padding: 0; }
-          img { width: 100%; height: auto; display: block; }
-        </style>
-      </head>
-      <body>
-        <img src="data:image/png;base64,${screenshot.toString('base64')}" alt="Conversation Screenshot" />
-      </body>
-      </html>
-    `;
+    // Wait specifically for charts to load
+    try {
+      await page.waitForSelector('.recharts-wrapper', {
+        timeout: 10000,
+        visible: true
+      });
+      console.log('Charts detected');
+    } catch (e) {
+      console.log('No charts found or charts took too long to load');
+    }
 
-    await page.setContent(screenshotHtml, { waitUntil: 'networkidle0' });
+    // Wait for progress bars to complete
+    try {
+      await page.waitForFunction(() => {
+        const progressBars = document.querySelectorAll('.chakra-progress__filled-track');
+        return progressBars.length === 0 || Array.from(progressBars).every(bar => {
+          const width = window.getComputedStyle(bar).width;
+          return width !== '0px' && width !== '100%';
+        });
+      }, { timeout: 5000 });
+      console.log('Progress bars loaded');
+    } catch (e) {
+      console.log('Progress bars timeout - continuing');
+    }
 
-    const conversationPdf = await page.pdf({
-      format: 'A4',
+    // Wait for any images to load
+    await page.evaluate(async () => {
+      const images = Array.from(document.images);
+      await Promise.all(images.map(img => {
+        if (img.complete) return Promise.resolve();
+        return new Promise(resolve => {
+          img.onload = resolve;
+          img.onerror = resolve;
+        });
+      }));
+    });
+
+    // Additional wait for any remaining async operations
+    await new Promise(resolve => setTimeout(resolve, 5000));
+
+    // Force a repaint to ensure everything is rendered
+    await page.evaluate(() => {
+      return new Promise(resolve => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(resolve);
+        });
+      });
+    });
+
+    // Generate PDF directly instead of screenshot approach
+    const pdf = await page.pdf({
+      format: 'Letter',
       printBackground: true,
-      margin: { top: '10px', bottom: '10px', left: '10px', right: '10px' }
+      margin: {
+        top: '0.5in',
+        right: '0.5in',
+        bottom: '0.5in',
+        left: '0.5in'
+      },
+      preferCSSPageSize: true
     });
-    pages.push(conversationPdf);
 
-    // Page 2: Questions and Responses
-    if (conversationData.responses && conversationData.responses.length > 0) {
-      console.log('Generating page 2: Questions and responses');
-      const questionsPageHtml = generateQuestionsPageHtml(conversationData);
-      await page.setContent(questionsPageHtml, { waitUntil: 'networkidle0' });
+    await browser.close();
 
-      const questionsPdf = await page.pdf({
-        format: 'A4',
-        printBackground: true,
-        margin: { top: '20px', bottom: '20px', left: '20px', right: '20px' }
-      });
-      pages.push(questionsPdf);
-    }
+    // Create blob and download
+    const blob = new Blob([pdf], { type: 'application/pdf' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `pathfinder-conversation-${conversationData.surgeonName || 'surgeon'}-${new Date().toISOString().split('T')[0]}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
 
-    // Page 3: Notes (if they exist)
-    if (hasNotes(conversationData)) {
-      console.log('Generating page 3: Notes');
-      const notesPageHtml = generateNotesPageHtml(conversationData);
-      await page.setContent(notesPageHtml, { waitUntil: 'networkidle0' });
+    toast({
+      title: 'PDF Generated Successfully',
+      description: 'The conversation PDF has been downloaded.',
+      status: 'success',
+      duration: 3000,
+      isClosable: true,
+    });
 
-      const notesPdf = await page.pdf({
-        format: 'A4',
-        printBackground: true,
-        margin: { top: '20px', bottom: '20px', left: '20px', right: '20px' }
-      });
-      pages.push(notesPdf);
-    } else {
-      console.log('No notes found, skipping notes page');
-    }
-
-    console.log('Combining', pages.length, 'pages');
-
-    // Combine all pages
-    return await combinePDFs(pages);
   } catch (error) {
-    console.error('Error in generateConversationPDF:', error);
-    throw error;
+    console.error('PDF generation error:', error);
+    toast({
+      title: 'PDF Generation Failed',
+      description: 'There was an error generating the PDF. Please try again.',
+      status: 'error',
+      duration: 5000,
+      isClosable: true,
+    });
+  } finally {
+    setIsGeneratingPDF(false);
   }
-}
+};
 
 // Generate HTML for questions and responses (Page 2)
 function generateQuestionsPageHtml(conversationData) {

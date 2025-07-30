@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   Container,
@@ -115,27 +115,420 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
     }
   }
 
-  useEffect(() => {
-    if (pdfMode) {
-      // In PDF mode, don't fetch - use provided data
-      setLoading(false)
-      setCompleted(pdfConversationData?.status === 'completed')
-      return
+  const recalculateScoresFromResponses = useCallback((currentResponses, questionsData) => {
+      const newScores = {
+        ka: 0,
+        ika: 0,
+        fa: 0,
+        ma: 0
+      }
+
+      //console.log('Recalculating scores from responses:', currentResponses)
+
+      Object.entries(currentResponses).forEach(([questionId, responseValue]) => {
+        const question = questionsData.find(q => q.id === questionId)
+        const selectedOption = question?.options?.find(opt => opt.id === responseValue)
+
+        if (selectedOption && selectedOption.scores) {
+          Object.keys(selectedOption.scores).forEach(alignment => {
+            newScores[alignment] += selectedOption.scores[alignment] || 0
+          })
+
+          //console.log(`Q${questionId}: ${selectedOption.text}`, selectedOption.scores)
+        }
+      })
+
+      //console.log('Recalculated scores:', newScores)
+      return newScores
+    }, [])
+
+  const calculateScores = useCallback(() => {
+    const newScores = {
+      ka: 0,
+      ika: 0,
+      fa: 0,
+      ma: 0,
     }
 
-    if (id) {
-      fetchConversation()
-    } else {
-      // New conversation for surgeon
-      setLoading(false)
-    }
-  }, [id, pdfMode, pdfConversationData])
+    questions.forEach(question => {
+      const response = responses[question.id]
+      if (response) {
+        const selectedOption = question.options.find(opt => opt.id === response)
+        if (selectedOption) {
+          newScores.ka += selectedOption.scores.ka
+          newScores.ika += selectedOption.scores.ika
+          newScores.fa += selectedOption.scores.fa
+          newScores.ma += selectedOption.scores.ma
+        }
+      }
+    })
 
-  useEffect(() => {
-    if (!pdfMode) {
-      calculateScores()
+    setScores(newScores)
+  }, [responses, questions])
+
+const getRecommendedAlignment = () => {
+    // For PDF mode, use the data directly
+    if (pdfMode && pdfConversationData) {
+      const approach = (pdfConversationData.recommended_approach || pdfConversationData.current_alignment || '').toLowerCase()
+      return {
+        alignment: alignmentTypes[approach] || null,
+        result: null
+      }
     }
-  }, [responses, pdfMode])
+
+    // For completed conversations, use the stored recommended approach first
+    if (completed && conversation?.recommended_approach) {
+      const approach = conversation.recommended_approach.toLowerCase()
+      return {
+        alignment: alignmentTypes[approach] || null,
+        result: null // We don't have tie info from stored conversations
+      }
+    }
+
+    // Otherwise calculate from current scores
+    const result = determineResult(scores)
+    return {
+      alignment: result.primary ? alignmentTypes[result.primary] : null,
+      result: result
+    }
+  }
+
+  const getMaxPossibleScore = useCallback((alignmentKey) => {
+    if (!questions || questions.length === 0) {
+      //console.warn('No questions available for max score calculation')
+      return 0
+    }
+
+    let maxScore = 0
+
+    questions.forEach(question => {
+      if (question.options && question.options.length > 0) {
+        const maxForThisQuestion = Math.max(
+          ...question.options.map(option => option.scores?.[alignmentKey] || 0)
+        )
+        maxScore += maxForThisQuestion
+      }
+    })
+
+    //console.log(`Max possible score for ${alignmentKey}: ${maxScore}`)
+    return maxScore
+  }, [questions])
+
+  // Helper function to convert responses array to map format
+  const convertResponsesArrayToMap = useCallback((responsesArray) => {
+    const responseMap = {}
+
+    if (Array.isArray(responsesArray)) {
+      responsesArray.forEach(resp => {
+        try {
+          // Handle different possible response formats
+          const questionId = resp.question_id || resp.questionId
+          let responseValue = resp.response_value || resp.responseValue || resp.value
+
+          // Parse JSON if it's a string
+          if (typeof responseValue === 'string') {
+            try {
+              responseValue = JSON.parse(responseValue)
+            } catch (e) {
+              // Keep as string if parsing fails
+            }
+          }
+
+          if (questionId && responseValue) {
+            responseMap[questionId] = responseValue
+          }
+        } catch (e) {
+          console.warn('Error converting response:', resp, e)
+        }
+      })
+    }
+
+    return responseMap
+  }, [])
+
+  // New helper function for percentage calculation
+  const getPercentageScore = useCallback((alignmentKey) => {
+    /* console.log(`getPercentageScore(${alignmentKey}):`, {
+      pdfMode,
+      currentScores: scores,
+      hasQuestions: questions && questions.length > 0,
+      hasResponses: Object.keys(responses).length > 0
+    }) */
+
+    if (pdfMode && pdfConversationData) {
+      // PRIORITY 1: If we have responses loaded, calculate from them
+      if (Object.keys(responses).length > 0) {
+        //console.log(`📄 PDF Mode: Calculating ${alignmentKey} from loaded responses`)
+        const currentScore = scores[alignmentKey] || 0
+        const maxForAlignment = getMaxPossibleScore(alignmentKey)
+
+        if (maxForAlignment > 0) {
+          const percentage = Math.round((currentScore / maxForAlignment) * 100)
+          //console.log(`📄 PDF Mode: ${alignmentKey} = ${currentScore}/${maxForAlignment} = ${percentage}%`)
+          return Math.min(percentage, 100)
+        }
+      }
+
+      // PRIORITY 2: Try to calculate directly from PDF responses
+      if (pdfConversationData.responses && Array.isArray(pdfConversationData.responses)) {
+        //console.log(`📄 PDF Mode: Calculating ${alignmentKey} directly from PDF responses`)
+        const responseMap = convertResponsesArrayToMap(pdfConversationData.responses)
+        const recalculatedScores = recalculateScoresFromResponses(responseMap, questions)
+        const rawScore = recalculatedScores[alignmentKey] || 0
+        const maxScore = getMaxPossibleScore(alignmentKey)
+
+        if (maxScore > 0) {
+          const recalculatedPercentage = Math.round((rawScore / maxScore) * 100)
+          //console.log(`📄 PDF Mode: Direct calculation ${alignmentKey}: ${rawScore}/${maxScore} = ${recalculatedPercentage}%`)
+          return Math.min(recalculatedPercentage, 100)
+        }
+      }
+
+      // PRIORITY 3: Check for stored percentage scores (FALLBACK ONLY)
+      const percentageKey = `alignment_percentage_${alignmentKey}`
+      const storedPercentage = pdfConversationData[percentageKey]
+
+      if (storedPercentage !== undefined) {
+        console.warn(`📄 PDF Mode: Using stored percentage as fallback for ${alignmentKey}: ${storedPercentage}%`)
+
+        // Cap inflated percentages
+        if (storedPercentage > 100) {
+          console.warn(`📄 PDF Mode: Capping inflated percentage ${storedPercentage}% at 100%`)
+          return 100
+        }
+
+        return Math.round(storedPercentage)
+      }
+
+      console.warn(`📄 PDF Mode: No valid data found for ${alignmentKey}`)
+      return 0
+    }
+
+    // Normal mode calculation (unchanged)
+    const currentScore = scores[alignmentKey] || 0
+    const maxForAlignment = getMaxPossibleScore(alignmentKey)
+
+    /* console.log(`Normal mode calculation for ${alignmentKey}:`, {
+      currentScore,
+      maxForAlignment,
+      percentage: maxForAlignment > 0 ? Math.round((currentScore / maxForAlignment) * 100) : 0
+    }) */
+
+    if (maxForAlignment > 0) {
+      const percentage = Math.round((currentScore / maxForAlignment) * 100)
+      return Math.min(percentage, 100)
+    }
+
+    return 0
+  }, [pdfMode, pdfConversationData, scores, getMaxPossibleScore, responses, convertResponsesArrayToMap, recalculateScoresFromResponses, questions])
+
+  const debugPDFData = useCallback(() => {
+    if (process.env.NODE_ENV !== 'development' || !pdfMode || !pdfConversationData) return
+
+    console.group('🔍 PDF Data Debug')
+    console.log('Full PDF data:', pdfConversationData)
+    console.log('Stored percentages:', {
+      ka: pdfConversationData.alignment_percentage_ka,
+      ika: pdfConversationData.alignment_percentage_ika,
+      fa: pdfConversationData.alignment_percentage_fa,
+      ma: pdfConversationData.alignment_percentage_ma
+    })
+    console.log('Raw scores:', pdfConversationData.scores)
+    console.log('Responses array:', pdfConversationData.responses)
+
+    if (pdfConversationData.responses) {
+      const convertedMap = convertResponsesArrayToMap(pdfConversationData.responses)
+      console.log('Converted response map:', convertedMap)
+
+      const recalculated = recalculateScoresFromResponses(convertedMap, questions)
+      console.log('Recalculated scores:', recalculated)
+
+      // Show what percentages would be
+      Object.keys(recalculated).forEach(key => {
+        const maxScore = getMaxPossibleScore(key)
+        const percentage = maxScore > 0 ? Math.round((recalculated[key] / maxScore) * 100) : 0
+        console.log(`${key}: ${recalculated[key]}/${maxScore} = ${percentage}%`)
+      })
+    }
+    console.groupEnd()
+  }, [pdfMode, pdfConversationData, convertResponsesArrayToMap, recalculateScoresFromResponses, questions, getMaxPossibleScore])
+
+  const EnhancedDebugComponent = () => {
+    if (process.env.NODE_ENV !== 'development') return null
+
+    return (
+      <Box position="fixed" top="300px" right="300px" bg="blue.100" p={3} borderRadius="md" fontSize="xs" maxW="300px" zIndex={1002}>
+        <Text fontWeight="bold" mb={2}>🔄 PDF Response Debug:</Text>
+
+        <Text>PDF Mode: {pdfMode ? 'true' : 'false'}</Text>
+        <Text>Responses Loaded: {Object.keys(responses).length}</Text>
+
+        {pdfMode && pdfConversationData && (
+          <>
+            <Text>PDF Has Responses: {pdfConversationData.responses ? 'Yes' : 'No'}</Text>
+            {pdfConversationData.responses && (
+              <Text>PDF Response Count: {pdfConversationData.responses.length}</Text>
+            )}
+          </>
+        )}
+
+        <Button size="xs" mt={2} onClick={() => {
+          console.log('🔍 Response Debug Info:')
+          console.log('Current responses state:', responses)
+          console.log('PDF conversation data:', pdfConversationData)
+          if (pdfConversationData?.responses) {
+            console.log('PDF responses array:', pdfConversationData.responses)
+            const converted = convertResponsesArrayToMap(pdfConversationData.responses)
+            console.log('Converted map:', converted)
+          }
+        }}>
+          Debug Responses
+        </Button>
+      </Box>
+    )
+  }
+
+  // Debug component to monitor score state
+  const EnhancedScoreMonitor = () => {
+    if (process.env.NODE_ENV !== 'development') return null
+
+    return (
+      <Box position="fixed" top="100px" right="10px" bg="yellow.100" p={3} borderRadius="md" fontSize="xs" maxW="400px" zIndex={1000}>
+        <Text fontWeight="bold" mb={2}>🔍 Enhanced Score Monitor:</Text>
+        <Text>PDF Mode: {pdfMode ? 'true' : 'false'}</Text>
+        <Text>Responses: {Object.keys(responses).length}</Text>
+        <Text>Current Scores: {JSON.stringify(scores)}</Text>
+        <Text>Questions loaded: {questions?.length || 0}</Text>
+
+        {pdfMode && pdfConversationData && (
+          <>
+            <Text fontWeight="bold" mt={2}>PDF Data:</Text>
+            <Text>Stored %: {JSON.stringify({
+              ka: pdfConversationData.alignment_percentage_ka,
+              ika: pdfConversationData.alignment_percentage_ika,
+              fa: pdfConversationData.alignment_percentage_fa,
+              ma: pdfConversationData.alignment_percentage_ma
+            })}</Text>
+          </>
+        )}
+
+        <Text fontWeight="bold" mt={2}>Calculated %:</Text>
+        {Object.entries(scores).map(([key, value]) => (
+          <Text key={key}>
+            {key}: {value} / {getMaxPossibleScore(key)} = {getPercentageScore(key)}%
+          </Text>
+        ))}
+
+        <Button size="xs" mt={2} onClick={debugPDFData}>
+          Debug PDF Data
+        </Button>
+      </Box>
+    )
+  }
+
+  const DebugScoreIssue = () => {
+    if (process.env.NODE_ENV !== 'development') return null
+
+    const debugSpecificScore = (alignmentKey) => {
+      console.group(`🔍 Debug ${alignmentKey.toUpperCase()} Score Issue`)
+
+      // Check what responses exist
+      console.log('Current responses:', responses)
+
+      // Manual calculation
+      let manualScore = 0
+      let manualMax = 0
+
+      questions.forEach((question, index) => {
+        const response = responses[question.id]
+        console.log(`Q${index + 1} (ID: ${question.id}):`)
+        console.log('  Question:', question.question)
+        console.log('  Response ID:', response)
+
+        if (response) {
+          const selectedOption = question.options.find(opt => opt.id === response)
+          if (selectedOption) {
+            console.log('  Selected:', selectedOption.text)
+            console.log('  Scores:', selectedOption.scores)
+            manualScore += selectedOption.scores[alignmentKey] || 0
+          } else {
+            console.log('  ❌ No option found for response:', response)
+          }
+        } else {
+          console.log('  ⚠️ No response recorded')
+        }
+
+        // Calculate max possible for this question
+        const maxForQuestion = Math.max(...question.options.map(opt => opt.scores[alignmentKey] || 0))
+        manualMax += maxForQuestion
+        console.log(`  Max possible for ${alignmentKey}:`, maxForQuestion)
+      })
+
+      console.log('📊 Final calculation:')
+      console.log(`Manual score: ${manualScore}`)
+      console.log(`Manual max: ${manualMax}`)
+      console.log(`Manual percentage: ${manualMax > 0 ? Math.round((manualScore / manualMax) * 100) : 0}%`)
+      console.log(`Current state score: ${scores[alignmentKey]}`)
+      console.log(`getPercentageScore result: ${getPercentageScore(alignmentKey)}%`)
+
+      console.groupEnd()
+    }
+
+    return (
+      <Box position="fixed" top="400px" right="10px" bg="red.100" p={3} borderRadius="md" fontSize="xs" maxW="300px" zIndex={1001}>
+        <Text fontWeight="bold" mb={2}>🐛 Score Debug:</Text>
+
+        <Text>Expected MA: 33%</Text>
+        <Text>Actual MA: {getPercentageScore('ma')}%</Text>
+        <Text>Raw MA score: {scores.ma}</Text>
+        <Text>Max MA score: {getMaxPossibleScore('ma')}</Text>
+
+        <Button size="xs" mt={2} onClick={() => debugSpecificScore('ma')}>
+          Debug MA Calculation
+        </Button>
+
+        <Button size="xs" mt={1} onClick={() => {
+          console.log('🔍 All alignment scores:')
+          Object.keys(scores).forEach(key => debugSpecificScore(key))
+        }}>
+          Debug All Scores
+        </Button>
+
+        <Text mt={2} fontSize="10px">
+          Check console for detailed breakdown
+        </Text>
+      </Box>
+    )
+  }
+
+  const getRadarChartData = useCallback(() => {
+    return [
+      {
+        alignment: 'KA',
+        score: getPercentageScore('ka'),
+        fullMark: 100,
+        color: alignmentTypes.ka.color
+      },
+      {
+        alignment: 'iKA',
+        score: getPercentageScore('ika'),
+        fullMark: 100,
+        color: alignmentTypes.ika.color
+      },
+      {
+        alignment: 'FA',
+        score: getPercentageScore('fa'),
+        fullMark: 100,
+        color: alignmentTypes.fa.color
+      },
+      {
+        alignment: 'MA',
+        score: getPercentageScore('ma'),
+        fullMark: 100,
+        color: alignmentTypes.ma.color
+      }
+    ]
+  }, [getPercentageScore, alignmentTypes])
 
   const fetchConversation = async () => {
     try {
@@ -168,10 +561,8 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
 
       // Set current question index based on completion status and responses
       if (isCompleted) {
-        // For completed conversations, show the results (set to last question)
         setCurrentQuestionIndex(questions.length - 1)
       } else {
-        // For in-progress conversations, find the first unanswered question
         let nextQuestionIndex = 0
         for (let i = 0; i < questions.length; i++) {
           if (responseMap[questions[i].id]) {
@@ -180,7 +571,6 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
             break
           }
         }
-        // Make sure we don't go beyond the last question
         setCurrentQuestionIndex(Math.min(nextQuestionIndex, questions.length - 1))
       }
 
@@ -192,6 +582,10 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
           fa: conversationData.alignment_score_fa || 0,
           ma: conversationData.alignment_score_ma || 0,
         })
+      } else if (Object.keys(responseMap).length > 0) {
+        // Recalculate scores from responses if not completed
+        const calculatedScores = recalculateScoresFromResponses(responseMap, questions)
+        setScores(calculatedScores)
       }
 
       // Load notes if user is sales rep
@@ -215,14 +609,14 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
 
   const fetchNotes = async () => {
     try {
-      console.log('Fetching notes for conversation:', id)
+      //console.log('Fetching notes for conversation:', id)
       const response = await api.get(`/conversations/${id}/notes`)
-      console.log('Notes response:', response.data)
+      //console.log('Notes response:', response.data)
 
       // The API returns { success: true, notes: [...] }
       if (response.data.success && response.data.notes && response.data.notes.length > 0) {
         const noteContent = response.data.notes[0].content || ''
-        console.log('Setting notes content:', noteContent)
+        //console.log('Setting notes content:', noteContent)
         setNotes(noteContent)
         setNotesContent(noteContent)
 
@@ -232,7 +626,7 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
           notes: noteContent
         }))
       } else {
-        console.log('No notes found, setting empty content')
+        //console.log('No notes found, setting empty content')
         setNotes('')
         setNotesContent('')
 
@@ -262,40 +656,21 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
     onNotesOpen()
   }
 
-  const calculateScores = () => {
-    const newScores = {
-      ka: 0,
-      ika: 0,
-      fa: 0,
-      ma: 0,
-    }
-
-    questions.forEach(question => {
-      const response = responses[question.id]
-      if (response) {
-        const selectedOption = question.options.find(opt => opt.id === response)
-        if (selectedOption) {
-          newScores.ka += selectedOption.scores.ka
-          newScores.ika += selectedOption.scores.ika
-          newScores.fa += selectedOption.scores.fa
-          newScores.ma += selectedOption.scores.ma
-        }
-      }
-    })
-
-    setScores(newScores)
-  }
-
   const handleResponse = async (questionId, value) => {
     const newResponses = { ...responses, [questionId]: value }
     setResponses(newResponses)
 
-    // Save response if we have a conversation ID
-    if (id) {
-      const question = questions.find(q => q.id === questionId)
-      const selectedOption = question.options.find(opt => opt.id === value)
+    // Calculate scores locally as well as saving to backend
+    const question = questions.find(q => q.id === questionId)
+    const selectedOption = question?.options?.find(opt => opt.id === value)
 
-      if (selectedOption) {
+    if (selectedOption) {
+      // Update local scores immediately using recalculation approach
+      const updatedScores = recalculateScoresFromResponses(newResponses, questions)
+      setScores(updatedScores)
+
+      // Save response to backend if we have a conversation ID
+      if (id) {
         try {
           await api.post(`/conversations/${id}/responses`, {
             questionId,
@@ -394,82 +769,37 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
     setCompleted(false)
   }
 
-  const getRecommendedAlignment = () => {
-    // For PDF mode, use the data directly
-    if (pdfMode && pdfConversationData) {
-      const approach = (pdfConversationData.recommended_approach || pdfConversationData.current_alignment || '').toLowerCase()
-      return {
-        alignment: alignmentTypes[approach] || null,
-        result: null
+  useEffect(() => {
+    if (pdfMode) {
+      // In PDF mode, load responses from pdfConversationData
+      if (pdfConversationData && pdfConversationData.responses) {
+        //console.log('📄 PDF Mode: Loading responses from conversation data')
+        //console.log('PDF responses array:', pdfConversationData.responses)
+
+        // Convert responses array to map format
+        const responseMap = convertResponsesArrayToMap(pdfConversationData.responses)
+        //console.log('📄 PDF Mode: Converted response map:', responseMap)
+
+        // Set responses state
+        setResponses(responseMap)
+
+        // Calculate scores from responses
+        const calculatedScores = recalculateScoresFromResponses(responseMap, questions)
+        //console.log('📄 PDF Mode: Calculated scores:', calculatedScores)
+        setScores(calculatedScores)
       }
+
+      setLoading(false)
+      setCompleted(pdfConversationData?.status === 'completed')
+      return
     }
 
-    // For completed conversations, use the stored recommended approach first
-    if (completed && conversation?.recommended_approach) {
-      const approach = conversation.recommended_approach.toLowerCase()
-      return {
-        alignment: alignmentTypes[approach] || null,
-        result: null // We don't have tie info from stored conversations
-      }
+    if (id) {
+      fetchConversation()
+    } else {
+      setLoading(false)
     }
-
-    // Otherwise calculate from current scores
-    const result = determineResult(scores)
-    return {
-      alignment: result.primary ? alignmentTypes[result.primary] : null,
-      result: result
-    }
-  }
-
-  const getMaxPossibleScore = (alignmentKey) => {
-    return questions.reduce((total, question) => {
-      const maxForQuestion = Math.max(...question.options.map(opt => opt.scores[alignmentKey]))
-      return total + maxForQuestion
-    }, 0)
-  }
-
-  // New helper function for percentage calculation
-  const getPercentageScore = (alignmentKey) => {
-    if (pdfMode && pdfConversationData) {
-      // In PDF mode, use the stored percentage scores if available
-      const percentageKey = `alignment_percentage_${alignmentKey}`
-      if (pdfConversationData[percentageKey] !== undefined) {
-        return pdfConversationData[percentageKey]
-      }
-    }
-
-    const maxForAlignment = getMaxPossibleScore(alignmentKey)
-    return maxForAlignment > 0 ? Math.round((scores[alignmentKey] / maxForAlignment) * 100) : 0
-  }
-
-  const getRadarChartData = () => {
-    return [
-      {
-        alignment: 'KA',
-        score: getPercentageScore('ka'),
-        fullMark: 100,
-        color: alignmentTypes.ka.color
-      },
-      {
-        alignment: 'iKA',
-        score: getPercentageScore('ika'),
-        fullMark: 100,
-        color: alignmentTypes.ika.color
-      },
-      {
-        alignment: 'FA',
-        score: getPercentageScore('fa'),
-        fullMark: 100,
-        color: alignmentTypes.fa.color
-      },
-      {
-        alignment: 'MA',
-        score: getPercentageScore('ma'),
-        fullMark: 100,
-        color: alignmentTypes.ma.color
-      }
-    ]
-  }
+  }, [id, pdfMode, pdfConversationData, convertResponsesArrayToMap, recalculateScoresFromResponses, questions])
 
   // Calculate the number of answered questions
   const answeredQuestionsCount = Object.keys(responses).length
@@ -877,6 +1207,8 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
                           fill="#eb1700"
                           fillOpacity={0.2}
                           strokeWidth={2}
+                          isAnimationActive={!pdfMode}
+                          animationDuration={pdfMode ? 0 : 1500}
                         />
                       </RadarChart>
                     </ResponsiveContainer>
@@ -893,6 +1225,7 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
                   <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
                     {Object.entries(alignmentTypes).map(([key, alignment]) => {
                       const percentage = getPercentageScore(key)
+                      //console.log(`Alignment: ${key}, Percentage: ${percentage}`)
                       return (
                         <Box key={key} p={5} bg="#f1efed" borderRadius="md">
                           <Flex justify="space-between" align="start" mb={2}>
@@ -934,6 +1267,9 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
             {renderActionButtons()}
           </VStack>
         )}
+       {/*  <EnhancedScoreMonitor />
+        <DebugScoreIssue />
+        <EnhancedDebugComponent /> */}
       </VStack>
 
       {/* Modals - hide in PDF mode */}
