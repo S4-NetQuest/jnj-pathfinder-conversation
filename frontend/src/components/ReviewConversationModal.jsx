@@ -49,17 +49,6 @@ const ReviewConversationModal = ({
   const totalCount = questions.length
   const completionPercentage = totalCount > 0 ? Math.round((answeredCount / totalCount) * 100) : 0
 
-  // Get recommended alignment for completed conversations
-  const getRecommendedAlignment = () => {
-    if (conversationData?.recommended_approach) {
-      const approach = conversationData.recommended_approach.toLowerCase()
-      return alignmentTypes[approach] || null
-    }
-    return null
-  }
-
-  const recommendedAlignment = getRecommendedAlignment()
-
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl" scrollBehavior="inside">
       <ModalOverlay />

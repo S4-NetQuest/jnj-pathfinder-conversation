@@ -3,6 +3,37 @@ const express = require('express');
 const puppeteer = require('puppeteer');
 const { PDFDocument } = require('pdf-lib');
 const router = express.Router();
+const questionsData = require('../data/questions.json');
+
+// Generate mappings from local backend data
+const generateMappings = () => {
+  const questionMapping = {};
+  const responseMapping = {};
+
+  questionsData.questions.forEach(question => {
+    questionMapping[question.id] = question.question;
+    responseMapping[question.id] = {};
+
+    if (question.options) {
+      question.options.forEach(option => {
+        responseMapping[question.id][option.id] = option.text;
+      });
+    }
+  });
+
+  return { questionMapping, responseMapping };
+};
+
+const getQuestionText = (questionId) => {
+  const { questionMapping } = generateMappings();
+  return questionMapping[questionId] || `Question ${questionId}`;
+};
+
+const getResponseText = (questionId, responseValue) => {
+  const { responseMapping } = generateMappings();
+  return responseMapping[questionId]?.[responseValue] || `Response: ${responseValue}`;
+};
+
 
 // Helper function for waiting (compatible with all Puppeteer versions)
 const waitForTimeout = (page, ms) => {
@@ -152,6 +183,17 @@ router.get('/test', async (req, res) => {
       }
     }
   }
+});
+
+router.get('/questions-status', (req, res) => {
+  const { questionMapping, responseMapping } = generateMappings();
+
+  res.json({
+    success: true,
+    questionsCount: questionsData?.questions?.length || 0,
+    sampleQuestions: Object.keys(questionMapping).slice(0, 3),
+    metadata: questionsData?.metadata || null
+  });
 });
 
 // Main PDF generation endpoint - FIXED VERSION
@@ -401,74 +443,8 @@ async function generateNotesPagePDF(browser, conversationData) {
   }
 }
 
-// Question text mapping
-const getQuestionText = (questionId) => {
-  const questionMapping = {
-    'q1_femur_tibia_first': 'Do you prioritize femur or tibia first in your surgical workflow?',
-    'q2_tka_priority': 'What is your primary focus in TKA alignment?',
-    'q3_adjust_resections': 'Do you adjust resections based on soft tissue balance?',
-    'q4_deviate_mechanical_axis': 'Are you willing to deviate from mechanical axis?',
-    'q5_distal_femoral_resection': 'How do you approach distal femoral resection?',
-    'q6_tibial_resection': 'What is your approach to tibial resection?',
-    'q7_extension_gaps_priority': 'How do you prioritize extension gap management?',
-    'q8_posterior_femoral_resection': 'What is your approach to posterior femoral resection?',
-    'q9_coronal_boundaries': 'How do you handle coronal boundaries in alignment?'
-  };
-  return questionMapping[questionId] || `Question ${questionId}`;
-};
 
-// Get response text
-const getResponseText = (questionId, responseValue) => {
-  const responseMapping = {
-    'q1_femur_tibia_first': {
-      'femur_first': 'I prioritize femur first in my workflow',
-      'tibia_first': 'I prioritize tibia first in my workflow',
-      'simultaneous': 'I approach both simultaneously'
-    },
-    'q2_tka_priority': {
-      'native_alignment': 'I prioritize native alignment restoration',
-      'mechanical_alignment': 'I prioritize mechanical alignment',
-      'functional_alignment': 'I prioritize functional alignment'
-    },
-    'q3_adjust_resections': {
-      'yes': 'Yes, I adjust resections based on soft tissue balance',
-      'no': 'No, I use standard resection techniques',
-      'sometimes': 'Sometimes, depending on the case'
-    },
-    'q4_deviate_mechanical_axis': {
-      'yes': 'Yes, I am willing to deviate from mechanical axis when appropriate',
-      'no': 'No, I prefer to maintain mechanical axis alignment',
-      'sometimes': 'Sometimes, depending on patient factors'
-    },
-    'q5_distal_femoral_resection': {
-      'anatomical': 'I use anatomical landmarks for distal femoral resection',
-      'mechanical': 'I use mechanical axis principles',
-      'balance': 'I balance anatomical and mechanical approaches'
-    },
-    'q6_tibial_resection': {
-      'perpendicular_mechanical': 'Perpendicular to mechanical axis',
-      'anatomical_slope': 'Based on anatomical tibial slope',
-      'patient_specific': 'Patient-specific approach'
-    },
-    'q7_extension_gaps_priority': {
-      'evenly_distribute': 'I prioritize even gap distribution',
-      'tight_extension': 'I prefer tighter extension gaps',
-      'loose_extension': 'I allow for looser extension gaps'
-    },
-    'q8_posterior_femoral_resection': {
-      'restore_medial_balance_lateral': 'Restore medial balance laterally',
-      'equal_resection': 'Equal posterior resection',
-      'anatomical_based': 'Based on anatomical landmarks'
-    },
-    'q9_coronal_boundaries': {
-      'no': 'No specific coronal boundary considerations',
-      'yes': 'Yes, I consider coronal boundaries',
-      'case_dependent': 'Depends on the specific case'
-    }
-  };
 
-  return responseMapping[questionId]?.[responseValue] || `Response: ${responseValue}`;
-};
 
 // Generate HTML for questions page
 function generateQuestionsPageHtml(conversationData) {

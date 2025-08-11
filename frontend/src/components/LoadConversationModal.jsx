@@ -22,6 +22,8 @@ import {
   useColorModeValue,
   Alert,
   AlertIcon,
+  AlertTitle,
+  AlertDescription,
   Spinner,
   Center,
   useToast,
@@ -41,13 +43,23 @@ import {
   ExternalLinkIcon
 } from '@chakra-ui/icons'
 import { useAuth } from '../contexts/AuthContext'
+import { useQuestions } from '../hooks/useQuestions'
 import api from '../services/api'
 import { getPhilosophyColor, getPhilosophyVariant } from '../theme/theme'
-import questionsData from '../data/questions.json'
 
 const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
   const { user } = useAuth()
   const toast = useToast()
+
+  // Replace static import with useQuestions hook
+  const {
+    questionsData,
+    questions,
+    loading: questionsLoading,
+    error: questionsError,
+    refresh: refreshQuestions
+  } = useQuestions()
+
   const [conversations, setConversations] = useState([])
   const [filteredConversations, setFilteredConversations] = useState([])
   const [loading, setLoading] = useState(false)
@@ -87,9 +99,17 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
 
   // Helper function to calculate max possible score for an alignment
   const calculateMaxPossibleScore = (alignmentKey) => {
-    return questionsData.questions.reduce((total, question) => {
-      const maxForQuestion = Math.max(...question.options.map(opt => opt.scores[alignmentKey]))
-      return total + maxForQuestion
+    if (!questions || questions.length === 0) {
+      console.warn('No questions available for score calculation')
+      return 0
+    }
+
+    return questions.reduce((total, question) => {
+      if (question.options && question.options.length > 0) {
+        const maxForQuestion = Math.max(...question.options.map(opt => opt.scores?.[alignmentKey] || 0))
+        return total + maxForQuestion
+      }
+      return total
     }, 0)
   }
 
@@ -354,6 +374,42 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
     onClose()
   }
 
+  // Show error if questions failed to load
+  if (questionsError) {
+    return (
+      <Modal isOpen={isOpen} onClose={onClose} size="md">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Questions Loading Error</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Alert status="error" borderRadius="md">
+              <AlertIcon />
+              <Box>
+                <AlertTitle>Failed to load questions!</AlertTitle>
+                <AlertDescription>
+                  {questionsError}. This may affect score calculations.
+                  <Button
+                    size="sm"
+                    ml={2}
+                    onClick={refreshQuestions}
+                    colorScheme="red"
+                    variant="outline"
+                  >
+                    Try Again
+                  </Button>
+                </AlertDescription>
+              </Box>
+            </Alert>
+          </ModalBody>
+          <ModalFooter>
+            <Button onClick={onClose}>Close</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    )
+  }
+
   if (!user) {
     return (
       <Modal isOpen={isOpen} onClose={onClose} size="md">
@@ -391,11 +447,26 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
             <Text color="#eb1700" fontSize="lg" fontWeight="500">
               Load Existing Conversation
             </Text>
+            {questionsLoading && (
+              <Spinner size="sm" color="#eb1700" />
+            )}
           </HStack>
         </ModalHeader>
         <ModalCloseButton isDisabled={editingCard !== null} />
 
         <ModalBody p={0}>
+          {/* Show warning if questions are still loading */}
+          {questionsLoading && (
+            <Box p={4} borderBottom="1px solid" borderColor="#e8e6e3">
+              <Alert status="info" size="sm">
+                <AlertIcon />
+                <Text fontSize="sm">
+                  Loading questions data... Score calculations may be unavailable.
+                </Text>
+              </Alert>
+            </Box>
+          )}
+
           {/* Filters */}
           <Box p={4} borderBottom="1px solid" borderColor="#e8e6e3">
             <VStack spacing={4}>
@@ -678,8 +749,8 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
                         </Flex>
                       )}
 
-                      {/* Scores Preview */}
-                      {editingCard !== conversation.id && conversation.status === 'completed' && (
+                      {/* Scores Preview - only show if questions are loaded */}
+                      {editingCard !== conversation.id && conversation.status === 'completed' && !questionsLoading && questions.length > 0 && (
                         <Box>
                           <Text fontSize="xs" color="#a39992" mb={2}>
                             Alignment Scores:
@@ -697,6 +768,19 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
                             <Text>
                               <Text as="span" fontWeight="medium" color={getPhilosophyColor("ma")}>MA:</Text> {calculatePercentage(conversation.alignment_score_ma || 0, 'ma')}%
                             </Text>
+                          </HStack>
+                        </Box>
+                      )}
+
+                      {/* Show loading indicator for scores if questions are loading */}
+                      {editingCard !== conversation.id && conversation.status === 'completed' && questionsLoading && (
+                        <Box>
+                          <Text fontSize="xs" color="#a39992" mb={2}>
+                            Alignment Scores:
+                          </Text>
+                          <HStack spacing={2}>
+                            <Spinner size="xs" />
+                            <Text fontSize="xs" color="#a39992">Loading score calculations...</Text>
                           </HStack>
                         </Box>
                       )}
