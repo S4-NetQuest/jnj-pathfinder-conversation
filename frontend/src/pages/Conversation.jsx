@@ -892,7 +892,7 @@ const getRecommendedAlignment = () => {
             size="lg"
             onClick={handleExploreKinematicRestoration}
           >
-            Explore Kinematic Restoration
+            Start Your Learning Journey
           </Button>
 
           <Button
@@ -908,7 +908,7 @@ const getRecommendedAlignment = () => {
             size="lg"
             onClick={handleSellingQuestions}
           >
-            Challenger Selling Philosophy Questions
+            Applying the Challenger Mindset
           </Button>
 
           <Button
@@ -916,7 +916,7 @@ const getRecommendedAlignment = () => {
             size="lg"
             onClick={handleReferences}
           >
-            References / Citations
+            Evidence Resources
           </Button>
         </SimpleGrid>
 

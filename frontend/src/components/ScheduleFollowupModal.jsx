@@ -17,6 +17,7 @@ import {
   Badge,
   HStack,
   Icon,
+  Link,
   useClipboard,
   Tabs,
   TabList,
@@ -27,7 +28,8 @@ import {
   FormControl,
   FormLabel,
 } from '@chakra-ui/react'
-import { CopyIcon, CheckIcon, CalendarIcon, EmailIcon } from '@chakra-ui/icons'
+import { CopyIcon, CheckIcon, CalendarIcon, EmailIcon, DownloadIcon } from '@chakra-ui/icons'
+import { getPdfUrl } from '../utils/urlUtils'
 
 const ScheduleFollowupModal = ({ isOpen, onClose, conversationData, salesRep }) => {
   const toast = useToast()
@@ -39,7 +41,7 @@ const ScheduleFollowupModal = ({ isOpen, onClose, conversationData, salesRep }) 
   })
 
   // Email template
-  const emailTemplate = `Subject: Let's Reconnect – Advancing Clinical Outcomes with Kinematic Restoration & J&J MedTech
+  const emailTemplate = `Subject: Let's Reconnect - Advancing Clinical Outcomes with Kinematic Restoration & J&J MedTech
 
 Dear Dr. ${customizations.doctorName},
 
@@ -127,7 +129,7 @@ Contact: ${salesRep?.email || '[Email]'} | ${salesRep?.phone || '[Phone]'}`
           <VStack spacing={4} align="stretch">
             {/* Customization Section */}
             <Box>
-              <Text fontSize="lg" fontWeight="bold" mb={3} color="gray.700">
+              <Text fontSize="lg" fontWeight="500" mb={3} color="gray.700">
                 Customize Details
               </Text>
               <VStack spacing={3}>
@@ -175,7 +177,7 @@ Contact: ${salesRep?.email || '[Email]'} | ${salesRep?.phone || '[Phone]'}`
             <Divider />
 
             {/* Always Visible Copy Buttons */}
-            <HStack spacing={3} justify="center" bg="#f1efed" p={3} borderRadius="md">
+            <HStack spacing={1} justify="center" bg="#f1efed" p={2} borderRadius="md">
               <Button
                 leftIcon={emailCopied ? <CheckIcon /> : <CopyIcon />}
                 colorScheme={emailCopied ? 'green' : 'red'}
@@ -194,6 +196,20 @@ Contact: ${salesRep?.email || '[Email]'} | ${salesRep?.phone || '[Phone]'}`
                 flex={1}
               >
                 {calendarCopied ? 'Calendar Copied!' : 'Copy Calendar Details'}
+              </Button>
+
+              <Button
+                as={Link}
+                href={getPdfUrl('Kinematic-Restoration-Handbook-US_ORT_DGSR_395356.pdf')}
+                target="_blank"
+                rel="noopener noreferrer"
+                leftIcon={<DownloadIcon/>}
+                colorScheme={'red'}
+                /* onClick={() => handleCopy('calendar')} */
+                size="sm"
+                flex={1}
+              >
+                KR Brochure
               </Button>
             </HStack>
 
@@ -221,7 +237,7 @@ Contact: ${salesRep?.email || '[Email]'} | ${salesRep?.phone || '[Phone]'}`
                       <Text fontSize="sm" color="gray.600">
                         Copy this template and paste into your email application
                       </Text>
-                      <Badge colorScheme="blue" fontSize="xs">
+                      <Badge colorScheme="blue" fontSize="xs" fontWeight={"500"}>
                         Email Template
                       </Badge>
                     </HStack>
@@ -248,7 +264,7 @@ Contact: ${salesRep?.email || '[Email]'} | ${salesRep?.phone || '[Phone]'}`
                       <Text fontSize="sm" color="gray.600">
                         Copy these details and paste into your calendar application
                       </Text>
-                      <Badge colorScheme="green" fontSize="xs">
+                      <Badge colorScheme="green" fontSize="xs" fontWeight={"500"}>
                         Calendar Details
                       </Badge>
                     </HStack>

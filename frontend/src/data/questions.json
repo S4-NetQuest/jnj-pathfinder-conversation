@@ -38,7 +38,7 @@
     {
       "id": "q1_femur_tibia_first",
       "order": 1,
-      "question": "Choose one…",
+      "question": "How do you sequence your resections during total knee arthroplasty (TKA)?",
       "type": "single_choice",
       "required": true,
       "options": [

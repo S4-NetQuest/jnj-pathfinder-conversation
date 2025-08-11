@@ -46,7 +46,7 @@ const ComparePhilosophiesModal = ({ isOpen, onClose }) => {
       <ModalContent maxH="90vh">
         <ModalHeader bg="gray.50" borderBottom="1px solid" borderColor={borderColor}>
           <Text color="#eb1700" fontSize="lg" fontWeight="bold">
-            Challenger Selling Philosophy Questions
+            Applying the Challenger Mindset
           </Text>
         </ModalHeader>
         <ModalCloseButton />

@@ -21,12 +21,16 @@ if (process.env.ENABLE_SAML === 'true') {
 const devLoginSchema = Joi.object({
   email: Joi.string().email().required(),
   role: Joi.string().valid('sales_rep', 'surgeon').required(),
+  password: Joi.string().required(),
 })
 
 // Development login endpoint
 router.post('/dev-login', async (req, res) => {
   console.log('=== DEV LOGIN REQUEST ===')
-  console.log('Request body:', req.body)
+  console.log('Request body (password hidden):', {
+    ...req.body,
+    password: req.body.password ? '[HIDDEN]' : undefined
+  })
   console.log('Session before:', req.session)
 
   if (process.env.NODE_ENV === 'production') {
@@ -40,48 +44,40 @@ router.post('/dev-login', async (req, res) => {
       return res.status(400).json({ error: error.details[0].message })
     }
 
-    const { email, role } = value
+    const { email, password, role } = value
     const pool = dbConfig.getPool()
 
-    // Check if user exists
+    // Check if user exists and get password
     const userQuery = 'SELECT * FROM users WHERE email = @email AND role = @role'
 
     console.log('Executing user query with:', { email, role })
 
-    let result = await pool.request()
+    const result = await pool.request()
       .input('email', dbConfig.sql.VarChar, email)
       .input('role', dbConfig.sql.VarChar, role)
       .query(userQuery)
 
-    console.log('User query result:', result.recordset)
+    console.log('User query result count:', result.recordset.length)
 
-    let user
     if (result.recordset.length === 0) {
-      // Create development user
-      console.log('Creating new development user')
-
-      const insertQuery = `
-        INSERT INTO users (email, name, first_name, last_name, role, created_at, updated_at)
-        OUTPUT INSERTED.*
-        VALUES (@email, @name, @firstName, @lastName, @role, GETDATE(), GETDATE())
-      `
-
-      const name = email.split('@')[0] // Use email prefix as name
-
-      result = await pool.request()
-        .input('email', dbConfig.sql.VarChar, email)
-        .input('name', dbConfig.sql.VarChar, `${name} (Dev)`)
-        .input('firstName', dbConfig.sql.VarChar, name)
-        .input('lastName', dbConfig.sql.VarChar, 'Dev User')
-        .input('role', dbConfig.sql.VarChar, role)
-        .query(insertQuery)
-
-      user = result.recordset[0]
-      console.log('Created user:', user)
-    } else {
-      user = result.recordset[0]
-      console.log('Found existing user:', user)
+      console.log('User not found')
+      return res.status(401).json({
+        error: 'Invalid email, password, or role. Please check your credentials.'
+      })
     }
+
+    const user = result.recordset[0]
+    console.log('Found user:', { ...user, password: '[HIDDEN]' })
+
+    // Validate password (plain text comparison for development)
+    if (user.password !== password) {
+      console.log('Password validation failed')
+      return res.status(401).json({
+        error: 'Invalid email, password, or role. Please check your credentials.'
+      })
+    }
+
+    console.log('Password validation successful')
 
     // Create session
     req.session.authenticated = true
@@ -113,9 +109,23 @@ router.post('/dev-login', async (req, res) => {
 
   } catch (error) {
     console.error('Dev login error:', error)
-    res.status(500).json({ error: 'Login failed', details: error.message })
+    res.status(500).json({ error: 'Login failed. Please try again.', details: error.message })
   }
 })
+
+// SAML login initiation (only if SAML is enabled)
+if (passport) {
+  router.get('/saml', passport.authenticate('saml'))
+
+  // SAML callback
+  router.post('/saml/callback',
+    passport.authenticate('saml', { failureRedirect: '/login?error=saml_failed' }),
+    (req, res) => {
+      console.log('SAML authentication successful for user:', req.user)
+      res.redirect(process.env.FRONTEND_URL || 'http://localhost:3001')
+    }
+  )
+}
 
 // SAML login initiation (only if SAML is enabled)
 if (passport) {

@@ -2,26 +2,26 @@ import React, { useState, useEffect } from 'react'
 import {
   Box,
   Container,
-  Heading,
   Text,
   Button,
+  HStack,
   VStack,
   useDisclosure,
   Alert,
   AlertIcon,
-  Flex,
-  Spacer,
+  Link,
   useToast,
   Card,
   CardBody,
 } from '@chakra-ui/react'
-import { AddIcon, SearchIcon } from '@chakra-ui/icons'
+import { AddIcon, SearchIcon, DownloadIcon } from '@chakra-ui/icons'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import ConversationModal from '../components/ConversationModal'
 import LoadConversationModal from '../components/LoadConversationModal'
 import DevLogin from '../components/DevLogin'
 import config from '../config/config'
+import { getPdfUrl } from '../utils/urlUtils'
 
 // Import all background images
 import pathfinderBgMobile from '../assets/images/pathfinder-bg-mobile.jpg'
@@ -204,9 +204,6 @@ const Home = () => {
         left: 0,
         right: 0,
         bottom: 0,
-/*         bg: imageLoaded
-          ? "linear-gradient(135deg, rgba(235, 23, 0, 0.05) 0%, rgba(0, 0, 0, 0.25) 100%)"
-          : "linear-gradient(135deg, rgba(235, 23, 0, 0.1) 0%, rgba(0, 0, 0, 0.1) 100%)", */
         zIndex: 1,
         transition: "background 0.3s ease-in-out"
       }}
@@ -241,6 +238,7 @@ const Home = () => {
                 fontSize={{ base: "md", md: "lg" }}
                 color="gray.700"
                 className="font-text"
+                lineHeight={{ base: "1.1", md: "1.2" }}
               >
                 The PATHFINDER Kinematic Restoration Conversation Guide will help identify {isSalesRep ? "your customer's" : "your"} alignment philosophy in Total Knee Arthroplasty (TKA).
               </Text>
@@ -302,7 +300,7 @@ const Home = () => {
                 _hover={{ shadow: "xl", transform: "translateY(-2px)" }}
                 transition="all 0.2s"
               >
-                Explore Kinematic Restoration
+                Start Your Learning Journey
               </Button>
 
               <Button
@@ -324,14 +322,56 @@ const Home = () => {
                   size="lg"
                   onClick={handleSellingQuestions}
                   fontSize={{ base: "sm", md: "md" }}
-                  py={{ base: 6, md: 7 }}
+                  py={{ base: 0, md: 0 }}
                   shadow="lg"
                   _hover={{ shadow: "xl", transform: "translateY(-2px)" }}
                   transition="all 0.2s"
                 >
-                  Challenger Selling Philosophy Questions
+                  Applying the Challenger Mindset
                 </Button>
               )}
+
+              <Text fontSize={"sm"}>Additional Resources</Text>
+              <HStack spacing={4} justify="center">
+              <Button
+                as={Link}
+                href={'https://truview.my.salesforce.com/sfc/p/36000000IwFC/a/Pl000005yPTh/kFGB.6JK_G2_bfIW_1Qy1GDhSsI4Tyhtkzf569pMnKo'}
+                target="_blank"
+                rel="noopener noreferrer"
+                leftIcon={<DownloadIcon/>}
+                color={"red.500"}
+                backgroundColor={"white"}
+                border={"1px solid"}
+                size="lg"
+                fontSize={{ base: "sm", md: "md" }}
+                py={{ base: 4, md: 6 }}
+                shadow="lg"
+                _hover={{ shadow: "xl", transform: "translateY(-2px)" }}
+                transition="all 0.2s"
+              >
+                Clinical Value Proposition
+              </Button>
+
+              <Button
+                as={Link}
+                href={getPdfUrl('Kinematic-Restoration-Handbook-US_ORT_DGSR_395356.pdf')}
+                target="_blank"
+                rel="noopener noreferrer"
+                leftIcon={<DownloadIcon/>}
+                color={"red.500"}
+                backgroundColor={"white"}
+                border={"1px solid"}
+                size="lg"
+                fontSize={{ base: "sm", md: "md" }}
+                py={{ base: 4, md: 6 }}
+                shadow="lg"
+                _hover={{ shadow: "xl", transform: "translateY(-2px)" }}
+                transition="all 0.2s"
+              >
+                KR Handbook
+              </Button>
+              </HStack>
+
             </VStack>
 
             {/* Role-specific Information */}
