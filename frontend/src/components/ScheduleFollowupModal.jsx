@@ -183,7 +183,6 @@ Contact: ${salesRep?.email || '[Email]'} | ${salesRep?.phone || '[Phone]'}`
                 colorScheme={emailCopied ? 'green' : 'red'}
                 onClick={() => handleCopy('email')}
                 size="sm"
-                flex={1}
               >
                 {emailCopied ? 'Email Copied!' : 'Copy Email Template'}
               </Button>
@@ -193,7 +192,6 @@ Contact: ${salesRep?.email || '[Email]'} | ${salesRep?.phone || '[Phone]'}`
                 colorScheme={calendarCopied ? 'green' : 'red'}
                 onClick={() => handleCopy('calendar')}
                 size="sm"
-                flex={1}
               >
                 {calendarCopied ? 'Calendar Copied!' : 'Copy Calendar Details'}
               </Button>
@@ -207,7 +205,7 @@ Contact: ${salesRep?.email || '[Email]'} | ${salesRep?.phone || '[Phone]'}`
                 colorScheme={'red'}
                 /* onClick={() => handleCopy('calendar')} */
                 size="sm"
-                flex={1}
+
               >
                 KR Brochure
               </Button>

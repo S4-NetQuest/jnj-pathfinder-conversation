@@ -372,6 +372,7 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
             </FormControl>
 
             {/* User Info for development only */}
+            {/*
             {process.env.NODE_ENV === 'development' && (
               <Box p={3} bg="#f1efed" borderRadius="md" fontSize="xs">
                 <Text fontWeight="bold" color="#312c2a">Development Info:</Text>
@@ -380,6 +381,7 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
                 <Text color="#6e6259">ID: {user?.id}</Text>
               </Box>
             )}
+             */}
           </VStack>
         </ModalBody>
 

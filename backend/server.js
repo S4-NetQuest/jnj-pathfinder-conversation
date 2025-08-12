@@ -220,6 +220,7 @@ const sessionConfig = {
     secure: process.env.NODE_ENV === 'production' && process.env.HTTPS_ENABLED === 'true',
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    rolling: true, // Extend session on each request
     sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax'
   }
 }

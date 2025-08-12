@@ -124,7 +124,7 @@ const Home = () => {
     return (
       <Box
         minH={availableHeight}
-        h={availableHeight} // Use calculated available height
+        h={availableHeight}
         overflow="hidden"
         bgImage={`url('${pathfinderBackground}')`}
         bgSize="cover"
@@ -149,7 +149,7 @@ const Home = () => {
           maxW="container.md"
           position="relative"
           zIndex={2}
-          h={availableHeight} // Use height instead of minH
+          h={availableHeight}
           display="flex"
           alignItems="center"
           justifyContent="center"
@@ -335,7 +335,7 @@ const Home = () => {
               <HStack spacing={4} justify="center">
               <Button
                 as={Link}
-                href={'https://truview.my.salesforce.com/sfc/p/36000000IwFC/a/Pl000005yPTh/kFGB.6JK_G2_bfIW_1Qy1GDhSsI4Tyhtkzf569pMnKo'}
+                href={getPdfUrl('Solutions-In-Motion-KR-Clinical-Value-Proposition-M_EM_ORT_DGSR_399044.pdf')}
                 target="_blank"
                 rel="noopener noreferrer"
                 leftIcon={<DownloadIcon/>}

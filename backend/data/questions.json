@@ -1,7 +1,7 @@
 {
   "metadata": {
     "version": "3.0",
-    "lastUpdated": "2025-08-11",
+    "lastUpdated": "2025-08-12",
     "description": "Pathfinder Conversation Guide Questions with KA/iKA/FA/MA alignment scoring - Updated from PDF specifications",
     "alignmentCategories": {
       "ka": {
@@ -46,20 +46,20 @@
           "id": "femur_first",
           "text": "Femur First",
           "scores": {
+            "ma": 0,
             "ka": 2,
-            "ika": 0,
-            "fa": 1,
-            "ma": 1
+            "ika": 1,
+            "fa": 0
           }
         },
         {
           "id": "tibia_first",
           "text": "Tibia First",
           "scores": {
+            "ma": 0,
             "ka": 0,
             "ika": 2,
-            "fa": 1,
-            "ma": 1
+            "fa": 1
           }
         }
       ]
@@ -73,32 +73,32 @@
       "options": [
         {
           "id": "neutral_mechanical",
-          "text": "Aiming for a neutral mechanical alignment (0deg HKA)",
+          "text": "Neutral mechanical alignment (0° HKA)",
           "scores": {
+            "ma": 2,
             "ka": 0,
             "ika": 0,
-            "fa": 0,
-            "ma": 2
+            "fa": 1
           }
         },
         {
           "id": "native_alignment",
           "text": "Restoring the patient's native alignment",
           "scores": {
+            "ma": 0,
             "ka": 2,
-            "ika": 0,
-            "fa": 0,
-            "ma": 0
+            "ika": 1,
+            "fa": 0
           }
         },
         {
           "id": "balanced_gaps",
           "text": "Prioritizing balanced flexion and extension gaps",
           "scores": {
+            "ma": 0,
             "ka": 0,
-            "ika": 0,
-            "fa": 2,
-            "ma": 0
+            "ika": 1,
+            "fa": 2
           }
         }
       ]
@@ -114,20 +114,20 @@
           "id": "yes",
           "text": "Yes",
           "scores": {
+            "ma": 0,
             "ka": 0,
-            "ika": 1,
-            "fa": 1,
-            "ma": 0
+            "ika": 2,
+            "fa": 2
           }
         },
         {
           "id": "no",
           "text": "No",
           "scores": {
-            "ka": 1,
+            "ma": 2,
+            "ka": 2,
             "ika": 0,
-            "fa": 0,
-            "ma": 1
+            "fa": 0
           }
         }
       ]
@@ -143,20 +143,20 @@
           "id": "yes",
           "text": "Yes",
           "scores": {
+            "ma": 0,
             "ka": 2,
             "ika": 2,
-            "fa": 1,
-            "ma": 0
+            "fa": 2
           }
         },
         {
           "id": "no",
           "text": "No",
           "scores": {
+            "ma": 2,
             "ka": 0,
             "ika": 0,
-            "fa": 0,
-            "ma": 2
+            "fa": 0
           }
         }
       ]
@@ -170,32 +170,32 @@
       "options": [
         {
           "id": "balance",
-          "text": "Be used to balance– adjusts the femoral resection within boundaries to obtain the target gaps.",
+          "text": "Be used to balance - adjusts the femoral resection within boundaries to obtain the target gaps",
           "scores": {
+            "ma": 1,
             "ka": 0,
-            "ika": 1,
-            "fa": 2,
-            "ma": 0
+            "ika": 2,
+            "fa": 2
           }
         },
         {
           "id": "perpendicular_mechanical",
-          "text": "Be perpendicular to mechanical axis– the femoral resection is aligned perpendicular to the femur's mechanical axis.",
+          "text": "Be perpendicular to mechanical axis - the femoral resection is aligned perpendicular to the femur's mechanical axis",
           "scores": {
+            "ma": 2,
             "ka": 0,
             "ika": 0,
-            "fa": 0,
-            "ma": 2
+            "fa": 0
           }
         },
         {
           "id": "restore_native",
-          "text": "Restore native joint line obliquity– the femoral resection is positioned to restore the joint line to pre-arthritic position.",
+          "text": "Restore native joint line obliquity - the femoral resection is positioned to restore the joint line to pre-arthritic position",
           "scores": {
+            "ma": 0,
             "ka": 2,
-            "ika": 0,
-            "fa": 0,
-            "ma": 0
+            "ika": 1,
+            "fa": 0
           }
         }
       ]
@@ -209,32 +209,32 @@
       "options": [
         {
           "id": "balance",
-          "text": "Be used to balance– adjusts the tibial resection within boundaries to obtain the target gaps.",
+          "text": "Be used to balance – adjusts the tibial resection within boundaries to obtain the target gaps",
           "scores": {
+            "ma": 1,
             "ka": 0,
-            "ika": 1,
-            "fa": 2,
-            "ma": 0
+            "ika": 2,
+            "fa": 2
           }
         },
         {
           "id": "perpendicular_mechanical",
-          "text": "Be perpendicular to mechanical axis- the tibial resection is aligned perpendicular to the tibia's mechanical axis.",
+          "text": "Be perpendicular to mechanical axis - the tibial resection is aligned perpendicular to the tibia's mechanical axis",
           "scores": {
+            "ma": 2,
             "ka": 0,
             "ika": 0,
-            "fa": 0,
-            "ma": 2
+            "fa": 0
           }
         },
         {
           "id": "restore_native",
-          "text": "Restore native joint line obliquity- the tibial resection is positioned to restore the joint line to pre-arthritic position.",
+          "text": "Restore native joint line obliquity - the tibial resection is positioned to restore the joint line to pre-arthritic position",
           "scores": {
+            "ma": 0,
             "ka": 2,
-            "ika": 2,
-            "fa": 0,
-            "ma": 0
+            "ika": 1,
+            "fa": 0
           }
         }
       ]
@@ -248,32 +248,32 @@
       "options": [
         {
           "id": "minimize_tibial_varus",
-          "text": "Minimize tibial varus -prioritizes neutral tibia, adjusts femur component to balance extension gaps.",
+          "text": "Minimize tibial varus - prioritizes neutral tibia, adjusts femur component to balance extension gaps",
           "scores": {
+            "ma": 2,
             "ka": 0,
-            "ika": 0,
-            "fa": 0,
-            "ma": 2
+            "ika": 1,
+            "fa": 1
           }
         },
         {
           "id": "minimize_femoral_deviation",
-          "text": "Minimize femoral joint line deviation–prioritizes native femur joint line, adjusts tibia component to balance gaps",
+          "text": "Minimize femoral joint line deviation - prioritizes native femur joint line, adjusts tibia component to balance gaps",
           "scores": {
+            "ma": 0,
             "ka": 2,
-            "ika": 0,
-            "fa": 0,
-            "ma": 0
+            "ika": 1,
+            "fa": 1
           }
         },
         {
           "id": "evenly_distribute",
-          "text": "Evenly distribute changes to femur/tibia –prioritizes neutral femur and tibia, splits varus/valgus adjustments between both components to balance gaps.",
+          "text": "Evenly distribute changes to femur/tibia - prioritizes neutral femur and tibia, splits varus/valgus adjustments between both components to balance gaps",
           "scores": {
+            "ma": 1,
             "ka": 0,
-            "ika": 0,
-            "fa": 2,
-            "ma": 0
+            "ika": 1,
+            "fa": 2
           }
         }
       ]
@@ -287,32 +287,32 @@
       "options": [
         {
           "id": "restore_both_offsets",
-          "text": "Restore both medial and lateral posterior condylar offsets– both medial and lateral posterior resections aim to recreate the pre-arthritic posterior condylar offset.",
+          "text": "Restore both medial and lateral posterior condylar offsets - both medial and lateral posterior resections aim to recreate the pre-arthritic posterior condylar offset",
           "scores": {
+            "ma": 0,
             "ka": 2,
-            "ika": 0,
-            "fa": 0,
-            "ma": 0
+            "ika": 1,
+            "fa": 0
           }
         },
         {
           "id": "restore_medial_balance_lateral",
-          "text": "Restore medial posterior condylar offset and use lateral resection to balance– the medial posterior resection recreates the pre-arthritic medial posterior condylar offset, and the lateral posterior resection is used to balance gaps.",
+          "text": "Restore medial posterior condylar offset and use lateral resection to balance - the medial posterior resection recreates the pre-arthritic medial posterior condylar offset, and the lateral posterior resection is used to balance gaps",
           "scores": {
+            "ma": 0,
             "ka": 0,
-            "ika": 2,
-            "fa": 0,
-            "ma": 0
+            "ika": 1,
+            "fa": 1
           }
         },
         {
           "id": "use_both_to_balance",
-          "text": "Use both medial and lateral resections to balance– both medial and lateral posterior resections are used to balance gaps to obtain the intended ligament tension.",
+          "text": "Use both medial and lateral resections to balance - both medial and lateral posterior resections are used to balance gaps to obtain the intended ligament tension",
           "scores": {
+            "ma": 1,
             "ka": 0,
-            "ika": 0,
-            "fa": 2,
-            "ma": 0
+            "ika": 2,
+            "fa": 2
           }
         }
       ]
@@ -328,20 +328,20 @@
           "id": "yes",
           "text": "Yes",
           "scores": {
-            "ka": 2,
-            "ika": 1,
-            "fa": 0,
-            "ma": 0
+            "ma": 2,
+            "ka": 0,
+            "ika": 0,
+            "fa": 2
           }
         },
         {
           "id": "no",
           "text": "No",
           "scores": {
-            "ka": 0,
-            "ika": 0,
-            "fa": 0,
-            "ma": 0
+            "ma": 0,
+            "ka": 2,
+            "ika": 2,
+            "fa": 0
           }
         }
       ]
@@ -350,25 +350,6 @@
   "scoringRules": {
     "maxScorePerQuestion": 2,
     "totalQuestions": 9,
-    "maxTotalScore": 18,
-    "recommendationThresholds": {
-      "ka": {
-        "min": 8,
-        "description": "Strong indication for Kinematic Alignment approach"
-      },
-      "ika": {
-        "min": 6,
-        "description": "Strong indication for Inverse Kinematic Alignment approach"
-      },
-      "fa": {
-        "min": 6,
-        "description": "Strong indication for Functional Alignment approach"
-      },
-      "ma": {
-        "min": 6,
-        "description": "Strong indication for Mechanical Alignment approach"
-      }
-    },
     "resultDetermination": "highest_score",
     "tieBreakingRules": {
       "method": "priority_order",

@@ -177,7 +177,7 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
     setScores(newScores)
   }, [responses, questions])
 
-const getRecommendedAlignment = () => {
+  const getRecommendedAlignment = () => {
     // For PDF mode, use the data directly
     if (pdfMode && pdfConversationData) {
       const approach = (pdfConversationData.recommended_approach || pdfConversationData.current_alignment || '').toLowerCase()

@@ -201,4 +201,33 @@ router.get('/debug', (req, res) => {
   })
 })
 
+router.get('/session-info', (req, res) => {
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(403).json({ error: 'Session info not available in production' })
+  }
+
+  const sessionInfo = {
+    sessionID: req.sessionID,
+    sessionData: req.session,
+    cookieMaxAge: req.session.cookie.maxAge,
+    cookieExpires: req.session.cookie.expires,
+    isAuthenticated: !!req.session.authenticated,
+    timeUntilExpiry: req.session.cookie.maxAge ?
+      new Date(Date.now() + req.session.cookie.maxAge).toISOString() : 'N/A',
+    rollingSession: req.session.cookie.rolling || 'Not configured'
+  }
+
+  res.json({
+    success: true,
+    sessionInfo,
+    recommendations: {
+      currentMaxAge: req.session.cookie.maxAge,
+      currentMaxAgeHours: req.session.cookie.maxAge ?
+        Math.round(req.session.cookie.maxAge / (1000 * 60 * 60) * 100) / 100 : 'N/A',
+      suggestedForDev: '7 days (604800000ms)',
+      suggestedForProd: '24 hours (86400000ms)'
+    }
+  })
+})
+
 module.exports = router
