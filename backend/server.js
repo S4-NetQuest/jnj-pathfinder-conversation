@@ -195,7 +195,7 @@ app.use(helmet(helmetOptions))
 
 // Apply rate limiting (skip in development if desired)
 if (process.env.NODE_ENV !== 'development' || process.env.ENABLE_RATE_LIMITING === 'true') {
-  app.use(limiter)
+  //app.use(limiter)
   console.log(`Rate limiting enabled: ${rateLimitMaxRequests} requests per ${rateLimitWindowMs}ms`)
 } else {
   console.log('Rate limiting disabled for development')

@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Button, useToast } from '@chakra-ui/react';
 import { DownloadIcon } from '@chakra-ui/icons';
+import api from '../services/api';
 
 const DownloadPDFButton = ({ conversationId, conversationData, isTestMode = false }) => {
   console.log('DownloadPDFButton props:', { conversationId, conversationData, isTestMode });
@@ -15,11 +16,17 @@ const DownloadPDFButton = ({ conversationId, conversationData, isTestMode = fals
     try {
       let response;
 
+      // Add detailed logging
+      console.log('=== PDF Download Started ===');
+      console.log('Test mode:', isTestMode);
+      console.log('Conversation ID:', conversationId);
+      console.log('Conversation data available:', !!conversationData);
+
       if (isTestMode) {
         // Test mode - GET request with no body
-        response = await fetch('/api/pdf/test', {
-          method: 'GET',
-          credentials: 'include',
+        console.log('Making test PDF request...');
+        response = await api.get('/pdf/test', {
+          responseType: 'blob', // Important: tell axios to handle binary data
           headers: {
             'Accept': 'application/pdf',
           }
@@ -37,38 +44,51 @@ const DownloadPDFButton = ({ conversationId, conversationData, isTestMode = fals
           return;
         }
 
-        response = await fetch('/api/pdf/generate', {
-          method: 'POST',
-          credentials: 'include',
+        if (!conversationData) {
+          toast({
+            title: 'Error',
+            description: 'Conversation data is missing',
+            status: 'error',
+            duration: 3000,
+            isClosable: true,
+          });
+          return;
+        }
+
+        console.log('Making PDF generation request...');
+        console.log('Conversation data sample:', {
+          surgeon_name: conversationData.surgeon_name || conversationData.surgeonName,
+          hospital_name: conversationData.hospital_name || conversationData.hospitalName,
+          responses_count: conversationData.responses?.length || 0,
+          notes_present: !!(conversationData.notes)
+        });
+
+        response = await api.post('/pdf/generate', {
+          conversationId: conversationId,
+          conversationData: conversationData
+        }, {
+          responseType: 'blob', // Important: tell axios to handle binary data
           headers: {
-            'Content-Type': 'application/json',
             'Accept': 'application/pdf',
-          },
-          body: JSON.stringify({
-            conversationId: conversationId,
-            conversationData: conversationData
-          })
+          }
         });
       }
 
       console.log('PDF Response status:', response.status);
+      console.log('Response headers:', response.headers);
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('PDF generation failed:', errorText);
-        throw new Error(`Failed to generate PDF: ${response.status} ${response.statusText}`);
+      // With axios, successful responses are in response.data
+      const blob = response.data;
+      console.log('PDF blob created - Size:', blob.size, 'bytes, Type:', blob.type);
+
+      if (blob.size === 0) {
+        throw new Error('Received empty PDF file');
       }
 
-      // Check if response is actually a PDF
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/pdf')) {
-        console.error('Response is not a PDF:', contentType);
-        throw new Error('Server did not return a PDF file');
+      // Verify blob is actually PDF data
+      if (blob.size < 100) {
+        console.warn('PDF blob seems very small, might be an error response');
       }
-
-      // Create blob and download
-      const blob = await response.blob();
-      console.log('PDF blob size:', blob.size, 'bytes');
 
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -77,22 +97,26 @@ const DownloadPDFButton = ({ conversationId, conversationData, isTestMode = fals
       // Generate filename
       let filename;
       if (isTestMode) {
-        filename = `test-pdf-${new Date().toISOString().slice(0, 10)}.pdf`;
+        filename = `pathfinder-test-pdf-${new Date().toISOString().slice(0, 10)}.pdf`;
       } else {
         const surgeonName = conversationData?.surgeonName ||
-                           conversationData?.surgeon_name ||
-                           'summary';
+                          conversationData?.surgeon_name ||
+                          'surgeon';
         const dateStr = new Date().toISOString().split('T')[0];
-        filename = `pathfinder-conversation-${surgeonName.replace(/\s+/g, '-')}-${dateStr}.pdf`;
+        const cleanSurgeonName = surgeonName.replace(/[^a-zA-Z0-9-_]/g, '-');
+        filename = `pathfinder-conversation-${cleanSurgeonName}-${dateStr}.pdf`;
       }
 
       link.download = filename;
+      console.log('Download filename:', filename);
 
       // Trigger download
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
+
+      console.log('✅ PDF download triggered successfully!');
 
       toast({
         title: 'PDF Downloaded',
@@ -103,19 +127,40 @@ const DownloadPDFButton = ({ conversationId, conversationData, isTestMode = fals
       });
 
     } catch (error) {
-      console.error('PDF download error:', error);
+      console.error('❌ PDF download error:', error);
+      console.error('Error response:', error.response);
 
       let errorMessage = 'Failed to generate PDF. Please try again.';
-      if (error.message.includes('404')) {
-        errorMessage = 'PDF service not found. Please contact support.';
-      } else if (error.message.includes('500')) {
-        errorMessage = 'Server error generating PDF. Please try again later.';
-      } else if (error.message.includes('Failed to fetch')) {
-        errorMessage = 'Network error. Please check your connection.';
+      let errorTitle = 'Download Failed';
+
+      // Handle axios errors
+      if (error.response) {
+        const status = error.response.status;
+        console.log('Error status:', status);
+
+        if (status === 404) {
+          errorMessage = 'PDF service not found. Please contact support.';
+          errorTitle = 'Service Not Found';
+        } else if (status === 500) {
+          errorMessage = 'Server error generating PDF. Please try again later.';
+          errorTitle = 'Server Error';
+        } else if (status === 408) {
+          errorMessage = 'PDF generation is taking too long. Please try again.';
+          errorTitle = 'Timeout Error';
+        }
+      } else if (error.request) {
+        errorMessage = 'Network error. Please check your connection and try again.';
+        errorTitle = 'Network Error';
+      } else if (error.message.includes('Target closed')) {
+        errorMessage = 'PDF generation service encountered an issue. Please try again.';
+        errorTitle = 'Generation Error';
+      } else if (error.message.includes('timeout')) {
+        errorMessage = 'PDF generation is taking too long. Please try again.';
+        errorTitle = 'Timeout Error';
       }
 
       toast({
-        title: 'Download Failed',
+        title: errorTitle,
         description: errorMessage,
         status: 'error',
         duration: 5000,
@@ -123,6 +168,7 @@ const DownloadPDFButton = ({ conversationId, conversationData, isTestMode = fals
       });
     } finally {
       setIsGenerating(false);
+      console.log('=== PDF Download Process Completed ===');
     }
   };
 

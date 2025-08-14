@@ -1,25 +1,53 @@
-// backend/routes/pdf.js (Fixed timeout methods)
+// backend/routes/pdf.js - COMPLETE FIXED VERSION FOR WINDOWS SERVER 2012
+process.noDeprecation = true;
+
 const express = require('express');
 const puppeteer = require('puppeteer');
 const { PDFDocument } = require('pdf-lib');
 const router = express.Router();
-const questionsData = require('../data/questions.json');
+const path = require('path');
+const fs = require('fs');
+
+// Import questions data with error handling
+let questionsData;
+try {
+  questionsData = require('../data/questions.json');
+} catch (error) {
+  console.error('Error loading questions.json:', error);
+  questionsData = { questions: [] };
+}
+
+// Debug middleware to log all requests
+router.use((req, res, next) => {
+  console.log(`PDF Route: ${req.method} ${req.path}`);
+  console.log('Headers:', req.headers);
+  next();
+});
+
+// Options handler for CORS
+// Simplified OPTIONS handler - let global CORS handle it
+router.options('*', (req, res) => {
+  console.log('PDF OPTIONS request received for:', req.path);
+  res.sendStatus(200);
+});
 
 // Generate mappings from local backend data
 const generateMappings = () => {
   const questionMapping = {};
   const responseMapping = {};
 
-  questionsData.questions.forEach(question => {
-    questionMapping[question.id] = question.question;
-    responseMapping[question.id] = {};
+  if (questionsData && questionsData.questions) {
+    questionsData.questions.forEach(question => {
+      questionMapping[question.id] = question.question;
+      responseMapping[question.id] = {};
 
-    if (question.options) {
-      question.options.forEach(option => {
-        responseMapping[question.id][option.id] = option.text;
-      });
-    }
-  });
+      if (question.options) {
+        question.options.forEach(option => {
+          responseMapping[question.id][option.id] = option.text;
+        });
+      }
+    });
+  }
 
   return { questionMapping, responseMapping };
 };
@@ -34,31 +62,294 @@ const getResponseText = (questionId, responseValue) => {
   return responseMapping[questionId]?.[responseValue] || `Response: ${responseValue}`;
 };
 
-
-// Helper function for waiting (compatible with all Puppeteer versions)
-const waitForTimeout = (page, ms) => {
+// Helper function for waiting
+const waitForTimeout = (ms) => {
   return new Promise(resolve => setTimeout(resolve, ms));
 };
 
-// Test PDF endpoint - FIXED VERSION
+router.get('/cors-test', (req, res) => {
+  console.log('PDF CORS test endpoint hit');
+  res.json({
+    success: true,
+    message: 'CORS working for PDF routes',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Alternative PDF generation without Chrome (using PDFKit)
+router.get('/alt-test', (req, res) => {
+  try {
+    const PDFDocument = require('pdfkit');
+    const doc = new PDFDocument();
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename="alternative-test.pdf"');
+
+    doc.pipe(res);
+
+    // Add content to PDF
+    doc.fontSize(20)
+       .fillColor('#eb1700')
+       .text('Pathfinder PDF Test', 100, 100);
+
+    doc.fontSize(12)
+       .fillColor('#333')
+       .text('Generated using PDFKit (no Chrome required)', 100, 140)
+       .text('Timestamp: ' + new Date().toLocaleString(), 100, 160)
+       .text('Server: Windows Server 2012', 100, 180)
+       .text('Node: ' + process.version, 100, 200);
+
+    doc.end();
+
+  } catch (error) {
+    res.status(500).json({
+      error: 'PDFKit test failed',
+      details: error.message
+    });
+  }
+});
+
+// Simple test endpoint to isolate Puppeteer issues
+router.get('/simple-test', async (req, res) => {
+  console.log('Simple PDF test called');
+
+  let browser;
+  const timeout = setTimeout(() => {
+	console.log('Simple test timeout');
+	if (!res.headersSent) {
+	  res.status(408).json({ error: 'Timeout in simple test - Chrome may be incompatible with this Puppeteer version' });
+	}
+  }, 25000); // Longer timeout
+
+  try {
+	console.log('Step 1: Looking for Chrome...');
+
+	const executablePath = 'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe';
+
+	if (!fs.existsSync(executablePath)) {
+	  clearTimeout(timeout);
+	  return res.status(500).json({
+		error: 'Chrome not found at expected path',
+		path: executablePath
+	  });
+	}
+
+	console.log('✅ Found Chrome at:', executablePath);
+	console.log('Step 2: Launching browser with compatibility args for Chrome 109...');
+
+	// Chrome 109 + Windows Server 2012 compatibility args
+	const launchOptions = {
+	  executablePath: executablePath,
+	  headless: true,
+	  timeout: 20000,
+	  ignoreDefaultArgs: ['--disable-extensions'], // Don't use default args that might conflict
+	  args: [
+		'--no-sandbox',
+		'--disable-setuid-sandbox',
+		'--disable-dev-shm-usage',
+		'--disable-web-security',
+		'--disable-features=VizDisplayCompositor',
+		'--disable-features=TranslateUI',
+		'--disable-features=BlinkGenPropertyTrees',
+		'--disable-ipc-flooding-protection',
+		'--disable-renderer-backgrounding',
+		'--disable-backgrounding-occluded-windows',
+		'--disable-background-timer-throttling',
+		'--disable-background-networking',
+		'--disable-breakpad',
+		'--disable-client-side-phishing-detection',
+		'--disable-component-update',
+		'--disable-default-apps',
+		'--disable-domain-reliability',
+		'--disable-extensions',
+		'--disable-features=AudioServiceOutOfProcess',
+		'--disable-hang-monitor',
+		'--disable-popup-blocking',
+		'--disable-print-preview',
+		'--disable-prompt-on-repost',
+		'--disable-sync',
+		'--disable-translate',
+		'--metrics-recording-only',
+		'--no-first-run',
+		'--no-default-browser-check',
+		'--no-pings',
+		'--password-store=basic',
+		'--use-mock-keychain',
+		'--disable-gpu',
+		'--single-process' // This might help with Windows Server 2012
+	  ]
+	};
+
+	console.log('Step 3: Attempting launch...');
+
+	browser = await puppeteer.launch(launchOptions);
+	console.log('Step 4: ✅ Browser launched successfully!');
+
+	const page = await browser.newPage();
+	console.log('Step 5: ✅ Page created');
+
+	await page.setContent('<html><body><h1>SUCCESS!</h1><p>Chrome 109 + Puppeteer working on Windows Server 2012!</p><p>Generated: ' + new Date() + '</p></body></html>', {
+	  waitUntil: 'domcontentloaded',
+	  timeout: 5000
+	});
+	console.log('Step 6: ✅ Content set');
+
+	const pdf = await page.pdf({
+	  format: 'A4',
+	  timeout: 10000,
+	  printBackground: true
+	});
+	console.log('Step 7: ✅ PDF generated, size:', pdf.length);
+
+	clearTimeout(timeout);
+
+	res.setHeader('Content-Type', 'application/pdf');
+	res.setHeader('Content-Disposition', 'attachment; filename="chrome109-success.pdf"');
+	res.send(pdf);
+
+	console.log('Step 8: ✅ Response sent successfully!');
+
+  } catch (error) {
+	console.error('❌ Simple test error:', error.message);
+	console.error('Error occurred at browser launch phase');
+	clearTimeout(timeout);
+	if (!res.headersSent) {
+	  res.status(500).json({
+		error: 'Chrome launch failed',
+		details: error.message,
+		suggestion: 'Chrome 109 may be incompatible with current Puppeteer version. Try: npm install puppeteer@19.11.1'
+	  });
+	}
+  } finally {
+	if (browser) {
+	  try {
+		await browser.close();
+		console.log('✅ Browser closed successfully');
+	  } catch (e) {
+		console.error('❌ Browser close error:', e);
+	  }
+	}
+  }
+});
+
+// Health check endpoint
+router.get('/health', (req, res) => {
+  console.log('PDF Health check called');
+  res.json({
+    success: true,
+    message: 'PDF service is running',
+    timestamp: new Date().toISOString(),
+    questionsLoaded: questionsData && questionsData.questions ? questionsData.questions.length : 0,
+    platform: process.platform,
+    nodeVersion: process.version
+  });
+});
+
+// Test PDF endpoint - COMPATIBLE WITH WINDOWS SERVER 2012 WITH TIMEOUTS
 router.get('/test', async (req, res) => {
   console.log('PDF Test endpoint called');
 
+  // Set request timeout to 30 seconds
+  req.setTimeout(30000);
+  res.setTimeout(30000);
+
+  // Set CORS headers
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+
   let browser;
+  let timeoutId;
+
   try {
-    browser = await puppeteer.launch({
-      headless: 'new',
+    // Set a timeout to prevent hanging
+    timeoutId = setTimeout(() => {
+      console.log('PDF generation timeout reached');
+      if (!res.headersSent) {
+        res.status(408).json({
+          success: false,
+          error: 'PDF generation timeout',
+          details: 'Request took longer than 25 seconds'
+        });
+      }
+    }, 25000);
+
+    console.log('Launching Puppeteer...');
+
+    // Simplified launch options for debugging
+    const launchOptions = {
+      headless: true,
+      timeout: 10000, // 10 second launch timeout
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
-        '--disable-web-security'
+        '--disable-web-security',
+        '--disable-gpu',
+        '--disable-software-rasterizer',
+        '--disable-extensions',
+        '--disable-default-apps',
+        '--disable-background-timer-throttling',
+        '--disable-background-networking',
+        '--disable-sync',
+        '--disable-translate',
+        '--hide-scrollbars',
+        '--mute-audio',
+        '--no-first-run'
       ]
-    });
+    };
+
+    // Try to find existing Chrome installation on Windows
+    const possiblePaths = [
+      'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe', // Your confirmed path first
+      'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+      process.env.CHROME_BIN,
+      process.env.GOOGLE_CHROME_BIN
+    ].filter(Boolean);
+
+    let chromeFound = false;
+    let executablePath = null;
+
+    for (const chromePath of possiblePaths) {
+      try {
+        console.log('Checking Chrome path:', chromePath);
+        if (fs.existsSync(chromePath)) {
+          launchOptions.executablePath = chromePath;
+          executablePath = chromePath;
+          console.log('✅ Found Chrome at:', chromePath);
+          chromeFound = true;
+          break;
+        } else {
+          console.log('❌ Chrome not found at:', chromePath);
+        }
+      } catch (e) {
+        console.log('Error checking Chrome path:', chromePath, e.message);
+      }
+    }
+
+    if (!chromeFound) {
+      console.log('❌ Chrome not found in any standard locations');
+      if (timeoutId) clearTimeout(timeoutId);
+      return res.status(500).json({
+        success: false,
+        error: 'Chrome not found',
+        details: 'Google Chrome must be installed for PDF generation',
+        checkedPaths: possiblePaths.filter(Boolean),
+        suggestion: 'Chrome should be at: C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe'
+      });
+    }
+
+    browser = await Promise.race([
+      puppeteer.launch(launchOptions),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Launch timeout')), 10000))
+    ]);
+
+    console.log('Puppeteer launched successfully');
 
     const page = await browser.newPage();
-    await page.setViewport({ width: 1200, height: 800 });
+    await page.setViewport({ width: 800, height: 600 }); // Smaller viewport for faster rendering
 
+    // Simplified HTML for faster processing
     const testHtml = `
       <!DOCTYPE html>
       <html>
@@ -68,7 +359,7 @@ router.get('/test', async (req, res) => {
         <style>
           body {
             font-family: Arial, sans-serif;
-            padding: 40px;
+            padding: 20px;
             color: #333;
             background-color: white;
           }
@@ -77,107 +368,74 @@ router.get('/test', async (req, res) => {
             font-size: 24px;
             font-weight: bold;
             margin-bottom: 20px;
-            border-bottom: 2px solid #eb1700;
-            padding-bottom: 10px;
-          }
-          .content {
-            line-height: 1.6;
           }
           .status {
             background-color: #f1efed;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 20px 0;
-          }
-          .timestamp {
-            color: #81766f;
-            font-size: 14px;
-            margin-top: 20px;
+            padding: 15px;
+            margin: 10px 0;
           }
         </style>
       </head>
       <body>
-        <div class="header">Pathfinder PDF Generation Test</div>
-        <div class="content">
-          <div class="status">
-            <h3>✅ PDF Generation System Status: WORKING</h3>
-            <p>This PDF was successfully generated using Puppeteer on the backend.</p>
-          </div>
-
-          <h4>Test Details:</h4>
-          <ul>
-            <li>Generated: ${new Date().toLocaleString()}</li>
-            <li>Puppeteer: Operational</li>
-            <li>PDF Buffer: Valid</li>
-            <li>Headers: Properly Set</li>
-          </ul>
-
-          <h4>Next Steps:</h4>
-          <ol>
-            <li>Verify this PDF opens correctly in Adobe Acrobat</li>
-            <li>Test the full conversation PDF generation</li>
-            <li>Confirm multi-page PDF creation works</li>
-          </ol>
-
-          <div class="timestamp">
-            Johnson & Johnson MedTech - Pathfinder Conversation Guide<br>
-            Test completed: ${new Date().toISOString()}
-          </div>
+        <div class="header">Pathfinder PDF Test</div>
+        <div class="status">
+          <h3>✅ PDF Generation Working</h3>
+          <p>Generated: ${new Date().toLocaleString()}</p>
+          <p>Chrome Found: ${chromeFound ? 'Yes' : 'Using bundled version'}</p>
+          <p>Node: ${process.version}</p>
+          <p>Platform: ${process.platform}</p>
         </div>
       </body>
       </html>
     `;
 
-    // Set content and wait for it to load completely
+    console.log('Setting page content...');
     await page.setContent(testHtml, {
-      waitUntil: ['networkidle0', 'domcontentloaded']
+      waitUntil: 'domcontentloaded',
+      timeout: 5000
     });
 
-    // Use compatible timeout method
-    await waitForTimeout(page, 1000);
-
-    // Generate PDF with explicit options
+    console.log('Generating PDF...');
     const pdfBuffer = await page.pdf({
       format: 'Letter',
       printBackground: true,
-      margin: {
-        top: '0.5in',
-        bottom: '0.5in',
-        left: '0.5in',
-        right: '0.5in'
-      },
-      preferCSSPageSize: false,
-      displayHeaderFooter: false
+      margin: { top: '0.5in', bottom: '0.5in', left: '0.5in', right: '0.5in' },
+      timeout: 10000
     });
 
     console.log('PDF generated successfully, buffer length:', pdfBuffer.length);
 
-    // Set proper headers before sending response
+    // Clear timeout
+    if (timeoutId) clearTimeout(timeoutId);
+
+    // Set proper headers
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Length', pdfBuffer.length);
     res.setHeader('Content-Disposition', 'attachment; filename="pathfinder-test.pdf"');
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
 
-    // Send the PDF buffer directly
-    res.end(pdfBuffer, 'binary');
+    // Send the PDF
+    res.send(pdfBuffer);
 
   } catch (error) {
     console.error('Test PDF generation error:', error);
 
-    // Send proper error response
+    // Clear timeout
+    if (timeoutId) clearTimeout(timeoutId);
+
     if (!res.headersSent) {
       res.status(500).json({
         success: false,
         error: 'Failed to generate test PDF',
-        details: error.message
+        details: error.message,
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
       });
     }
   } finally {
     if (browser) {
       try {
         await browser.close();
+        console.log('Browser closed successfully');
       } catch (e) {
         console.error('Error closing browser:', e);
       }
@@ -185,22 +443,23 @@ router.get('/test', async (req, res) => {
   }
 });
 
-router.get('/questions-status', (req, res) => {
-  const { questionMapping, responseMapping } = generateMappings();
-
+router.post('/test-post', (req, res) => {
+  console.log('Test POST route hit');
+  console.log('Body:', req.body);
   res.json({
     success: true,
-    questionsCount: questionsData?.questions?.length || 0,
-    sampleQuestions: Object.keys(questionMapping).slice(0, 3),
-    metadata: questionsData?.metadata || null
+    message: 'POST route working',
+    body: req.body
   });
 });
 
-// Main PDF generation endpoint - FIXED VERSION
+// Main PDF generation endpoint - WORKING WITH PUPPETEER 19.11.1 + CHROME 109
 router.post('/generate', async (req, res) => {
   console.log('PDF Generate endpoint called');
+  console.log('Request body keys:', Object.keys(req.body || {}));
 
   let browser;
+  let timeoutId;
 
   try {
     const { conversationId, conversationData } = req.body;
@@ -215,17 +474,67 @@ router.post('/generate', async (req, res) => {
       });
     }
 
-    // Launch Puppeteer with better options
-    browser = await puppeteer.launch({
-      headless: 'new',
+    // Set timeout to prevent hanging
+    timeoutId = setTimeout(() => {
+      console.log('PDF generation timeout reached');
+      if (!res.headersSent) {
+        res.status(408).json({
+          success: false,
+          error: 'PDF generation timeout',
+          details: 'Request took longer than 60 seconds'
+        });
+      }
+    }, 60000);
+
+    console.log('Launching Puppeteer 19.11.1 for main PDF generation...');
+    console.log(`process.env.NODE_ENV: ${process.env.NODE_ENV}`);
+
+
+    // Working configuration - same as simple-test
+    const executablePath = (process.env.NODE_ENV !== 'development') ? 'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe' : 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+
+    console.log('Using Chrome executable path:', executablePath);
+
+    const launchOptions = {
+      executablePath: executablePath,
+      headless: true, // Keep as 'true' for Chrome 109 compatibility
+      timeout: 30000, // Increased timeout
+      ignoreDefaultArgs: ['--disable-extensions', '--disable-default-apps'],
       args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-web-security',
-        '--disable-features=VizDisplayCompositor'
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-web-security',
+      '--disable-features=VizDisplayCompositor',
+      '--disable-gpu',
+      '--disable-software-rasterizer',
+      '--disable-background-timer-throttling',
+      '--disable-backgrounding-occluded-windows',
+      '--disable-renderer-backgrounding',
+      '--disable-background-networking',
+      '--disable-default-apps',
+      '--disable-extensions',
+      '--disable-sync',
+      '--disable-translate',
+      '--no-first-run',
+      '--no-default-browser-check',
+      '--disable-ipc-flooding-protection',
+      '--single-process', // Important for Windows Server 2012
+      '--no-zygote', // Disable zygote process
+      '--disable-accelerated-2d-canvas',
+      '--disable-accelerated-jpeg-decoding',
+      '--disable-accelerated-mjpeg-decode',
+      '--disable-accelerated-video-decode',
+      '--disable-features=AudioServiceOutOfProcess',
+      '--disable-features=VizDisplayCompositor',
+      '--run-all-compositor-stages-before-draw',
+      '--disable-new-content-rendering-timeout'
       ]
-    });
+    };
+
+    // Launch Puppeteer
+    browser = await puppeteer.launch(launchOptions);
+    console.log('Browser launched successfully');
 
     console.log('Generating multi-page PDF...');
 
@@ -237,38 +546,43 @@ router.post('/generate', async (req, res) => {
 
     console.log('Multi-page PDF generated successfully, size:', finalPdf.length, 'bytes');
 
+    // Clear timeout
+    if (timeoutId) clearTimeout(timeoutId);
+
     // Generate proper filename
     const surgeonName = conversationData.surgeon_name || conversationData.surgeonName || 'surgeon';
     const cleanSurgeonName = surgeonName.replace(/[^a-zA-Z0-9-_]/g, '-');
     const dateStr = new Date().toISOString().split('T')[0];
     const filename = `pathfinder-conversation-${cleanSurgeonName}-${dateStr}.pdf`;
 
-    // Set proper headers before sending response
+    // Set proper headers
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Length', finalPdf.length);
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
 
-    // Send the PDF buffer directly
-    res.end(finalPdf, 'binary');
+    // Send the PDF
+    res.send(finalPdf);
 
   } catch (error) {
     console.error('PDF generation error:', error);
 
-    // Send proper error response
+    // Clear timeout
+    if (timeoutId) clearTimeout(timeoutId);
+
     if (!res.headersSent) {
       res.status(500).json({
         success: false,
         error: 'Failed to generate PDF',
-        details: error.message
+        details: error.message,
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
       });
     }
   } finally {
     if (browser) {
       try {
         await browser.close();
+        console.log('Browser closed successfully');
       } catch (e) {
         console.error('Error closing browser:', e);
       }
@@ -276,86 +590,262 @@ router.post('/generate', async (req, res) => {
   }
 });
 
-// Generate all PDF pages
+console.log('PDF /generate route registered');
+
+// Helper function: Generate all PDF pages
 async function generateAllPDFPages(browser, conversationData) {
   const pdfBuffers = [];
 
   try {
-    // Page 1: Main conversation results (from React component)
+    console.log('Starting PDF page generation...');
+
+    // Page 1: Main conversation results
     console.log('Generating Page 1: Conversation Results');
-    const page1Buffer = await generateMainConversationPDF(browser, conversationData);
-    pdfBuffers.push(page1Buffer);
+    try {
+      const page1Buffer = await generateSimpleConversationPDF(browser, conversationData);
+      pdfBuffers.push(page1Buffer);
+      console.log('✅ Page 1 generated successfully');
+    } catch (error) {
+      console.error('❌ Error generating Page 1:', error.message);
+      throw new Error(`Failed to generate conversation summary: ${error.message}`);
+    }
 
     // Page 2: Questions and Responses
     if (conversationData.responses && conversationData.responses.length > 0) {
       console.log('Generating Page 2: Questions and Responses');
-      const page2Buffer = await generateQuestionsPagePDF(browser, conversationData);
-      pdfBuffers.push(page2Buffer);
+      try {
+        const page2Buffer = await generateQuestionsPagePDF(browser, conversationData);
+        pdfBuffers.push(page2Buffer);
+        console.log('✅ Page 2 generated successfully');
+      } catch (error) {
+        console.error('❌ Error generating Page 2:', error.message);
+        // Don't throw here, just log the error and continue
+        console.log('Continuing without questions page...');
+      }
     }
 
     // Page 3: Notes (if they exist)
     if (hasNotes(conversationData)) {
       console.log('Generating Page 3: Notes');
-      const page3Buffer = await generateNotesPagePDF(browser, conversationData);
-      pdfBuffers.push(page3Buffer);
+      try {
+        const page3Buffer = await generateNotesPagePDF(browser, conversationData);
+        pdfBuffers.push(page3Buffer);
+        console.log('✅ Page 3 generated successfully');
+      } catch (error) {
+        console.error('❌ Error generating Page 3:', error.message);
+        // Don't throw here, just log the error and continue
+        console.log('Continuing without notes page...');
+      }
     }
 
-    console.log(`Generated ${pdfBuffers.length} pages total`);
+    console.log(`✅ Generated ${pdfBuffers.length} pages total`);
+
+    if (pdfBuffers.length === 0) {
+      throw new Error('No PDF pages were generated successfully');
+    }
+
     return pdfBuffers;
 
   } catch (error) {
-    console.error('Error generating PDF pages:', error);
+    console.error('❌ Error in generateAllPDFPages:', error);
     throw error;
   }
 }
 
-// Generate main conversation PDF from React component
-async function generateMainConversationPDF(browser, conversationData) {
-  const page = await browser.newPage();
+// Helper function: Generate simple conversation PDF
+async function generateSimpleConversationPDF(browser, conversationData) {
+  let page;
 
   try {
-    await page.setViewport({ width: 1200, height: 800 });
+    console.log('Creating new page for conversation PDF...');
+    page = await browser.newPage();
 
-    // Disable animations for consistent rendering
-    await page.evaluateOnNewDocument(() => {
-      const css = `
-        *, *::before, *::after {
-          animation-duration: 0s !important;
-          animation-delay: 0s !important;
-          transition-duration: 0s !important;
-          transition-delay: 0s !important;
-        }
-      `;
-      const style = document.createElement('style');
-      style.appendChild(document.createTextNode(css));
-      document.head.appendChild(style);
+    // Set a smaller viewport for better compatibility
+    await page.setViewport({ width: 800, height: 600 });
+
+    console.log('Setting page content...');
+
+    const surgeonName = conversationData.surgeon_name || conversationData.surgeonName || 'Unknown Surgeon';
+    const hospitalName = conversationData.hospital_name || conversationData.hospitalName || 'Unknown Hospital';
+    const currentAlignment = conversationData.current_alignment || 'Not determined';
+    const conversationDate = conversationData.conversation_date || conversationData.created_at || new Date().toISOString();
+
+    const mainHtml = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>Conversation Summary</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #ffffff;
+            color: #333;
+            line-height: 1.6;
+          }
+          .header {
+            border-bottom: 3px solid #eb1700;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+          }
+          .title {
+            color: #eb1700;
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 10px;
+          }
+          .subtitle {
+            color: #81766f;
+            font-size: 18px;
+            margin-bottom: 5px;
+          }
+          .info-section {
+            background-color: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 25px;
+          }
+          .info-item {
+            margin-bottom: 15px;
+          }
+          .info-label {
+            color: #81766f;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 5px;
+          }
+          .info-value {
+            color: #2d3748;
+            font-size: 16px;
+            font-weight: 500;
+          }
+          .result-section {
+            background-color: #f1efed;
+            border-radius: 8px;
+            padding: 25px;
+            text-align: center;
+            margin-bottom: 25px;
+          }
+          .result-title {
+            color: #eb1700;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 15px;
+          }
+          .result-value {
+            color: #2d3748;
+            font-size: 20px;
+            font-weight: 500;
+            background-color: white;
+            padding: 15px;
+            border-radius: 6px;
+            border: 2px solid #eb1700;
+          }
+          .stats-section {
+            background-color: #f7fafc;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+            text-align: center;
+          }
+          .stat-item {
+            background-color: white;
+            padding: 15px;
+            margin: 10px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            display: inline-block;
+            min-width: 120px;
+          }
+          .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #eb1700;
+            margin-bottom: 5px;
+          }
+          .stat-label {
+            font-size: 14px;
+            color: #81766f;
+          }
+          .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+            text-align: center;
+            color: #81766f;
+            font-size: 14px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="title">Pathfinder Conversation Guide</div>
+          <div class="subtitle">Kinematic Restoration Assessment Summary</div>
+        </div>
+
+        <div class="info-section">
+          <div class="info-item">
+            <div class="info-label">Surgeon</div>
+            <div class="info-value">${surgeonName}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Hospital</div>
+            <div class="info-value">${hospitalName}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Assessment Date</div>
+            <div class="info-value">${new Date(conversationDate).toLocaleDateString()}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Status</div>
+            <div class="info-value">Completed</div>
+          </div>
+        </div>
+
+        <div class="result-section">
+          <div class="result-title">Recommended Alignment Philosophy</div>
+          <div class="result-value">${currentAlignment}</div>
+        </div>
+
+        <div class="stats-section">
+          <div class="stat-item">
+            <div class="stat-value">${conversationData.responses ? conversationData.responses.length : 0}</div>
+            <div class="stat-label">Questions Answered</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">${hasNotes(conversationData) ? 'Yes' : 'No'}</div>
+            <div class="stat-label">Notes Included</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">100%</div>
+            <div class="stat-label">Assessment Complete</div>
+          </div>
+        </div>
+
+        <div class="footer">
+          <p>Johnson & Johnson MedTech - Pathfinder Conversation Guide</p>
+          <p>Generated on ${new Date().toLocaleDateString()}</p>
+        </div>
+      </body>
+      </html>
+    `;
+
+    // Set content with timeout
+    await page.setContent(mainHtml, {
+      waitUntil: 'domcontentloaded',
+      timeout: 10000
     });
 
-    // Navigate to PDF view
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-    const pdfViewUrl = `${frontendUrl}/conversation/pdf-view?data=${encodeURIComponent(JSON.stringify(conversationData))}`;
+    console.log('Content set, waiting for render...');
 
-    console.log('Navigating to:', pdfViewUrl);
+    // Wait for content to be fully rendered
+    await new Promise(resolve => setTimeout(resolve, 2000));
 
-    await page.goto(pdfViewUrl, {
-      waitUntil: ['networkidle0', 'domcontentloaded'],
-      timeout: 30000
-    });
+    console.log('Generating PDF...');
 
-    // Wait for content to load
-    await page.waitForSelector('[data-testid="conversation-pdf-content"]', {
-      timeout: 15000
-    });
-
-    // Wait for charts if they exist
-    try {
-      await page.waitForSelector('.recharts-wrapper', { timeout: 5000 });
-      await waitForTimeout(page, 2000); // Compatible timeout for chart rendering
-    } catch (e) {
-      console.log('No charts found or timeout - continuing');
-    }
-
-    // Generate PDF
     const pdf = await page.pdf({
       format: 'Letter',
       printBackground: true,
@@ -365,30 +855,41 @@ async function generateMainConversationPDF(browser, conversationData) {
         bottom: '0.5in',
         left: '0.5in'
       },
-      preferCSSPageSize: false
+      timeout: 15000
     });
 
+    console.log('✅ PDF generated successfully, size:', pdf.length);
     return pdf;
 
+  } catch (error) {
+    console.error('❌ Error in generateSimpleConversationPDF:', error);
+    throw error;
   } finally {
-    await page.close();
+    if (page) {
+      try {
+        await page.close();
+        console.log('Page closed successfully');
+      } catch (e) {
+        console.error('Error closing page:', e);
+      }
+    }
   }
 }
 
-// Generate questions page PDF
+// Helper function: Generate questions page PDF
 async function generateQuestionsPagePDF(browser, conversationData) {
   const page = await browser.newPage();
 
   try {
-    await page.setViewport({ width: 1200, height: 800 });
+    await page.setViewport({ width: 800, height: 600 });
 
     const questionsHtml = generateQuestionsPageHtml(conversationData);
     await page.setContent(questionsHtml, {
-      waitUntil: ['networkidle0', 'domcontentloaded']
+      waitUntil: 'domcontentloaded',
+      timeout: 5000
     });
 
-    // Wait for content to be fully rendered
-    await waitForTimeout(page, 1000);
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
     const pdf = await page.pdf({
       format: 'Letter',
@@ -399,7 +900,7 @@ async function generateQuestionsPagePDF(browser, conversationData) {
         bottom: '0.5in',
         left: '0.5in'
       },
-      preferCSSPageSize: false
+      timeout: 10000
     });
 
     return pdf;
@@ -409,20 +910,20 @@ async function generateQuestionsPagePDF(browser, conversationData) {
   }
 }
 
-// Generate notes page PDF
+// Helper function: Generate notes page PDF
 async function generateNotesPagePDF(browser, conversationData) {
   const page = await browser.newPage();
 
   try {
-    await page.setViewport({ width: 1200, height: 800 });
+    await page.setViewport({ width: 800, height: 600 });
 
     const notesHtml = generateNotesPageHtml(conversationData);
     await page.setContent(notesHtml, {
-      waitUntil: ['networkidle0', 'domcontentloaded']
+      waitUntil: 'domcontentloaded',
+      timeout: 5000
     });
 
-    // Wait for content to be fully rendered
-    await waitForTimeout(page, 1000);
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
     const pdf = await page.pdf({
       format: 'Letter',
@@ -433,7 +934,7 @@ async function generateNotesPagePDF(browser, conversationData) {
         bottom: '0.5in',
         left: '0.5in'
       },
-      preferCSSPageSize: false
+      timeout: 10000
     });
 
     return pdf;
@@ -443,10 +944,7 @@ async function generateNotesPagePDF(browser, conversationData) {
   }
 }
 
-
-
-
-// Generate HTML for questions page
+// Helper function: Generate questions page HTML
 function generateQuestionsPageHtml(conversationData) {
   const surgeonName = conversationData.surgeon_name || conversationData.surgeonName || 'Unknown Surgeon';
   const hospitalName = conversationData.hospital_name || conversationData.hospitalName || 'Unknown Hospital';
@@ -490,7 +988,7 @@ function generateQuestionsPageHtml(conversationData) {
       <title>Questions and Responses</title>
       <style>
         body {
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+          font-family: Arial, sans-serif;
           margin: 0;
           padding: 20px;
           background-color: #ffffff;
@@ -612,23 +1110,19 @@ function generateQuestionsPageHtml(conversationData) {
   `;
 }
 
-// Generate HTML for notes page
+// Helper function: Generate notes page HTML
 function generateNotesPageHtml(conversationData) {
   const surgeonName = conversationData.surgeon_name || conversationData.surgeonName || 'Unknown Surgeon';
   const hospitalName = conversationData.hospital_name || conversationData.hospitalName || 'Unknown Hospital';
 
   let notesContent = 'No notes available';
-  let notesDate = '';
-  let salesRepName = conversationData.sales_rep_name || 'Sales Representative';
 
   // Handle notes as either string or array
   if (typeof conversationData.notes === 'string' && conversationData.notes.trim() !== '') {
     notesContent = conversationData.notes;
-    notesDate = new Date().toLocaleDateString();
   } else if (Array.isArray(conversationData.notes) && conversationData.notes.length > 0) {
     const notes = conversationData.notes[0];
     notesContent = notes ? notes.content : 'No notes available';
-    notesDate = notes ? new Date(notes.updated_at || notes.created_at).toLocaleDateString() : '';
   }
 
   // Clean up HTML content from ReactQuill
@@ -648,7 +1142,7 @@ function generateNotesPageHtml(conversationData) {
       <title>Conversation Notes</title>
       <style>
         body {
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+          font-family: Arial, sans-serif;
           margin: 0;
           padding: 20px;
           background-color: #ffffff;
@@ -727,7 +1221,7 @@ function generateNotesPageHtml(conversationData) {
   `;
 }
 
-// Helper function to check if notes exist
+// Helper function: Check if notes exist
 function hasNotes(conversationData) {
   // Check if notes exist as a string
   if (typeof conversationData.notes === 'string' && conversationData.notes.trim() !== '') {
@@ -746,7 +1240,7 @@ function hasNotes(conversationData) {
   return false;
 }
 
-// Function to combine multiple PDFs
+// Helper function: Combine multiple PDFs
 async function combinePDFs(pdfBuffers) {
   const mergedPdf = await PDFDocument.create();
 
@@ -758,5 +1252,12 @@ async function combinePDFs(pdfBuffers) {
 
   return Buffer.from(await mergedPdf.save());
 }
+
+console.log('PDF router setup complete. Routes registered:');
+console.log('- GET /health');
+console.log('- GET /test');
+console.log('- GET /simple-test');
+console.log('- GET /alt-test');
+console.log('- POST /generate');
 
 module.exports = router;

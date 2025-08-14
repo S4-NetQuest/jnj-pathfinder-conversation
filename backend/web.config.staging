@@ -1,12 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- web.config for Pathfinder Backend - Staging Environment -->
 <configuration>
   <appSettings>
-    <!-- Original IIS settings -->
-    <add key="MODE" value="staging" />
-    <add key="SITE_KEY" value="plethoraofpinatas" />
-    <add key="WHITELIST" value="https://previews.s4stage.com/pathfinder" />
-
     <!-- Node.js Environment Variables -->
     <add key="NODE_ENV" value="staging" />
     <add key="PORT" value="4343" />
@@ -23,118 +17,46 @@
 
     <!-- Session Configuration -->
     <add key="SESSION_SECRET" value="staging-super-secret-session-key-change-this" />
-    <add key="USE_SQL_SESSION_STORE" value="false" />
 
     <!-- Authentication Configuration -->
     <add key="ENABLE_MANUAL_LOGIN" value="true" />
     <add key="ENABLE_SAML" value="false" />
-
-    <!-- JWT Configuration -->
-    <add key="JWT_SECRET" value="staging-jwt-secret-key" />
-    <add key="JWT_EXPIRES_IN" value="24h" />
-
-    <!-- Rate Limiting -->
-    <add key="RATE_LIMIT_WINDOW_MS" value="900000" />
-    <add key="RATE_LIMIT_MAX_REQUESTS" value="100" />
-    <add key="ENABLE_RATE_LIMITING" value="true" />
-
-    <!-- Logging -->
-    <add key="LOG_LEVEL" value="info" />
-    <add key="ENABLE_REQUEST_LOGGING" value="false" />
-
-    <!-- File Upload -->
-    <add key="MAX_FILE_SIZE" value="10485760" />
-
-    <!-- Security -->
-    <add key="HTTPS_ENABLED" value="true" />
   </appSettings>
 
   <system.webServer>
-    <!-- Node.js application handler -->
-    <handlers>
-      <add name="iisnode" path="server.js" verb="*" modules="iisnode" />
-    </handlers>
-
-    <!-- IISNode configuration for staging with Node.js v22.16.0 -->
+    <!-- IISNode basic configuration -->
     <iisnode
-      nodeProcessCommandLine="&quot;%programfiles%\nodejs_other\nodejs_v22.16.0\node.exe&quot;"
-      interceptor="&quot;%programfiles%\iisnode\interceptor.js&quot;"
+      nodeProcessCommandLine="&quot;C:\Program Files\nodejs_other\nodejs_v22.16.0\node.exe&quot;"
       node_env="staging"
-      enableXFF="true"
-      promoteServerVars="HTTP_X_FORWARDED_FOR,HTTP_X_FORWARDED_PROTO,HTTP_HOST"
-      flushResponse="false"
-      devErrorsEnabled="true"
-      debuggingEnabled="false"
       loggingEnabled="true"
       logDirectory="logs"
-      maxNamedPipeConnectionRetry="100"
-      namedPipeConnectionRetryDelay="250"
-      maxNamedPipeConnectionPoolSize="512"
-      maxNamedPipePooledConnectionAge="30000"
-      maxConcurrentRequestsPerProcess="1024"
-      asyncCompletionThreadCount="0"
-      initialRequestBufferSize="4096"
-      maxRequestBufferSize="65536"
-      uncFileChangesPollingInterval="5000"
-      gracefulShutdownTimeout="60000"
-      watchedFiles="web.config;*.js;*.json" />
+      debuggingEnabled="true"
+      devErrorsEnabled="true" />
 
-    <!-- Remove conflicting modules -->
-    <modules>
-      <remove name="WebDAVModule"/>
-      <remove name="DefaultDocumentModule" />
-    </modules>
-
-    <!-- Remove conflicting handlers -->
+    <!-- Simple handlers -->
     <handlers>
-      <remove name="WebDAV" />
-      <remove name="ExtensionlessUrlHandler-Integrated-4.0" />
-      <remove name="OPTIONSVerbHandler" />
-      <remove name="TRACEVerbHandler" />
-      <add name="ExtensionlessUrlHandler-Integrated-4.0" path="*." verb="*" type="System.Web.Handlers.TransferRequestHandler" preCondition="integratedMode,runtimeVersionv4.0" />
       <add name="iisnode" path="server.js" verb="*" modules="iisnode" />
     </handlers>
 
-    <!-- URL Rewrite rules -->
+    <!-- Rewrite rules with HTTPS redirect -->
     <rewrite>
       <rules>
         <!-- Redirect HTTP to HTTPS -->
-        <rule name="http to https" stopProcessing="true">
+        <rule name="HTTP to HTTPS redirect" stopProcessing="true">
           <match url="(.*)" />
           <conditions>
-            <add input="{HTTPS}" pattern="^OFF$" />
+            <add input="{HTTPS}" pattern="off" ignoreCase="true" />
             <add input="{HTTP_HOST}" pattern="^localhost" negate="true" />
           </conditions>
           <action type="Redirect" url="https://pathfinder-api.s4stage.com/{R:1}" redirectType="Permanent" />
         </rule>
 
-        <!-- Handle Node.js logs -->
-        <rule name="LogFile" patternSyntax="ECMAScript" stopProcessing="true">
-          <match url="^[a-zA-Z0-9_\-]+\.js\.logs\/\d+\.txt$"/>
-        </rule>
-
-        <!-- Don't rewrite requests for node_modules -->
-        <rule name="NodeModules" patternSyntax="ECMAScript" stopProcessing="true">
-          <match url="^node_modules/.*"/>
-        </rule>
-
-        <!-- Don't rewrite requests for static content -->
-        <rule name="StaticContent" patternSyntax="ECMAScript" stopProcessing="true">
-          <match url="^(css/|js/|images/|fonts/|favicon\.ico).*"/>
-        </rule>
-
-        <!-- Don't rewrite requests for health check -->
-        <rule name="HealthCheck" patternSyntax="ECMAScript" stopProcessing="true">
-          <match url="^health$"/>
-          <action type="Rewrite" url="server.js"/>
-        </rule>
-
-        <!-- Handle all other routes through Node.js -->
+        <!-- Handle all other requests -->
         <rule name="DynamicContent">
           <conditions>
             <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="True"/>
           </conditions>
-          <action type="Rewrite" url="server.js" />
+          <action type="Rewrite" url="server.js"/>
         </rule>
       </rules>
     </rewrite>
@@ -148,26 +70,14 @@
           <add segment=".env.staging" />
           <add segment="logs" />
           <add segment="config" />
-          <add segment="bin" />
         </hiddenSegments>
-        <requestLimits maxAllowedContentLength="10485760" maxQueryString="2048" />
-        <fileExtensions>
-          <remove fileExtension=".inc" />
-          <remove fileExtension=".config" />
-        </fileExtensions>
+        <requestLimits maxAllowedContentLength="10485760" />
       </requestFiltering>
     </security>
 
-    <!-- Custom headers for CORS and security -->
+    <!-- Enhanced CORS and security headers -->
     <httpProtocol>
       <customHeaders>
-        <!-- CORS Headers (staging-specific) -->
-        <add name="Access-Control-Allow-Origin" value="https://previews.s4stage.com" />
-        <add name="Access-Control-Allow-Methods" value="GET,POST,PUT,DELETE,OPTIONS,PATCH" />
-        <add name="Access-Control-Allow-Headers" value="Content-Type,Authorization,X-Requested-With,Accept,Origin,Cache-Control" />
-        <add name="Access-Control-Allow-Credentials" value="true" />
-        <add name="Access-Control-Max-Age" value="86400" />
-
         <!-- Security Headers -->
         <add name="X-Frame-Options" value="SAMEORIGIN" />
         <add name="X-Content-Type-Options" value="nosniff" />
@@ -178,46 +88,10 @@
         <!-- Cache Control for API responses -->
         <add name="Cache-Control" value="no-cache, no-store, must-revalidate" />
         <add name="Pragma" value="no-cache" />
-        <add name="Expires" value="0" />
       </customHeaders>
     </httpProtocol>
 
-    <!-- Error handling -->
-    <httpErrors errorMode="Custom" defaultResponseMode="ExecuteURL">
-      <remove statusCode="404" subStatusCode="-1" />
-      <remove statusCode="500" subStatusCode="-1" />
-      <error statusCode="404" responseMode="ExecuteURL" path="/server.js" />
-      <error statusCode="500" responseMode="ExecuteURL" path="/server.js" />
-    </httpErrors>
-
-    <!-- Default document -->
-    <defaultDocument>
-      <files>
-        <clear />
-        <add value="server.js" />
-      </files>
-    </defaultDocument>
-
-    <!-- Static content and compression -->
-    <staticContent>
-      <remove fileExtension=".json" />
-      <remove fileExtension=".yml" />
-      <remove fileExtension=".yaml" />
-      <mimeMap fileExtension=".json" mimeType="application/json" />
-      <mimeMap fileExtension=".yml" mimeType="text/plain" />
-      <mimeMap fileExtension=".yaml" mimeType="text/plain" />
-      <clientCache cacheControlMode="UseMaxAge" cacheControlMaxAge="0.00:00:00" />
-    </staticContent>
-
-    <!-- Compression -->
-    <urlCompression doStaticCompression="true" doDynamicCompression="true" />
-    <httpCompression>
-      <dynamicTypes>
-        <add mimeType="application/json" enabled="true" />
-        <add mimeType="application/javascript" enabled="true" />
-        <add mimeType="text/css" enabled="true" />
-        <add mimeType="text/html" enabled="true" />
-      </dynamicTypes>
-    </httpCompression>
+    <!-- Show detailed errors for debugging -->
+    <httpErrors errorMode="Detailed" />
   </system.webServer>
 </configuration>
