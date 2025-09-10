@@ -91,6 +91,7 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
   const effectiveConversationData = pdfMode ? pdfConversationData : conversation;
   const effectiveCompleted = pdfMode ? (pdfConversationData?.status === 'completed') : completed;
 
+  console.log("effectiveConversationData",effectiveConversationData)
   const isMobile = useBreakpointValue({ base: true, md: false })
   const alignmentImages = {
     'KA': kaSummaryImg,
@@ -901,7 +902,22 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
                 {effectiveConversationData && (
                   <VStack align="start" spacing={1}>
                     <Text fontSize="sm" color="#81766f">
-                      {effectiveConversationData.hospital_name || effectiveConversationData.hospitalName}
+                      Hospital: {effectiveConversationData.hospital_name || effectiveConversationData.hospitalName}
+                    </Text>
+                    <Text fontSize="sm" color="#81766f">
+                      Affiliated Surgery Center: {effectiveConversationData.surgery_center_name || effectiveConversationData.surgeryCenterName}
+                    </Text>
+                    <Text fontSize="sm" color="#81766f">
+                      Surgeon Knee Arthroplasty Volume / Year: {effectiveConversationData.surgeon_volume_per_year || effectiveConversationData.surgeonVolumePerYear}
+                    </Text>
+                    <Text fontSize="sm" color="#81766f">
+                      Surgeon is currently using robotics: {(effectiveConversationData.uses_robotics || effectiveConversationData.usesRobotics) ? 'Yes' : 'No'}
+                    </Text>
+                    <Text fontSize="sm" color="#81766f">
+                      {(() => {
+                        const alignment = effectiveConversationData.current_alignment || effectiveConversationData.currentAlignment;
+                        return `Current Alignment Philosophy: ${alignment === 'UNKNOWN' ? 'N/A' : alignment || 'N/A'}`;
+                      })()}
                     </Text>
                     <Text fontSize="sm" color="#81766f">
                       Date: {new Date(effectiveConversationData.conversation_date || effectiveConversationData.conversationDate).toLocaleDateString()}
@@ -1020,7 +1036,7 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
             <Alert status="success" borderRadius="md">
               <AlertIcon />
               <Text>
-                Assessment completed! Your recommended alignment philosophy has been determined.
+                Conversation completed! Your alignment philosophy result is based on your responses.
               </Text>
             </Alert>
 
@@ -1037,7 +1053,7 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
                       <VStack spacing={4} align="stretch">
                         <Flex justify="space-between" align="center">
                           <Text fontSize="lg" fontWeight="" color="#6e6259">
-                            Your approach suggests:
+                            Your responses indicate:
                           </Text>
                           <Badge
                             bg={recommendedAlignment.color}

@@ -268,7 +268,7 @@
         },
         {
           "id": "evenly_distribute",
-          "text": "Evenly distribute changes to femur/tibia - prioritizes neutral femur and tibia, splits varus/valgus adjustments between both components to balance gaps",
+          "text": "Evenly distributes changes to femur/tibia, varus/valgus adjustments made between both components to balance gaps.",
           "scores": {
             "ma": 1,
             "ka": 0,

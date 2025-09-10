@@ -85,7 +85,7 @@ const getChromeExecutablePath = () => {
     console.log(`Using development Chrome for Testing path: ${devPath}`);
     return devPath;
   }
-  
+
   // Fallback for local development if you want to use your regularly installed Chrome
   const localFallbackPath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
   if (fs.existsSync(localFallbackPath)) {
@@ -727,8 +727,6 @@ function generateQuestionsPageHtml(conversationData) {
     <body>
       <div class="header">
         <div class="title">Questions and Responses</div>
-        <div class="subtitle">Conversation with ${surgeonName}</div>
-        <div class="subtitle">${hospitalName}</div>
       </div>
 
       <div class="stats-section">
@@ -835,8 +833,6 @@ function generateNotesPageHtml(conversationData) {
     <body>
       <div class="header">
         <div class="title">Conversation Notes</div>
-        <div class="subtitle">Conversation with ${surgeonName}</div>
-        <div class="subtitle">${hospitalName}</div>
       </div>
 
       <div class="notes-section">
