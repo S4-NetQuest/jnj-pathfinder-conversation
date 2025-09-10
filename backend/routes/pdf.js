@@ -2,7 +2,7 @@
 process.noDeprecation = true;
 
 const express = require('express');
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-core');
 const { PDFDocument } = require('pdf-lib');
 const router = express.Router();
 const path = require('path');
@@ -67,6 +67,35 @@ const waitForTimeout = (ms) => {
   return new Promise(resolve => setTimeout(resolve, ms));
 };
 
+const getChromeExecutablePath = () => {
+  // For production/staging on Windows Server 2012
+  if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging') {
+    const prodPath = 'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe';
+    if (fs.existsSync(prodPath)) {
+      console.log(`Using production Chrome path: ${prodPath}`);
+      return prodPath;
+    }
+    throw new Error('Production Chrome executable not found at expected path.');
+  }
+
+  // For local development on Windows 11
+  // Assumes you downloaded Chrome for Testing into a .chrome folder in your project root
+  const devPath = path.resolve(process.cwd(), 'chrome', 'chrome-win', 'chrome.exe');
+  if (fs.existsSync(devPath)) {
+    console.log(`Using development Chrome for Testing path: ${devPath}`);
+    return devPath;
+  }
+  
+  // Fallback for local development if you want to use your regularly installed Chrome
+  const localFallbackPath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+  if (fs.existsSync(localFallbackPath)) {
+    console.log(`Using local fallback Chrome path: ${localFallbackPath}. WARNING: Version mismatch may occur.`);
+    return localFallbackPath;
+  }
+
+  throw new Error('Chrome executable could not be found for the current environment.');
+};
+
 router.get('/cors-test', (req, res) => {
   console.log('PDF CORS test endpoint hit');
   res.json({
@@ -74,162 +103,6 @@ router.get('/cors-test', (req, res) => {
     message: 'CORS working for PDF routes',
     timestamp: new Date().toISOString()
   });
-});
-
-// Alternative PDF generation without Chrome (using PDFKit)
-router.get('/alt-test', (req, res) => {
-  try {
-    const PDFDocument = require('pdfkit');
-    const doc = new PDFDocument();
-
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'attachment; filename="alternative-test.pdf"');
-
-    doc.pipe(res);
-
-    // Add content to PDF
-    doc.fontSize(20)
-       .fillColor('#eb1700')
-       .text('Pathfinder PDF Test', 100, 100);
-
-    doc.fontSize(12)
-       .fillColor('#333')
-       .text('Generated using PDFKit (no Chrome required)', 100, 140)
-       .text('Timestamp: ' + new Date().toLocaleString(), 100, 160)
-       .text('Server: Windows Server 2012', 100, 180)
-       .text('Node: ' + process.version, 100, 200);
-
-    doc.end();
-
-  } catch (error) {
-    res.status(500).json({
-      error: 'PDFKit test failed',
-      details: error.message
-    });
-  }
-});
-
-// Simple test endpoint to isolate Puppeteer issues
-router.get('/simple-test', async (req, res) => {
-  console.log('Simple PDF test called');
-
-  let browser;
-  const timeout = setTimeout(() => {
-	console.log('Simple test timeout');
-	if (!res.headersSent) {
-	  res.status(408).json({ error: 'Timeout in simple test - Chrome may be incompatible with this Puppeteer version' });
-	}
-  }, 25000); // Longer timeout
-
-  try {
-	console.log('Step 1: Looking for Chrome...');
-
-	const executablePath = 'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe';
-
-	if (!fs.existsSync(executablePath)) {
-	  clearTimeout(timeout);
-	  return res.status(500).json({
-		error: 'Chrome not found at expected path',
-		path: executablePath
-	  });
-	}
-
-	console.log('✅ Found Chrome at:', executablePath);
-	console.log('Step 2: Launching browser with compatibility args for Chrome 109...');
-
-	// Chrome 109 + Windows Server 2012 compatibility args
-	const launchOptions = {
-	  executablePath: executablePath,
-	  headless: true,
-	  timeout: 20000,
-	  ignoreDefaultArgs: ['--disable-extensions'], // Don't use default args that might conflict
-	  args: [
-		'--no-sandbox',
-		'--disable-setuid-sandbox',
-		'--disable-dev-shm-usage',
-		'--disable-web-security',
-		'--disable-features=VizDisplayCompositor',
-		'--disable-features=TranslateUI',
-		'--disable-features=BlinkGenPropertyTrees',
-		'--disable-ipc-flooding-protection',
-		'--disable-renderer-backgrounding',
-		'--disable-backgrounding-occluded-windows',
-		'--disable-background-timer-throttling',
-		'--disable-background-networking',
-		'--disable-breakpad',
-		'--disable-client-side-phishing-detection',
-		'--disable-component-update',
-		'--disable-default-apps',
-		'--disable-domain-reliability',
-		'--disable-extensions',
-		'--disable-features=AudioServiceOutOfProcess',
-		'--disable-hang-monitor',
-		'--disable-popup-blocking',
-		'--disable-print-preview',
-		'--disable-prompt-on-repost',
-		'--disable-sync',
-		'--disable-translate',
-		'--metrics-recording-only',
-		'--no-first-run',
-		'--no-default-browser-check',
-		'--no-pings',
-		'--password-store=basic',
-		'--use-mock-keychain',
-		'--disable-gpu',
-		'--single-process' // This might help with Windows Server 2012
-	  ]
-	};
-
-	console.log('Step 3: Attempting launch...');
-
-	browser = await puppeteer.launch(launchOptions);
-	console.log('Step 4: ✅ Browser launched successfully!');
-
-	const page = await browser.newPage();
-	console.log('Step 5: ✅ Page created');
-
-	await page.setContent('<html><body><h1>SUCCESS!</h1><p>Chrome 109 + Puppeteer working on Windows Server 2012!</p><p>Generated: ' + new Date() + '</p></body></html>', {
-	  waitUntil: 'domcontentloaded',
-	  timeout: 5000
-	});
-	console.log('Step 6: ✅ Content set');
-
-	const pdf = await page.pdf({
-	  format: 'A4',
-	  timeout: 10000,
-	  printBackground: true
-	});
-	console.log('Step 7: ✅ PDF generated, size:', pdf.length);
-
-	clearTimeout(timeout);
-
-	res.setHeader('Content-Type', 'application/pdf');
-	res.setHeader('Content-Disposition', 'attachment; filename="chrome109-success.pdf"');
-	res.send(pdf);
-
-	console.log('Step 8: ✅ Response sent successfully!');
-
-  } catch (error) {
-	console.error('❌ Simple test error:', error.message);
-	console.error('Error occurred at browser launch phase');
-	clearTimeout(timeout);
-	if (!res.headersSent) {
-	  res.status(500).json({
-		error: 'Chrome launch failed',
-		details: error.message,
-		suggestion: 'Chrome 109 may be incompatible with current Puppeteer version. Try: npm install puppeteer@19.11.1'
-	  });
-	}
-  } finally {
-	if (browser) {
-	  try {
-		await browser.close();
-		console.log('✅ Browser closed successfully');
-	  } catch (e) {
-		console.error('❌ Browser close error:', e);
-	  }
-	}
-  }
 });
 
 // Health check endpoint
@@ -245,337 +118,74 @@ router.get('/health', (req, res) => {
   });
 });
 
-// Test PDF endpoint - COMPATIBLE WITH WINDOWS SERVER 2012 WITH TIMEOUTS
-router.get('/test', async (req, res) => {
-  console.log('PDF Test endpoint called');
-
-  // Set request timeout to 30 seconds
-  req.setTimeout(30000);
-  res.setTimeout(30000);
-
-  // Set CORS headers
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-
+// Main PDF generation endpoint - WORKING WITH PUPPETEER 19.11.1 + CHROME 109
+router.post('/generate', async (req, res) => {
+  console.log('PDF Generate endpoint called');
   let browser;
   let timeoutId;
 
   try {
-    // Set a timeout to prevent hanging
+    const { conversationData } = req.body;
+    if (!conversationData) {
+      return res.status(400).json({ success: false, error: 'Conversation data is required' });
+    }
+
     timeoutId = setTimeout(() => {
-      console.log('PDF generation timeout reached');
+      console.log('PDF generation timeout reached (60s)');
+      if (browser) browser.close(); // Attempt to clean up
       if (!res.headersSent) {
-        res.status(408).json({
-          success: false,
-          error: 'PDF generation timeout',
-          details: 'Request took longer than 25 seconds'
-        });
+        res.status(408).json({ success: false, error: 'PDF generation timeout' });
       }
-    }, 25000);
+    }, 60000);
 
-    console.log('Launching Puppeteer...');
+    // CHANGE 3: Get the executable path dynamically
+    const executablePath = getChromeExecutablePath();
 
-    // Simplified launch options for debugging
+    // CHANGE 4: Refined and simplified launch options for Chrome 109
     const launchOptions = {
+      executablePath,
       headless: true,
-      timeout: 10000, // 10 second launch timeout
+      timeout: 30000,
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
-        '--disable-web-security',
-        '--disable-gpu',
+        '--disable-gpu', // Crucial for server environments
         '--disable-software-rasterizer',
-        '--disable-extensions',
-        '--disable-default-apps',
-        '--disable-background-timer-throttling',
-        '--disable-background-networking',
-        '--disable-sync',
-        '--disable-translate',
-        '--hide-scrollbars',
-        '--mute-audio',
-        '--no-first-run'
+        '--single-process', // Often helps stability on older Windows versions
+        '--no-zygote',
+        '--disable-features=VizDisplayCompositor',
+        '--run-all-compositor-stages-before-draw', // Helps with rendering issues
       ]
     };
 
-    // Try to find existing Chrome installation on Windows
-    const possiblePaths = [
-      'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe', // Your confirmed path first
-      'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-      process.env.CHROME_BIN,
-      process.env.GOOGLE_CHROME_BIN
-    ].filter(Boolean);
-
-    let chromeFound = false;
-    let executablePath = null;
-
-    for (const chromePath of possiblePaths) {
-      try {
-        console.log('Checking Chrome path:', chromePath);
-        if (fs.existsSync(chromePath)) {
-          launchOptions.executablePath = chromePath;
-          executablePath = chromePath;
-          console.log('✅ Found Chrome at:', chromePath);
-          chromeFound = true;
-          break;
-        } else {
-          console.log('❌ Chrome not found at:', chromePath);
-        }
-      } catch (e) {
-        console.log('Error checking Chrome path:', chromePath, e.message);
-      }
-    }
-
-    if (!chromeFound) {
-      console.log('❌ Chrome not found in any standard locations');
-      if (timeoutId) clearTimeout(timeoutId);
-      return res.status(500).json({
-        success: false,
-        error: 'Chrome not found',
-        details: 'Google Chrome must be installed for PDF generation',
-        checkedPaths: possiblePaths.filter(Boolean),
-        suggestion: 'Chrome should be at: C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe'
-      });
-    }
-
-    browser = await Promise.race([
-      puppeteer.launch(launchOptions),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('Launch timeout')), 10000))
-    ]);
-
-    console.log('Puppeteer launched successfully');
-
-    const page = await browser.newPage();
-    await page.setViewport({ width: 800, height: 600 }); // Smaller viewport for faster rendering
-
-    // Simplified HTML for faster processing
-    const testHtml = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="UTF-8">
-        <title>Test PDF</title>
-        <style>
-          body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
-            color: #333;
-            background-color: white;
-          }
-          .header {
-            color: #eb1700;
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 20px;
-          }
-          .status {
-            background-color: #f1efed;
-            padding: 15px;
-            margin: 10px 0;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="header">Pathfinder PDF Test</div>
-        <div class="status">
-          <h3>✅ PDF Generation Working</h3>
-          <p>Generated: ${new Date().toLocaleString()}</p>
-          <p>Chrome Found: ${chromeFound ? 'Yes' : 'Using bundled version'}</p>
-          <p>Node: ${process.version}</p>
-          <p>Platform: ${process.platform}</p>
-        </div>
-      </body>
-      </html>
-    `;
-
-    console.log('Setting page content...');
-    await page.setContent(testHtml, {
-      waitUntil: 'domcontentloaded',
-      timeout: 5000
-    });
-
-    console.log('Generating PDF...');
-    const pdfBuffer = await page.pdf({
-      format: 'Letter',
-      printBackground: true,
-      margin: { top: '0.5in', bottom: '0.5in', left: '0.5in', right: '0.5in' },
-      timeout: 10000
-    });
-
-    console.log('PDF generated successfully, buffer length:', pdfBuffer.length);
-
-    // Clear timeout
-    if (timeoutId) clearTimeout(timeoutId);
-
-    // Set proper headers
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Length', pdfBuffer.length);
-    res.setHeader('Content-Disposition', 'attachment; filename="pathfinder-test.pdf"');
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-
-    // Send the PDF
-    res.send(pdfBuffer);
-
-  } catch (error) {
-    console.error('Test PDF generation error:', error);
-
-    // Clear timeout
-    if (timeoutId) clearTimeout(timeoutId);
-
-    if (!res.headersSent) {
-      res.status(500).json({
-        success: false,
-        error: 'Failed to generate test PDF',
-        details: error.message,
-        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-      });
-    }
-  } finally {
-    if (browser) {
-      try {
-        await browser.close();
-        console.log('Browser closed successfully');
-      } catch (e) {
-        console.error('Error closing browser:', e);
-      }
-    }
-  }
-});
-
-router.post('/test-post', (req, res) => {
-  console.log('Test POST route hit');
-  console.log('Body:', req.body);
-  res.json({
-    success: true,
-    message: 'POST route working',
-    body: req.body
-  });
-});
-
-// Main PDF generation endpoint - WORKING WITH PUPPETEER 19.11.1 + CHROME 109
-router.post('/generate', async (req, res) => {
-  console.log('PDF Generate endpoint called');
-  console.log('Request body keys:', Object.keys(req.body || {}));
-
-  let browser;
-  let timeoutId;
-
-  try {
-    const { conversationId, conversationData } = req.body;
-
-    console.log('Conversation ID:', conversationId);
-    console.log('Conversation data available:', !!conversationData);
-
-    if (!conversationData) {
-      return res.status(400).json({
-        success: false,
-        error: 'Conversation data is required'
-      });
-    }
-
-    // Set timeout to prevent hanging
-    timeoutId = setTimeout(() => {
-      console.log('PDF generation timeout reached');
-      if (!res.headersSent) {
-        res.status(408).json({
-          success: false,
-          error: 'PDF generation timeout',
-          details: 'Request took longer than 60 seconds'
-        });
-      }
-    }, 60000);
-
-    console.log('Launching Puppeteer 19.11.1 for main PDF generation...');
-    console.log(`process.env.NODE_ENV: ${process.env.NODE_ENV}`);
-
-
-    // Working configuration - same as simple-test
-    const executablePath = (process.env.NODE_ENV !== 'development') ? 'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe' : 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
-
-    console.log('Using Chrome executable path:', executablePath);
-
-    const launchOptions = {
-      executablePath: executablePath,
-      headless: true, // Keep as 'true' for Chrome 109 compatibility
-      timeout: 30000, // Increased timeout
-      ignoreDefaultArgs: ['--disable-extensions', '--disable-default-apps'],
-      args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-web-security',
-      '--disable-features=VizDisplayCompositor',
-      '--disable-gpu',
-      '--disable-software-rasterizer',
-      '--disable-background-timer-throttling',
-      '--disable-backgrounding-occluded-windows',
-      '--disable-renderer-backgrounding',
-      '--disable-background-networking',
-      '--disable-default-apps',
-      '--disable-extensions',
-      '--disable-sync',
-      '--disable-translate',
-      '--no-first-run',
-      '--no-default-browser-check',
-      '--disable-ipc-flooding-protection',
-      '--single-process', // Important for Windows Server 2012
-      '--no-zygote', // Disable zygote process
-      '--disable-accelerated-2d-canvas',
-      '--disable-accelerated-jpeg-decoding',
-      '--disable-accelerated-mjpeg-decode',
-      '--disable-accelerated-video-decode',
-      '--disable-features=AudioServiceOutOfProcess',
-      '--disable-features=VizDisplayCompositor',
-      '--run-all-compositor-stages-before-draw',
-      '--disable-new-content-rendering-timeout'
-      ]
-    };
-
-    // Launch Puppeteer
     browser = await puppeteer.launch(launchOptions);
     console.log('Browser launched successfully');
 
-    console.log('Generating multi-page PDF...');
-
-    // Generate all PDF pages
     const pdfBuffers = await generateAllPDFPages(browser, conversationData);
-
-    // Combine all pages into one PDF
     const finalPdf = await combinePDFs(pdfBuffers);
 
     console.log('Multi-page PDF generated successfully, size:', finalPdf.length, 'bytes');
+    clearTimeout(timeoutId);
 
-    // Clear timeout
-    if (timeoutId) clearTimeout(timeoutId);
-
-    // Generate proper filename
-    const surgeonName = conversationData.surgeon_name || conversationData.surgeonName || 'surgeon';
+    const surgeonName = conversationData.surgeon_name || 'surgeon';
     const cleanSurgeonName = surgeonName.replace(/[^a-zA-Z0-9-_]/g, '-');
     const dateStr = new Date().toISOString().split('T')[0];
     const filename = `pathfinder-conversation-${cleanSurgeonName}-${dateStr}.pdf`;
 
-    // Set proper headers
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Length', finalPdf.length);
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-
-    // Send the PDF
     res.send(finalPdf);
 
   } catch (error) {
     console.error('PDF generation error:', error);
-
-    // Clear timeout
-    if (timeoutId) clearTimeout(timeoutId);
-
+    clearTimeout(timeoutId);
     if (!res.headersSent) {
       res.status(500).json({
         success: false,
         error: 'Failed to generate PDF',
         details: error.message,
-        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
       });
     }
   } finally {
@@ -602,7 +212,8 @@ async function generateAllPDFPages(browser, conversationData) {
     // Page 1: Main conversation results
     console.log('Generating Page 1: Conversation Results');
     try {
-      const page1Buffer = await generateSimpleConversationPDF(browser, conversationData);
+      //const page1Buffer = await generateSimpleConversationPDF(browser, conversationData);
+      const page1Buffer = await generateMainConversationPDF(browser, conversationData);
       pdfBuffers.push(page1Buffer);
       console.log('✅ Page 1 generated successfully');
     } catch (error) {
@@ -649,6 +260,71 @@ async function generateAllPDFPages(browser, conversationData) {
   } catch (error) {
     console.error('❌ Error in generateAllPDFPages:', error);
     throw error;
+  }
+}
+
+async function generateMainConversationPDF(browser, conversationData) {
+  const page = await browser.newPage();
+
+  try {
+    await page.setViewport({ width: 1200, height: 800 });
+
+    // Disable animations for consistent rendering
+    await page.evaluateOnNewDocument(() => {
+      const css = `
+        *, *::before, *::after {
+          animation-duration: 0s !important;
+          animation-delay: 0s !important;
+          transition-duration: 0s !important;
+          transition-delay: 0s !important;
+        }
+      `;
+      const style = document.createElement('style');
+      style.appendChild(document.createTextNode(css));
+      document.head.appendChild(style);
+    });
+
+    // Navigate to PDF view
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const pdfViewUrl = `${frontendUrl}/conversation/pdf-view?data=${encodeURIComponent(JSON.stringify(conversationData))}`;
+
+    console.log('Navigating to:', pdfViewUrl);
+
+    await page.goto(pdfViewUrl, {
+      waitUntil: ['networkidle0', 'domcontentloaded'],
+      timeout: 30000
+    });
+
+    // Wait for content to load
+    await page.waitForSelector('[data-testid="conversation-pdf-content"]', {
+      timeout: 15000
+    });
+
+    // Wait for charts if they exist
+    try {
+      await page.waitForSelector('.recharts-wrapper', { timeout: 5000 });
+      await waitForTimeout(page, 2000); // Compatible timeout for chart rendering
+    } catch (e) {
+      console.log('No charts found or timeout - continuing');
+    }
+
+    // Generate PDF
+    const pdf = await page.pdf({
+      format: 'Letter',
+      printBackground: true,
+      margin: {
+        top: '0.5in',
+        right: '0.5in',
+        bottom: '0.5in',
+        left: '0.5in'
+      },
+      preferCSSPageSize: false
+    });
+
+    return pdf;
+
+  } finally {
+    await page.close();
   }
 }
 
@@ -835,8 +511,8 @@ async function generateSimpleConversationPDF(browser, conversationData) {
 
     // Set content with timeout
     await page.setContent(mainHtml, {
-      waitUntil: 'domcontentloaded',
-      timeout: 10000
+      waitUntil: 'networkidle0', // Waits until there are no network connections for 500ms
+      timeout: 15000
     });
 
     console.log('Content set, waiting for render...');
@@ -846,16 +522,13 @@ async function generateSimpleConversationPDF(browser, conversationData) {
 
     console.log('Generating PDF...');
 
+    await page.emulateMediaType('screen');
+
     const pdf = await page.pdf({
       format: 'Letter',
       printBackground: true,
-      margin: {
-        top: '0.5in',
-        right: '0.5in',
-        bottom: '0.5in',
-        left: '0.5in'
-      },
-      timeout: 15000
+      margin: { top: '0.5in', right: '0.5in', bottom: '0.5in', left: '0.5in' },
+      timeout: 20000
     });
 
     console.log('✅ PDF generated successfully, size:', pdf.length);
@@ -878,70 +551,36 @@ async function generateSimpleConversationPDF(browser, conversationData) {
 
 // Helper function: Generate questions page PDF
 async function generateQuestionsPagePDF(browser, conversationData) {
-  const page = await browser.newPage();
+    let page;
+    try {
+        page = await browser.newPage();
+        await page.setViewport({ width: 800, height: 600 });
+        const questionsHtml = generateQuestionsPageHtml(conversationData);
 
-  try {
-    await page.setViewport({ width: 800, height: 600 });
+        await page.setContent(questionsHtml, { waitUntil: 'networkidle0', timeout: 10000 });
+        await page.emulateMediaType('screen'); // Add this line
 
-    const questionsHtml = generateQuestionsPageHtml(conversationData);
-    await page.setContent(questionsHtml, {
-      waitUntil: 'domcontentloaded',
-      timeout: 5000
-    });
-
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    const pdf = await page.pdf({
-      format: 'Letter',
-      printBackground: true,
-      margin: {
-        top: '0.5in',
-        right: '0.5in',
-        bottom: '0.5in',
-        left: '0.5in'
-      },
-      timeout: 10000
-    });
-
-    return pdf;
-
-  } finally {
-    await page.close();
-  }
+        return await page.pdf({ format: 'Letter', printBackground: true, /* ... */ });
+    } finally {
+        if (page) await page.close();
+    }
 }
 
 // Helper function: Generate notes page PDF
 async function generateNotesPagePDF(browser, conversationData) {
-  const page = await browser.newPage();
+    let page;
+    try {
+        page = await browser.newPage();
+        await page.setViewport({ width: 800, height: 600 });
+        const notesHtml = generateNotesPageHtml(conversationData);
 
-  try {
-    await page.setViewport({ width: 800, height: 600 });
+        await page.setContent(notesHtml, { waitUntil: 'networkidle0', timeout: 10000 });
+        await page.emulateMediaType('screen'); // Add this line
 
-    const notesHtml = generateNotesPageHtml(conversationData);
-    await page.setContent(notesHtml, {
-      waitUntil: 'domcontentloaded',
-      timeout: 5000
-    });
-
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    const pdf = await page.pdf({
-      format: 'Letter',
-      printBackground: true,
-      margin: {
-        top: '0.5in',
-        right: '0.5in',
-        bottom: '0.5in',
-        left: '0.5in'
-      },
-      timeout: 10000
-    });
-
-    return pdf;
-
-  } finally {
-    await page.close();
-  }
+        return await page.pdf({ format: 'Letter', printBackground: true, /* ... */ });
+    } finally {
+        if (page) await page.close();
+    }
 }
 
 // Helper function: Generate questions page HTML
