@@ -82,6 +82,7 @@ const Home = () => {
 
   const handleConversationCreated = (conversationId) => {
     onCreateClose()
+    /*
     toast({
       title: 'Conversation Created',
       description: `Successfully created conversation with ID: ${conversationId}`,
@@ -89,6 +90,7 @@ const Home = () => {
       duration: 3000,
       isClosable: true,
     })
+    */
     navigate(`/conversation/${conversationId}`)
   }
 
@@ -322,7 +324,7 @@ const Home = () => {
 
                       <Button
                         as={Link}
-                        href={getPdfUrl('*.pdf')}
+                        href={getPdfUrl('CPAK-Job-Aid.pdf')}
                         target="_blank"
                         rel="noopener noreferrer"
                         leftIcon={<DownloadIcon />}
@@ -480,7 +482,7 @@ const Home = () => {
 
                           <Button
                             as={Link}
-                            href={getPdfUrl('*.pdf')}
+                            href={getPdfUrl('CPAK-Job-Aid.pdf')}
                             target="_blank"
                             rel="noopener noreferrer"
                             leftIcon={<DownloadIcon />}

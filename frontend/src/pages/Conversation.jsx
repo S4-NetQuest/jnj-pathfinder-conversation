@@ -17,6 +17,7 @@ import {
   AlertDescription,
   Flex,
   Image,
+  Icon,
   useToast,
   useBreakpointValue,
   SimpleGrid,
@@ -37,6 +38,7 @@ import {
   CalendarIcon,
   EditIcon,
   ViewIcon,
+  InfoIcon,
 } from '@chakra-ui/icons'
 import ReactQuill from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
@@ -48,6 +50,7 @@ import api from '../services/api'
 import ScheduleFollowupModal from '../components/ScheduleFollowupModal'
 import DownloadPDFButton from '../components/DownloadPDFButton'
 import ReviewConversationModal from '../components/ReviewConversationModal'
+import DisclaimerModal from '../components/DisclaimerModal'
 import kaSummaryImg from '../assets/images/ka-summary.png'
 import ikaSummaryImg from '../assets/images/ika-summary.png'
 import faSummaryImg from '../assets/images/fa-summary.png'
@@ -87,6 +90,8 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [completed, setCompleted] = useState(false)
+  const [showDisclaimer, setShowDisclaimer] = useState(false)
+  const [disclaimerAccepted, setDisclaimerAccepted] = useState(false)
 
   const effectiveConversationData = pdfMode ? pdfConversationData : conversation;
   const effectiveCompleted = pdfMode ? (pdfConversationData?.status === 'completed') : completed;
@@ -423,6 +428,17 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
       }
       setResponses(responseMap)
 
+      // Check if this is a new conversation and disclaimer hasn't been shown
+      const hasAnswers = Object.keys(responseMap).length > 0
+      const disclaimerShown = localStorage.getItem(`disclaimer_shown_${id}`)
+
+      if (!hasAnswers && !disclaimerShown && !isCompleted) {
+        setShowDisclaimer(true)
+        setDisclaimerAccepted(false)
+      } else {
+        setDisclaimerAccepted(true)
+      }
+
       // Set current question index based on completion status and responses
       if (isCompleted) {
         setCurrentQuestionIndex(questions.length - 1)
@@ -512,6 +528,26 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
         notes: ''
       }))
     }
+  }
+
+  const handleDisclaimerAccept = () => {
+    setDisclaimerAccepted(true)
+    setShowDisclaimer(false)
+    // Store in localStorage that disclaimer has been shown for this conversation
+    localStorage.setItem(`disclaimer_shown_${id}`, 'true')
+
+    toast({
+      title: 'Ready to Begin',
+      description: 'You can now start the conversation',
+      status: 'success',
+      duration: 3000,
+      isClosable: true,
+    })
+  }
+
+  const handleDisclaimerClose = () => {
+    // If user closes disclaimer without accepting, redirect back to home
+    setShowDisclaimer(false)
   }
 
   const handleNotesOpen = () => {
@@ -962,7 +998,27 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
         </Card>
 
         {/* Show questions for non-PDF mode and not completed */}
-        {!pdfMode && !effectiveCompleted && currentQuestion && (
+        {/* ADD THIS NEW SECTION - Disclaimer placeholder */}
+        {!pdfMode && !effectiveCompleted && !disclaimerAccepted && (
+          <Box
+            p={8}
+            textAlign="center"
+            bg="gray.50"
+            borderRadius="md"
+            border="1px solid"
+            borderColor="gray.200"
+          >
+            <VStack spacing={4}>
+              <Icon as={InfoIcon} boxSize={8} color="gray.400" />
+              <Text color="gray.600">
+                Please acknowledge the disclaimer to begin the conversation.
+              </Text>
+            </VStack>
+          </Box>
+        )}
+
+        {/* MODIFY THIS EXISTING SECTION - Add disclaimerAccepted condition */}
+        {!pdfMode && !effectiveCompleted && currentQuestion && disclaimerAccepted && (
           /* Question Card */
           <Card>
             <CardBody>
@@ -1263,6 +1319,14 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
             conversationData={effectiveConversationData}
             alignmentTypes={alignmentTypes}
           />
+
+          {/* Disclaimer Modal */}
+          <DisclaimerModal
+            isOpen={showDisclaimer}
+            onClose={handleDisclaimerClose}
+            onAccept={handleDisclaimerAccept}
+          />
+
         </>
       )}
     </Container>

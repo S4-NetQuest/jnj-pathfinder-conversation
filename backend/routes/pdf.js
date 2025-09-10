@@ -1,4 +1,4 @@
-// backend/routes/pdf.js - COMPLETE FIXED VERSION FOR WINDOWS SERVER 2012
+// backend/routes/pdf.js - CLEANED AND FIXED
 process.noDeprecation = true;
 
 const express = require('express');
@@ -22,13 +22,6 @@ router.use((req, res, next) => {
   console.log(`PDF Route: ${req.method} ${req.path}`);
   console.log('Headers:', req.headers);
   next();
-});
-
-// Options handler for CORS
-// Simplified OPTIONS handler - let global CORS handle it
-router.options('*', (req, res) => {
-  console.log('PDF OPTIONS request received for:', req.path);
-  res.sendStatus(200);
 });
 
 // Generate mappings from local backend data
@@ -62,13 +55,9 @@ const getResponseText = (questionId, responseValue) => {
   return responseMapping[questionId]?.[responseValue] || `Response: ${responseValue}`;
 };
 
-// Helper function for waiting
-const waitForTimeout = (ms) => {
-  return new Promise(resolve => setTimeout(resolve, ms));
-};
-
 const getChromeExecutablePath = () => {
   // For production/staging on Windows Server 2012
+  /*
   if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging') {
     const prodPath = 'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe';
     if (fs.existsSync(prodPath)) {
@@ -77,25 +66,26 @@ const getChromeExecutablePath = () => {
     }
     throw new Error('Production Chrome executable not found at expected path.');
   }
+  */
 
   // For local development on Windows 11
-  // Assumes you downloaded Chrome for Testing into a .chrome folder in your project root
   const devPath = path.resolve(process.cwd(), 'chrome', 'chrome-win', 'chrome.exe');
   if (fs.existsSync(devPath)) {
     console.log(`Using development Chrome for Testing path: ${devPath}`);
     return devPath;
   }
 
-  // Fallback for local development if you want to use your regularly installed Chrome
+  // Fallback for local development
   const localFallbackPath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
   if (fs.existsSync(localFallbackPath)) {
-    console.log(`Using local fallback Chrome path: ${localFallbackPath}. WARNING: Version mismatch may occur.`);
+    console.log(`Using local fallback Chrome path: ${localFallbackPath}`);
     return localFallbackPath;
   }
 
   throw new Error('Chrome executable could not be found for the current environment.');
 };
 
+// CORS test endpoint
 router.get('/cors-test', (req, res) => {
   console.log('PDF CORS test endpoint hit');
   res.json({
@@ -118,7 +108,7 @@ router.get('/health', (req, res) => {
   });
 });
 
-// Main PDF generation endpoint - WORKING WITH PUPPETEER 19.11.1 + CHROME 109
+// Main PDF generation endpoint
 router.post('/generate', async (req, res) => {
   console.log('PDF Generate endpoint called');
   let browser;
@@ -130,18 +120,21 @@ router.post('/generate', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Conversation data is required' });
     }
 
+    console.log('Conversation data:', conversationData);
+    console.log('Conversation data scores:', conversationData.scores);
+    console.log('Scores keys:', Object.keys(conversationData.scores || {}));
+    console.log('Scores length:', Object.keys(conversationData.scores || {}).length);
+
     timeoutId = setTimeout(() => {
       console.log('PDF generation timeout reached (60s)');
-      if (browser) browser.close(); // Attempt to clean up
+      if (browser) browser.close();
       if (!res.headersSent) {
         res.status(408).json({ success: false, error: 'PDF generation timeout' });
       }
     }, 60000);
 
-    // CHANGE 3: Get the executable path dynamically
     const executablePath = getChromeExecutablePath();
 
-    // CHANGE 4: Refined and simplified launch options for Chrome 109
     const launchOptions = {
       executablePath,
       headless: true,
@@ -150,12 +143,12 @@ router.post('/generate', async (req, res) => {
         '--no-sandbox',
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
-        '--disable-gpu', // Crucial for server environments
+        '--disable-gpu',
         '--disable-software-rasterizer',
-        '--single-process', // Often helps stability on older Windows versions
+        '--single-process',
         '--no-zygote',
         '--disable-features=VizDisplayCompositor',
-        '--run-all-compositor-stages-before-draw', // Helps with rendering issues
+        '--run-all-compositor-stages-before-draw',
       ]
     };
 
@@ -200,26 +193,25 @@ router.post('/generate', async (req, res) => {
   }
 });
 
-console.log('PDF /generate route registered');
-
-// Helper function: Generate all PDF pages
+// Generate all PDF pages
 async function generateAllPDFPages(browser, conversationData) {
   const pdfBuffers = [];
 
   try {
     console.log('Starting PDF page generation...');
 
-    // Page 1: Main conversation results
-    console.log('Generating Page 1: Conversation Results');
+    // Page 1: Main conversation results (frontend screenshot with chart + score breakdown)
+    console.log('Generating Page 1: Conversation Results with Scores');
     try {
-      //const page1Buffer = await generateSimpleConversationPDF(browser, conversationData);
-      const page1Buffer = await generateMainConversationPDF(browser, conversationData);
+      const page1Buffer = await generateEnhancedConversationPDF(browser, conversationData);
       pdfBuffers.push(page1Buffer);
       console.log('✅ Page 1 generated successfully');
     } catch (error) {
       console.error('❌ Error generating Page 1:', error.message);
       throw new Error(`Failed to generate conversation summary: ${error.message}`);
     }
+
+    // Remove Pages 2 and 3 (chart and score breakdown) since they're captured in Page 1
 
     // Page 2: Questions and Responses
     if (conversationData.responses && conversationData.responses.length > 0) {
@@ -230,7 +222,6 @@ async function generateAllPDFPages(browser, conversationData) {
         console.log('✅ Page 2 generated successfully');
       } catch (error) {
         console.error('❌ Error generating Page 2:', error.message);
-        // Don't throw here, just log the error and continue
         console.log('Continuing without questions page...');
       }
     }
@@ -244,17 +235,22 @@ async function generateAllPDFPages(browser, conversationData) {
         console.log('✅ Page 3 generated successfully');
       } catch (error) {
         console.error('❌ Error generating Page 3:', error.message);
-        // Don't throw here, just log the error and continue
         console.log('Continuing without notes page...');
       }
     }
 
-    console.log(`✅ Generated ${pdfBuffers.length} pages total`);
-
-    if (pdfBuffers.length === 0) {
-      throw new Error('No PDF pages were generated successfully');
+    // Page 4: Final Pages: Fillable Form Pages
+    console.log('Generating Final Pages: Fillable Forms');
+    try {
+      const formPagesBuffer = await generateFillableFormPagesPDF(browser, conversationData);
+      pdfBuffers.push(formPagesBuffer);
+      console.log('✅ Fillable form pages generated successfully');
+    } catch (error) {
+      console.error('❌ Error generating fillable form pages:', error.message);
+      console.log('Continuing without form pages...');
     }
 
+    console.log(`✅ Generated ${pdfBuffers.length} pages total`);
     return pdfBuffers;
 
   } catch (error) {
@@ -263,13 +259,14 @@ async function generateAllPDFPages(browser, conversationData) {
   }
 }
 
-async function generateMainConversationPDF(browser, conversationData) {
+// Generate main conversation summary PDF (Page 1)
+async function generateEnhancedConversationPDF(browser, conversationData) {
   const page = await browser.newPage();
 
   try {
     await page.setViewport({ width: 1200, height: 800 });
 
-    // Disable animations for consistent rendering
+    // Disable animations and force colors for PDF
     await page.evaluateOnNewDocument(() => {
       const css = `
         *, *::before, *::after {
@@ -277,6 +274,8 @@ async function generateMainConversationPDF(browser, conversationData) {
           animation-delay: 0s !important;
           transition-duration: 0s !important;
           transition-delay: 0s !important;
+          -webkit-print-color-adjust: exact !important;
+          color-adjust: exact !important;
         }
       `;
       const style = document.createElement('style');
@@ -284,41 +283,53 @@ async function generateMainConversationPDF(browser, conversationData) {
       document.head.appendChild(style);
     });
 
-    // Navigate to PDF view
+    // Try frontend view first, then fallback to enhanced HTML
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
     const pdfViewUrl = `${frontendUrl}/conversation/pdf-view?data=${encodeURIComponent(JSON.stringify(conversationData))}`;
 
-    console.log('Navigating to:', pdfViewUrl);
+    console.log('Attempting frontend PDF view:', pdfViewUrl);
 
-    await page.goto(pdfViewUrl, {
-      waitUntil: ['networkidle0', 'domcontentloaded'],
-      timeout: 30000
-    });
-
-    // Wait for content to load
-    await page.waitForSelector('[data-testid="conversation-pdf-content"]', {
-      timeout: 15000
-    });
-
-    // Wait for charts if they exist
     try {
-      await page.waitForSelector('.recharts-wrapper', { timeout: 5000 });
-      await waitForTimeout(page, 2000); // Compatible timeout for chart rendering
-    } catch (e) {
-      console.log('No charts found or timeout - continuing');
+      await page.goto(pdfViewUrl, {
+        waitUntil: ['networkidle0', 'domcontentloaded'],
+        timeout: 20000
+      });
+
+      await page.waitForSelector('[data-testid="conversation-pdf-content"]', {
+        timeout: 10000
+      });
+
+      // Wait for dynamic content
+      await new Promise(resolve => setTimeout(resolve, 3000));
+
+    } catch (frontendError) {
+      console.log('Frontend view failed, using enhanced fallback HTML:', frontendError.message);
+
+      // Use enhanced HTML with proper score rendering
+      const enhancedHtml = generateEnhancedConversationHTML(conversationData);
+      await page.setContent(enhancedHtml, {
+        waitUntil: 'networkidle0',
+        timeout: 15000
+      });
+
+      // Wait for content to render
+      await new Promise(resolve => setTimeout(resolve, 2000));
     }
 
-    // Generate PDF
+    // Force screen media type for color preservation
+    await page.emulateMediaType('screen');
+
+    // Generate PDF with enhanced settings
     const pdf = await page.pdf({
       format: 'Letter',
       printBackground: true,
+      preferCSSPageSize: false,
       margin: {
-        top: '0.5in',
-        right: '0.5in',
-        bottom: '0.5in',
-        left: '0.5in'
-      },
-      preferCSSPageSize: false
+        top: '0.2in',
+        right: '0.2in',
+        bottom: '0.2in',
+        left: '0.2in'
+      }
     });
 
     return pdf;
@@ -328,135 +339,118 @@ async function generateMainConversationPDF(browser, conversationData) {
   }
 }
 
-// Helper function: Generate simple conversation PDF
-async function generateSimpleConversationPDF(browser, conversationData) {
-  let page;
+// Generate conversation summary HTML (Page 1)
+function generateEnhancedConversationHTML(conversationData) {
+  const surgeonName = conversationData.surgeon_name || conversationData.surgeonName || 'Unknown Surgeon';
+  const hospitalName = conversationData.hospital_name || conversationData.hospitalName || 'Unknown Hospital';
+  const currentAlignment = conversationData.current_alignment || 'Not determined';
+  const conversationDate = conversationData.conversation_date || conversationData.created_at || new Date().toISOString();
 
-  try {
-    console.log('Creating new page for conversation PDF...');
-    page = await browser.newPage();
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Conversation Summary</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          margin: 0;
+          padding: 20px;
+          background-color: #ffffff;
+          color: #333;
+          line-height: 1.6;
+          -webkit-print-color-adjust: exact !important;
+          color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
 
-    // Set a smaller viewport for better compatibility
-    await page.setViewport({ width: 800, height: 600 });
+        .container {
+          max-width: 800px;
+          margin: 0 auto;
+        }
 
-    console.log('Setting page content...');
+        .header {
+          border-bottom: 3px solid #eb1700;
+          padding-bottom: 20px;
+          margin-bottom: 30px;
+        }
 
-    const surgeonName = conversationData.surgeon_name || conversationData.surgeonName || 'Unknown Surgeon';
-    const hospitalName = conversationData.hospital_name || conversationData.hospitalName || 'Unknown Hospital';
-    const currentAlignment = conversationData.current_alignment || 'Not determined';
-    const conversationDate = conversationData.conversation_date || conversationData.created_at || new Date().toISOString();
+        .title {
+          color: #eb1700;
+          font-size: 32px;
+          font-weight: bold;
+          margin-bottom: 10px;
+        }
 
-    const mainHtml = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="UTF-8">
-        <title>Conversation Summary</title>
-        <style>
-          body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #ffffff;
-            color: #333;
-            line-height: 1.6;
-          }
-          .header {
-            border-bottom: 3px solid #eb1700;
-            padding-bottom: 20px;
-            margin-bottom: 30px;
-          }
-          .title {
-            color: #eb1700;
-            font-size: 32px;
-            font-weight: bold;
-            margin-bottom: 10px;
-          }
-          .subtitle {
-            color: #81766f;
-            font-size: 18px;
-            margin-bottom: 5px;
-          }
-          .info-section {
-            background-color: #f7fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 25px;
-            margin-bottom: 25px;
-          }
-          .info-item {
-            margin-bottom: 15px;
-          }
-          .info-label {
-            color: #81766f;
-            font-size: 14px;
-            font-weight: 500;
-            margin-bottom: 5px;
-          }
-          .info-value {
-            color: #2d3748;
-            font-size: 16px;
-            font-weight: 500;
-          }
-          .result-section {
-            background-color: #f1efed;
-            border-radius: 8px;
-            padding: 25px;
-            text-align: center;
-            margin-bottom: 25px;
-          }
-          .result-title {
-            color: #eb1700;
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 15px;
-          }
-          .result-value {
-            color: #2d3748;
-            font-size: 20px;
-            font-weight: 500;
-            background-color: white;
-            padding: 15px;
-            border-radius: 6px;
-            border: 2px solid #eb1700;
-          }
-          .stats-section {
-            background-color: #f7fafc;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 25px;
-            text-align: center;
-          }
-          .stat-item {
-            background-color: white;
-            padding: 15px;
-            margin: 10px;
-            border-radius: 6px;
-            border: 1px solid #e2e8f0;
-            display: inline-block;
-            min-width: 120px;
-          }
-          .stat-value {
-            font-size: 24px;
-            font-weight: bold;
-            color: #eb1700;
-            margin-bottom: 5px;
-          }
-          .stat-label {
-            font-size: 14px;
-            color: #81766f;
-          }
-          .footer {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #e2e8f0;
-            text-align: center;
-            color: #81766f;
-            font-size: 14px;
-          }
-        </style>
-      </head>
-      <body>
+        .subtitle {
+          color: #81766f;
+          font-size: 18px;
+          margin-bottom: 5px;
+        }
+
+        .info-section {
+          background-color: #f7fafc;
+          border: 1px solid #e2e8f0;
+          border-radius: 8px;
+          padding: 25px;
+          margin-bottom: 25px;
+        }
+
+        .info-item {
+          margin-bottom: 15px;
+        }
+
+        .info-label {
+          color: #81766f;
+          font-size: 14px;
+          font-weight: 500;
+          margin-bottom: 5px;
+        }
+
+        .info-value {
+          color: #2d3748;
+          font-size: 16px;
+          font-weight: 500;
+        }
+
+        .result-section {
+          background-color: #f1efed;
+          border-radius: 8px;
+          padding: 25px;
+          text-align: center;
+          margin-bottom: 25px;
+        }
+
+        .result-title {
+          color: #eb1700;
+          font-size: 24px;
+          font-weight: bold;
+          margin-bottom: 15px;
+        }
+
+        .result-value {
+          color: #2d3748;
+          font-size: 20px;
+          font-weight: 500;
+          background-color: white;
+          padding: 15px;
+          border-radius: 6px;
+          border: 2px solid #eb1700;
+        }
+
+        .footer {
+          margin-top: 40px;
+          padding-top: 20px;
+          border-top: 1px solid #e2e8f0;
+          text-align: center;
+          color: #81766f;
+          font-size: 14px;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
         <div class="header">
           <div class="title">Pathfinder Conversation Guide</div>
           <div class="subtitle">Kinematic Restoration Assessment Summary</div>
@@ -486,113 +480,45 @@ async function generateSimpleConversationPDF(browser, conversationData) {
           <div class="result-value">${currentAlignment}</div>
         </div>
 
-        <div class="stats-section">
-          <div class="stat-item">
-            <div class="stat-value">${conversationData.responses ? conversationData.responses.length : 0}</div>
-            <div class="stat-label">Questions Answered</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-value">${hasNotes(conversationData) ? 'Yes' : 'No'}</div>
-            <div class="stat-label">Notes Included</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-value">100%</div>
-            <div class="stat-label">Assessment Complete</div>
-          </div>
-        </div>
-
         <div class="footer">
           <p>Johnson & Johnson MedTech - Pathfinder Conversation Guide</p>
           <p>Generated on ${new Date().toLocaleDateString()}</p>
         </div>
-      </body>
-      </html>
-    `;
+      </div>
+    </body>
+    </html>
+  `;
+}
 
-    // Set content with timeout
-    await page.setContent(mainHtml, {
-      waitUntil: 'networkidle0', // Waits until there are no network connections for 500ms
-      timeout: 15000
-    });
+// Generate questions page PDF (Page 4)
+async function generateQuestionsPagePDF(browser, conversationData) {
+  let page;
+  try {
+    page = await browser.newPage();
+    await page.setViewport({ width: 800, height: 600 });
+    const questionsHtml = generateQuestionsPageHtml(conversationData);
 
-    console.log('Content set, waiting for render...');
-
-    // Wait for content to be fully rendered
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    console.log('Generating PDF...');
-
+    await page.setContent(questionsHtml, { waitUntil: 'networkidle0', timeout: 10000 });
     await page.emulateMediaType('screen');
 
-    const pdf = await page.pdf({
+    return await page.pdf({
       format: 'Letter',
       printBackground: true,
-      margin: { top: '0.5in', right: '0.5in', bottom: '0.5in', left: '0.5in' },
-      timeout: 20000
+      margin: { top: '0.5in', right: '0.5in', bottom: '0.5in', left: '0.5in' }
     });
-
-    console.log('✅ PDF generated successfully, size:', pdf.length);
-    return pdf;
-
-  } catch (error) {
-    console.error('❌ Error in generateSimpleConversationPDF:', error);
-    throw error;
   } finally {
-    if (page) {
-      try {
-        await page.close();
-        console.log('Page closed successfully');
-      } catch (e) {
-        console.error('Error closing page:', e);
-      }
-    }
+    if (page) await page.close();
   }
 }
 
-// Helper function: Generate questions page PDF
-async function generateQuestionsPagePDF(browser, conversationData) {
-    let page;
-    try {
-        page = await browser.newPage();
-        await page.setViewport({ width: 800, height: 600 });
-        const questionsHtml = generateQuestionsPageHtml(conversationData);
-
-        await page.setContent(questionsHtml, { waitUntil: 'networkidle0', timeout: 10000 });
-        await page.emulateMediaType('screen'); // Add this line
-
-        return await page.pdf({ format: 'Letter', printBackground: true, /* ... */ });
-    } finally {
-        if (page) await page.close();
-    }
-}
-
-// Helper function: Generate notes page PDF
-async function generateNotesPagePDF(browser, conversationData) {
-    let page;
-    try {
-        page = await browser.newPage();
-        await page.setViewport({ width: 800, height: 600 });
-        const notesHtml = generateNotesPageHtml(conversationData);
-
-        await page.setContent(notesHtml, { waitUntil: 'networkidle0', timeout: 10000 });
-        await page.emulateMediaType('screen'); // Add this line
-
-        return await page.pdf({ format: 'Letter', printBackground: true, /* ... */ });
-    } finally {
-        if (page) await page.close();
-    }
-}
-
-// Helper function: Generate questions page HTML
+// Generate questions page HTML (Page 4)
 function generateQuestionsPageHtml(conversationData) {
   const surgeonName = conversationData.surgeon_name || conversationData.surgeonName || 'Unknown Surgeon';
-  const hospitalName = conversationData.hospital_name || conversationData.hospitalName || 'Unknown Hospital';
 
   const responsesHtml = conversationData.responses.map((response, index) => {
     const questionText = getQuestionText(response.question_id);
     let responseValue = response.response_value;
 
-    // Parse JSON if needed
     if (typeof responseValue === 'string') {
       try {
         responseValue = JSON.parse(responseValue);
@@ -644,28 +570,6 @@ function generateQuestionsPageHtml(conversationData) {
           font-size: 28px;
           font-weight: bold;
           margin-bottom: 10px;
-        }
-        .subtitle {
-          color: #81766f;
-          font-size: 16px;
-          margin-bottom: 5px;
-        }
-        .stats-section {
-          background-color: #f1efed;
-          border-radius: 8px;
-          padding: 15px;
-          margin-bottom: 25px;
-          text-align: center;
-        }
-        .stats-value {
-          font-size: 24px;
-          font-weight: bold;
-          color: #eb1700;
-        }
-        .stats-label {
-          font-size: 14px;
-          color: #81766f;
-          margin-top: 5px;
         }
         .question-item {
           background-color: #f7fafc;
@@ -729,11 +633,6 @@ function generateQuestionsPageHtml(conversationData) {
         <div class="title">Questions and Responses</div>
       </div>
 
-      <div class="stats-section">
-        <div class="stats-value">${conversationData.responses.length}</div>
-        <div class="stats-label">Questions Answered</div>
-      </div>
-
       <div class="questions-section">
         ${responsesHtml}
       </div>
@@ -747,14 +646,31 @@ function generateQuestionsPageHtml(conversationData) {
   `;
 }
 
-// Helper function: Generate notes page HTML
+// Generate notes page PDF (Page 5)
+async function generateNotesPagePDF(browser, conversationData) {
+  let page;
+  try {
+    page = await browser.newPage();
+    await page.setViewport({ width: 800, height: 600 });
+    const notesHtml = generateNotesPageHtml(conversationData);
+
+    await page.setContent(notesHtml, { waitUntil: 'networkidle0', timeout: 10000 });
+    await page.emulateMediaType('screen');
+
+    return await page.pdf({
+      format: 'Letter',
+      printBackground: true,
+      margin: { top: '0.5in', right: '0.5in', bottom: '0.5in', left: '0.5in' }
+    });
+  } finally {
+    if (page) await page.close();
+  }
+}
+
+// Generate notes page HTML (Page 5)
 function generateNotesPageHtml(conversationData) {
-  const surgeonName = conversationData.surgeon_name || conversationData.surgeonName || 'Unknown Surgeon';
-  const hospitalName = conversationData.hospital_name || conversationData.hospitalName || 'Unknown Hospital';
-
   let notesContent = 'No notes available';
-
-  // Handle notes as either string or array
+``
   if (typeof conversationData.notes === 'string' && conversationData.notes.trim() !== '') {
     notesContent = conversationData.notes;
   } else if (Array.isArray(conversationData.notes) && conversationData.notes.length > 0) {
@@ -762,7 +678,6 @@ function generateNotesPageHtml(conversationData) {
     notesContent = notes ? notes.content : 'No notes available';
   }
 
-  // Clean up HTML content from ReactQuill
   const cleanNotesContent = notesContent
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
     .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
@@ -796,11 +711,6 @@ function generateNotesPageHtml(conversationData) {
           font-size: 28px;
           font-weight: bold;
           margin-bottom: 10px;
-        }
-        .subtitle {
-          color: #81766f;
-          font-size: 16px;
-          margin-bottom: 5px;
         }
         .notes-section {
           background-color: #f7fafc;
@@ -856,6 +766,160 @@ function generateNotesPageHtml(conversationData) {
   `;
 }
 
+// Generate fillable form pages PDF
+async function generateFillableFormPagesPDF(browser, conversationData) {
+  const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
+
+  try {
+    // Create a new PDF document
+    const pdfDoc = await PDFDocument.create();
+
+    // Add a page
+    let currentPage = pdfDoc.addPage([612, 792]); // Letter size: 8.5" x 11"
+    const { width, height } = currentPage.getSize();
+
+    // Embed fonts
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+    // Colors
+    const jjRed = rgb(235/255, 23/255, 0/255); // #eb1700
+    const darkGray = rgb(45/255, 55/255, 72/255); // #2d3748
+    const lightGray = rgb(129/255, 118/255, 111/255); // #81766f
+
+    // Get conversation data
+    const currentDate = new Date().toLocaleDateString();
+
+    let yPosition = height - 60; // Start from top
+
+    // Header
+    currentPage.drawText('Pathfinder Conversation Follow-up', {
+      x: 50,
+      y: yPosition,
+      size: 20,
+      font: boldFont,
+      color: jjRed
+    });
+
+    yPosition -= 25;
+
+
+    // Get the form
+    const form = pdfDoc.getForm();
+
+    // Form sections with one multiline field each
+    const formSections = [
+      { title: 'Key Takeaways', height: 120 },
+      { title: 'Action Planning', height: 80 },
+      { title: 'Agreed Next Steps', height: 80 },
+      { title: 'Resources Needed', height: 60 },
+      { title: 'Target Timeline for Follow-up', height: 40 },
+      { title: 'Coaching Notes', height: 140 },
+      { title: 'Manager Sign-Off', height: 40 },
+      { title: 'Date', height: 30 }
+    ];
+
+    for (const section of formSections) {
+      // Check if we need a new page
+      if (yPosition < 180) {
+        currentPage = pdfDoc.addPage([612, 792]);
+        yPosition = height - 60;
+      }
+
+      // Section title
+      currentPage.drawText(section.title, {
+        x: 50,
+        y: yPosition,
+        size: 14,
+        font: boldFont,
+        color: jjRed
+      });
+
+      // Draw underline for section title using actual text width
+      const titleWidth = boldFont.widthOfTextAtSize(section.title, 14);
+      currentPage.drawLine({
+        start: { x: 50, y: yPosition - 5 },
+        end: { x: 50 + titleWidth, y: yPosition - 5 },
+        thickness: 1,
+        color: jjRed
+      });
+
+      yPosition -= 25;
+
+      // Create ONE multiline text field for this section
+      const fieldName = section.title.replace(/\s+/g, '_').toLowerCase();
+      const textField = form.createTextField(fieldName);
+      textField.setText('');
+      textField.enableMultiline();
+      textField.enableScrolling();
+
+      // Set up the field appearance first, then modify font size
+      textField.addToPage(currentPage, {
+        x: 60,
+        y: yPosition - section.height,
+        width: width - 120,
+        height: section.height,
+        textColor: rgb(0, 0, 0)
+      });
+
+      // Now set font size after the field is added to the page
+      try {
+        textField.setFontSize(10); // Try setting font size after addToPage
+      } catch (fontError) {
+        console.log(`Could not set font size for ${fieldName}, using default`);
+      }
+
+      yPosition -= section.height + 25; // Move down by field height plus spacing
+    }
+
+    // Add disclaimer at bottom of last page
+    const pages = pdfDoc.getPages();
+    const lastPage = pages[pages.length - 1];
+
+    const disclaimerText = 'Disclaimer: The PATHFINDER Conversation Guide is an educational resource designed to reflect TKA alignment preferences based on HCP responses. It does not prescribe or recommend any specific alignment philosophy. Clinical decisions remain the sole responsibility of the surgeon, based on their professional judgement and patient-specific factors.';
+
+    // Split disclaimer into lines that fit
+    const maxWidth = width - 100;
+    const words = disclaimerText.split(' ');
+    const lines = [];
+    let currentLine = '';
+
+    for (const word of words) {
+      const testLine = currentLine + (currentLine ? ' ' : '') + word;
+      const textWidth = font.widthOfTextAtSize(testLine, 8);
+
+      if (textWidth <= maxWidth) {
+        currentLine = testLine;
+      } else {
+        lines.push(currentLine);
+        currentLine = word;
+      }
+    }
+    if (currentLine) lines.push(currentLine);
+
+    // Draw disclaimer
+    let disclaimerY = 80;
+    for (let i = lines.length - 1; i >= 0; i--) {
+      lastPage.drawText(lines[i], {
+        x: 50,
+        y: disclaimerY,
+        size: 8,
+        font: font,
+        color: lightGray
+      });
+      disclaimerY += 10;
+    }
+
+    // Save the PDF
+    const pdfBytes = await pdfDoc.save();
+    return Buffer.from(pdfBytes);
+
+  } catch (error) {
+    console.error('Error creating fillable PDF:', error);
+    throw error;
+  }
+}
+
 // Helper function: Check if notes exist
 function hasNotes(conversationData) {
   // Check if notes exist as a string
@@ -890,9 +954,7 @@ async function combinePDFs(pdfBuffers) {
 
 console.log('PDF router setup complete. Routes registered:');
 console.log('- GET /health');
-console.log('- GET /test');
-console.log('- GET /simple-test');
-console.log('- GET /alt-test');
+console.log('- GET /cors-test');
 console.log('- POST /generate');
 
 module.exports = router;
