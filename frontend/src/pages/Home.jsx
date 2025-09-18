@@ -28,7 +28,7 @@ import { getPdfUrl } from '../utils/urlUtils'
 
 // Import new assets
 import pathfinderWordmark from '../assets/images/FINAL-JJMT_Wordmark_Pathfinder Conversation Guide_RGB_Red.png'
-import pathfinderCompass from '../assets/images/Picture1.png'
+import pathfinderCompass from '../assets/images/home-compass.png'
 
 const Home = () => {
   const { user, logout, isSalesRep, isSurgeon } = useAuth()
@@ -39,10 +39,10 @@ const Home = () => {
   // Responsive layout configuration
   const isMobile = useBreakpointValue({ base: true, md: false })
   const compassSize = useBreakpointValue({
-    base: { w: '280px', h: '280px' },
-    md: { w: '320px', h: '320px' },
-    lg: { w: '400px', h: '400px' },
-    xl: { w: '450px', h: '450px' }
+    base: { w: '0px', h: '0px' },
+    md: { w: '520px', h: '520px' },
+    lg: { w: '550px', h: '550px' },
+    xl: { w: '600px', h: '600px' }
   })
 
   // Calculate available height accounting for header and footer
@@ -128,7 +128,7 @@ const Home = () => {
             <Box textAlign="center">
               <Image
                 src={pathfinderWordmark}
-                alt="PATHFINDER Kinematic Restoration Conversation Guide"
+                alt="Kinematic Restoration"
                 maxH={{ base: '80px', md: '100px' }}
                 w="auto"
                 fallback={
@@ -161,12 +161,12 @@ const Home = () => {
       overflow="hidden"
     >
       <Container maxW="container.xl" h={availableHeight}>
-        <VStack spacing={{ base: 4, md: 6 }} h="full" py={{ base: 2, md: 4 }}>
-          <Box textAlign="center" w="full">
+        <VStack spacing={{ base: 4, md: 6 }} h="full" py={{ base: 0, md: 0 }}>
+          <Box textAlign="center" w="full" p={0}>
             <Image
               src={pathfinderWordmark}
-              alt="PATHFINDER Kinematic Restoration Conversation Guide"
-              maxH={{ base: '50px', md: '65px', lg: '80px' }}
+              alt="Kinematic Restoration"
+              maxH={{ base: '50px', md: '65px', lg: '100px' }}
               w="auto"
               mx="auto"
               opacity={imagesLoaded.wordmark ? 1 : 0}
@@ -179,8 +179,7 @@ const Home = () => {
                   textAlign="center"
                   className="font-display"
                 >
-                  PATHFINDER<br />
-                  Kinematic Restoration Conversation Guide
+                  Kinematic Restoration
                 </Text>
               }
             />
@@ -195,7 +194,8 @@ const Home = () => {
               maxW="900px"
               mx="auto"
             >
-              The PATHFINDER Kinematic Restoration Conversation Guide will help identify {isSalesRep ? "your customer's" : "your"} alignment philosophy in Total Knee Arthroplasty (TKA).
+              {/* The PATHFINDER Kinematic Restoration Conversation Guide will help identify {isSalesRep ? "your customer's" : "your"} alignment philosophy in Total Knee Arthroplasty (TKA). */}
+              Let’s talk about alignment philosophies in Total Knee Arthroplasty (TKA).
             </Text>
           </Box>
 
@@ -505,7 +505,7 @@ const Home = () => {
                   </GridItem>
 
                   <GridItem>
-                    <Flex justify="center" align="center" h="full">
+                    <Flex justify="center" align="center" h="full" marginTop={"-50px"}>
                       <Image
                         src={pathfinderCompass}
                         alt="PATHFINDER Compass"

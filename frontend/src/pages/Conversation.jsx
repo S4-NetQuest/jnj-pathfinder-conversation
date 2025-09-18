@@ -1286,26 +1286,33 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
               </ModalBody>
 
               <ModalFooter>
-                <Button
-                  variant="outline"
-                  mr={3}
-                  onClick={onNotesClose}
-                  borderColor="#eb1700"
-                  color="#eb1700"
-                  _hover={{ bg: "#eb1700", color: "white" }}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  bg="#eb1700"
-                  color="white"
-                  _hover={{ bg: "#9e0000" }}
-                  onClick={handleSaveNotes}
-                  isLoading={saving}
-                  loadingText="Saving..."
-                >
-                  Save Notes
-                </Button>
+                <VStack flex="1" spacing={2} mt={-4} align="stretch">
+                  <Text fontSize={"sm"} color="#81766f">
+                    This notes field is provided for educational discussion purposes only. Do not enter patient information, adverse event details, or complaint data. Notes should be limited to professional conversation context (e.g. alignment philosophy, practice insights or educational reflections.
+                  </Text>
+                  <HStack justify="end" spacing={3} mt={2}>
+                    <Button
+                      variant="outline"
+                      mr={3}
+                      onClick={onNotesClose}
+                      borderColor="#eb1700"
+                      color="#eb1700"
+                      _hover={{ bg: "#eb1700", color: "white" }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      bg="#eb1700"
+                      color="white"
+                      _hover={{ bg: "#9e0000" }}
+                      onClick={handleSaveNotes}
+                      isLoading={saving}
+                      loadingText="Saving..."
+                    >
+                      Save Notes
+                    </Button>
+                  </HStack>
+                </VStack>
               </ModalFooter>
             </ModalContent>
           </Modal>

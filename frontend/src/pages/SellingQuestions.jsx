@@ -7,23 +7,25 @@ import {
   Text,
   Button,
   Box,
-  useDisclosure,
-  useBreakpointValue,
-  Image,
   Badge,
   Checkbox,
   CheckboxGroup,
   Wrap,
   WrapItem,
-  Divider,
   useColorModeValue,
   Collapse,
   Icon,
   Flex,
   Spacer,
+  Tabs,
+  TabList,
+  TabPanels,
+  Tab,
+  TabPanel,
 } from '@chakra-ui/react'
 import { ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons'
 import { useAuth } from '../contexts/AuthContext'
+import ChallengerSellingChoreography from '../components/ChallengerSellingChoreography'
 
 // Import your selling questions JSON data
 // You can either import it as a static file or fetch it from an API
@@ -214,6 +216,104 @@ const QuestionCard = ({ question, categories }) => {
   )
 }
 
+
+
+const SellingQuestionsFilter = ({
+  categories,
+  selectedCategories,
+  onCategoryChange,
+  filteredQuestions,
+  totalQuestions
+}) => {
+  const cardBgColor = useColorModeValue('white', 'gray.800')
+
+  const handleSelectAll = () => {
+    onCategoryChange(categories.map(cat => cat.name))
+  }
+
+  const handleClearAll = () => {
+    onCategoryChange([])
+  }
+
+  return (
+    <Box
+      p={6}
+      bg={cardBgColor}
+      borderRadius="lg"
+      borderWidth="1px"
+      borderColor="jj.gray.200"
+      shadow="sm"
+    >
+      <VStack spacing={4} align="stretch">
+        <Flex align="center" wrap="wrap" gap={2}>
+          <Text fontWeight="medium" color="jj.gray.700" minW="fit-content">
+            Filter by Category:
+          </Text>
+          <Spacer />
+          <HStack spacing={2} wrap="wrap">
+            <Button
+              size="sm"
+              variant="outline"
+              colorScheme="red"
+              onClick={handleSelectAll}
+              isDisabled={selectedCategories.length === categories.length}
+            >
+              Select All
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              colorScheme="red"
+              onClick={handleClearAll}
+              isDisabled={selectedCategories.length === 0}
+            >
+              Clear All
+            </Button>
+          </HStack>
+        </Flex>
+
+        <CheckboxGroup
+          value={selectedCategories}
+          onChange={onCategoryChange}
+        >
+          <Wrap spacing={4}>
+            {categories.map((category) => (
+              <WrapItem key={category.id}>
+                <Checkbox
+                  value={category.name}
+                  colorScheme={category.color}
+                  size="lg"
+                >
+                  <VStack align="start" spacing={0} ml={2}>
+                    <Text fontSize="sm" fontWeight="medium">
+                      {category.name}
+                    </Text>
+                    <Text fontSize="xs" color="jj.gray.500" maxW="200px">
+                      {category.description}
+                    </Text>
+                  </VStack>
+                </Checkbox>
+              </WrapItem>
+            ))}
+          </Wrap>
+        </CheckboxGroup>
+
+        {/* Results Summary */}
+        <Box pt={2} borderTop="1px solid" borderColor="jj.gray.200">
+          <Text fontSize="sm" color="jj.gray.600">
+            Showing {filteredQuestions.length} of {totalQuestions} questions
+            {selectedCategories.length > 0 && selectedCategories.length < categories.length && (
+              <Text as="span" ml={2} fontWeight="">
+                • Filtered by: {selectedCategories.join(', ')}
+              </Text>
+            )}
+          </Text>
+        </Box>
+      </VStack>
+    </Box>
+  )
+}
+
 const SellingQuestions = () => {
   const { user } = useAuth()
   const [questions, setQuestions] = useState([])
@@ -221,9 +321,9 @@ const SellingQuestions = () => {
   const [filteredQuestions, setFilteredQuestions] = useState([])
   const [selectedCategories, setSelectedCategories] = useState([])
   const [loading, setLoading] = useState(true)
-  //const isMobile = useBreakpointValue({ base: true, md: false })
+  const [activeTab, setActiveTab] = useState(0) // 0 = Challenger Selling, 1 = Selling Questions
+
   const bgColor = useColorModeValue('gray.50', 'gray.900')
-  const cardBgColor = useColorModeValue('white', 'gray.800')
 
   useEffect(() => {
     // Simulate loading delay and load static data
@@ -270,146 +370,99 @@ const SellingQuestions = () => {
     setSelectedCategories(values)
   }
 
-  const handleClearFilters = () => {
-    setSelectedCategories(categories.map(cat => cat.name))
-  }
-
-  const handleSelectAll = () => {
-    setSelectedCategories(categories.map(cat => cat.name))
-  }
-
-  const handleClearAll = () => {
-    setSelectedCategories([])
+  const handleTabChange = (index) => {
+    setActiveTab(index)
   }
 
   return (
     <Box bg={bgColor} minH="100vh" pt="0px" pb="100px">
-      <Container maxW="container.lg" py={4}>
+      <Container maxW="container.xl" py={4}>
         <VStack spacing={8} align="stretch">
           {/* Header */}
           <Box textAlign="center" px={4}>
             <Text
               fontSize={{ base: '24px', md: '32px' }}
               fontFamily="heading"
-              fontWeight=""
               color="jj.red"
               mb={2}
               lineHeight="1.2"
             >
-              Selling Questions
+              Applying the Challenger Mindset
             </Text>
             <Text color="jj.gray.600" fontSize={{ base: 'sm', md: 'md' }}>
-              Strategic questions to encourage exploration of Kinematic Restoration
+              Strategic approaches and questions for Kinematic Restoration conversations
             </Text>
           </Box>
 
           {loading ? (
             <Box textAlign="center" py={12}>
               <Text color="jj.gray.500" fontSize="lg">
-                Loading selling questions...
+                Loading sales resources...
               </Text>
             </Box>
           ) : (
-            <>
-              {/* Filter Section */}
-              <Box
-                p={6}
-                bg={cardBgColor}
-                borderRadius="lg"
-                borderWidth="1px"
-                borderColor="jj.gray.200"
-                shadow="sm"
-              >
-                <VStack spacing={4} align="stretch">
-                  <Flex align="center" wrap="wrap" gap={2}>
-                    <Text fontWeight="medium" color="jj.gray.700" minW="fit-content">
-                      Filter by Category:
-                    </Text>
-                    <Spacer />
-                    <HStack spacing={2} wrap="wrap">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        colorScheme="red"
-                        onClick={handleSelectAll}
-                        isDisabled={selectedCategories.length === categories.length}
-                      >
-                        Select All
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        colorScheme="red"
-                        onClick={handleClearAll}
-                        isDisabled={selectedCategories.length === 0}
-                      >
-                        Clear All
-                      </Button>
-                    </HStack>
-                  </Flex>
+            <Tabs
+              variant="enclosed"
+              colorScheme="red"
+              index={activeTab}
+              onChange={handleTabChange}
+              defaultIndex={0}
+            >
+              <TabList>
+                <Tab fontWeight="medium">
+                  Challenger Selling Choreography
+                </Tab>
+                <Tab fontWeight="medium">
+                  Selling Questions
+                </Tab>
+              </TabList>
 
-                  <CheckboxGroup
-                    value={selectedCategories}
-                    onChange={handleCategoryChange}
-                  >
-                    <Wrap spacing={4}>
-                      {categories.map((category) => (
-                        <WrapItem key={category.id}>
-                          <Checkbox
-                            value={category.name}
-                            colorScheme={category.color}
-                            size="lg"
-                          >
-                            <VStack align="start" spacing={0} ml={2}>
-                              <Text fontSize="sm" fontWeight="medium">
-                                {category.name}
-                              </Text>
-                              <Text fontSize="xs" color="jj.gray.500" maxW="200px">
-                                {category.description}
-                              </Text>
-                            </VStack>
-                          </Checkbox>
-                        </WrapItem>
-                      ))}
-                    </Wrap>
-                  </CheckboxGroup>
+              <TabPanels>
+                {/* Challenger Selling Choreography Tab */}
+                <TabPanel px={0} py={6}>
+                  <ChallengerSellingChoreography />
+                </TabPanel>
 
-                  {/* Results Summary */}
-                  <Box pt={2} borderTop="1px solid" borderColor="jj.gray.200">
-                    <Text fontSize="sm" color="jj.gray.600">
-                      Showing {filteredQuestions.length} of {questions.length} questions
-                      {selectedCategories.length > 0 && selectedCategories.length < categories.length && (
-                        <Text as="span" ml={2} fontWeight="">
-                          • Filtered by: {selectedCategories.join(', ')}
-                        </Text>
-                      )}
-                    </Text>
-                  </Box>
-                </VStack>
-              </Box>
-
-              {/* Questions List */}
-              {filteredQuestions.length === 0 ? (
-                <Box textAlign="center" py={12}>
-                  <Text color="jj.gray.500" fontSize="lg" mb={4}>
-                    No questions found matching your selected categories.
-                  </Text>
-                  <Button colorScheme="blue" onClick={handleSelectAll}>
-                    Reset Filters
-                  </Button>
-                </Box>
-              ) : (
-                <VStack spacing={4} align="stretch">
-                  {filteredQuestions.map((question) => (
-                    <QuestionCard
-                      key={question.id}
-                      question={question}
+                {/* Selling Questions Tab */}
+                <TabPanel px={0} py={6}>
+                  <VStack spacing={6} align="stretch">
+                    {/* Filter Section */}
+                    <SellingQuestionsFilter
                       categories={categories}
+                      selectedCategories={selectedCategories}
+                      onCategoryChange={handleCategoryChange}
+                      filteredQuestions={filteredQuestions}
+                      totalQuestions={questions.length}
                     />
-                  ))}
-                </VStack>
-              )}
-            </>
+
+                    {/* Questions List */}
+                    {filteredQuestions.length === 0 ? (
+                      <Box textAlign="center" py={12}>
+                        <Text color="jj.gray.500" fontSize="lg" mb={4}>
+                          No questions found matching your selected categories.
+                        </Text>
+                        <Button
+                          colorScheme="red"
+                          onClick={() => handleCategoryChange(categories.map(cat => cat.name))}
+                        >
+                          Reset Filters
+                        </Button>
+                      </Box>
+                    ) : (
+                      <VStack spacing={4} align="stretch">
+                        {filteredQuestions.map((question) => (
+                          <QuestionCard
+                            key={question.id}
+                            question={question}
+                            categories={categories}
+                          />
+                        ))}
+                      </VStack>
+                    )}
+                  </VStack>
+                </TabPanel>
+              </TabPanels>
+            </Tabs>
           )}
         </VStack>
       </Container>
