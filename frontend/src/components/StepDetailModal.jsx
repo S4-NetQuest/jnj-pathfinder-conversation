@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Modal,
   ModalOverlay,
@@ -16,8 +16,17 @@ import {
   Heading,
   useColorModeValue,
   SimpleGrid,
+  List,
+  ListItem,
+  ListIcon,
+  Collapse,
+  Fade,
+  Flex,
+  Spacer,
+  useToast,
 } from '@chakra-ui/react'
-import { ChevronLeftIcon, ChevronRightIcon, ArrowBackIcon } from '@chakra-ui/icons'
+import { ChevronLeftIcon, ChevronRightIcon, ArrowBackIcon, ChevronDownIcon, ChevronUpIcon, ArrowForwardIcon } from '@chakra-ui/icons'
+import { MdCheckCircle } from 'react-icons/md'
 
 const StepDetailModal = ({
   isOpen,
@@ -31,6 +40,45 @@ const StepDetailModal = ({
   const bgColor = useColorModeValue('white', 'gray.800')
   const borderColor = useColorModeValue('jj.gray.200', 'gray.600')
   const cardBgColor = useColorModeValue('white', 'gray.700')
+  const toast = useToast()
+
+  // State to track which cards have details expanded
+  const [expandedCards, setExpandedCards] = useState({});
+
+  // Reset expanded state when step changes
+  useEffect(() => {
+    if (currentStep) {
+      setExpandedCards({});
+    }
+  }, [currentStep?.id]);
+
+  // Toggle expanded state for a specific card
+  const toggleCardExpansion = (index) => {
+    setExpandedCards(prev => ({
+      ...prev,
+      [index]: !prev[index]
+    }));
+  };
+
+  // Handle Discovery navigation when no implementation is provided
+  const handleNavigateToDiscovery = () => {
+    if (typeof onNavigateToDiscovery === 'function') {
+      onNavigateToDiscovery();
+    } else {
+      toast({
+        title: "Navigation",
+        description: "Navigating to Discovery Questions...",
+        status: "info",
+        duration: 2000,
+        isClosable: true,
+      });
+      // Close the current modal
+      onClose();
+    }
+  };
+
+  // Is this the final step?
+  const isFinalStep = currentStep && currentStep.id === 6;
 
   // Swipe handling
   useEffect(() => {
@@ -246,7 +294,7 @@ const StepDetailModal = ({
                     </Text>
                   </Box>
 
-                  {/* Expanded Message / Insight Content */}
+                  {/* Bullet Points Section */}
                   <Box p={6}>
                     <Heading
                       size="sm"
@@ -256,16 +304,56 @@ const StepDetailModal = ({
                       borderColor="jj.red"
                       pb={2}
                     >
-                      Expanded Message / Insight
+                      Key Points
                     </Heading>
-                    <Text
-                      fontSize="sm"
-                      lineHeight="1.7"
-                      color="jj.gray.700"
-                      whiteSpace="pre-line"
+
+                    {/* Bullet Points List */}
+                    {card.bulletText && (
+                      <List spacing={3} mb={4}>
+                        {card.bulletText.map((bullet, i) => (
+                          <ListItem key={i} display="flex">
+                            <ListIcon as={MdCheckCircle} color="jj.red" mt="3px" />
+                            <Text fontSize="sm" lineHeight="1.5">
+                              {bullet}
+                            </Text>
+                          </ListItem>
+                        ))}
+                      </List>
+                    )}
+
+                    {/* Show Details Button */}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      colorScheme="red"
+                      width="100%"
+                      mt={2}
+                      onClick={() => toggleCardExpansion(index)}
+                      rightIcon={expandedCards[index] ? <ChevronUpIcon /> : <ChevronDownIcon />}
                     >
-                      {card.expandedMessage}
-                    </Text>
+                      {expandedCards[index] ? 'Hide Details' : 'Show Details'}
+                    </Button>
+
+                    {/* Expandable Details Section */}
+                    <Collapse in={expandedCards[index]} animateOpacity>
+                      <Box
+                        mt={4}
+                        p={4}
+                        bg="gray.50"
+                        borderRadius="md"
+                        borderWidth="1px"
+                        borderColor="gray.200"
+                      >
+                        <Text
+                          fontSize="sm"
+                          lineHeight="1.7"
+                          color="jj.gray.700"
+                          whiteSpace="pre-line"
+                        >
+                          {card.expandedMessage}
+                        </Text>
+                      </Box>
+                    </Collapse>
                   </Box>
                 </Box>
               ))}
@@ -277,41 +365,57 @@ const StepDetailModal = ({
           bg="jj.gray.50"
           borderTop="1px solid"
           borderColor={borderColor}
-          justifyContent="space-between"
           py={4}
         >
-          {/* Return to Choreography Button */}
-          <Button
-            leftIcon={<ArrowBackIcon />}
-            variant="outline"
-            colorScheme="red"
-            onClick={onClose}
-          >
-            Return to Choreography
-          </Button>
+          <Flex width="100%" align="center">
+            {/* Return to Choreography Button */}
+            <Button
+              leftIcon={<ArrowBackIcon />}
+              variant="outline"
+              colorScheme="red"
+              onClick={onClose}
+            >
+              Return to Choreography
+            </Button>
 
-          {/* Navigation Buttons */}
-          <HStack spacing={2}>
-            <IconButton
-              icon={<ChevronLeftIcon />}
-              aria-label="Previous step"
-              variant="outline"
-              colorScheme="red"
-              isDisabled={!hasPreviousStep}
-              onClick={onPreviousStep}
-            />
-            <Text fontSize="sm" color="jj.gray.600" minW="80px" textAlign="center">
-              {currentStep.id} of 6
-            </Text>
-            <IconButton
-              icon={<ChevronRightIcon />}
-              aria-label="Next step"
-              variant="outline"
-              colorScheme="red"
-              isDisabled={!hasNextStep}
-              onClick={onNextStep}
-            />
-          </HStack>
+            <Spacer />
+
+            {/* Navigation - Shows differently on final step */}
+            {isFinalStep ? (
+              <Fade in={true}>
+                <Button
+                  rightIcon={<ArrowForwardIcon />}
+                  colorScheme="red"
+                  onClick={handleNavigateToDiscovery}
+                  ml={2}
+                >
+                  Continue to Discovery Questions
+                </Button>
+              </Fade>
+            ) : (
+              <HStack spacing={2}>
+                <IconButton
+                  icon={<ChevronLeftIcon />}
+                  aria-label="Previous step"
+                  variant="outline"
+                  colorScheme="red"
+                  isDisabled={!hasPreviousStep}
+                  onClick={onPreviousStep}
+                />
+                <Text fontSize="sm" color="jj.gray.600" minW="120px" textAlign="center">
+                  Step {currentStep.id} of 6: {currentStep.title}
+                </Text>
+                <IconButton
+                  icon={<ChevronRightIcon />}
+                  aria-label="Next step"
+                  variant="outline"
+                  colorScheme="red"
+                  isDisabled={!hasNextStep}
+                  onClick={onNextStep}
+                />
+              </HStack>
+            )}
+          </Flex>
         </ModalFooter>
       </ModalContent>
     </Modal>

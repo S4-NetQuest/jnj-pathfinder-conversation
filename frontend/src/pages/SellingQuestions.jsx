@@ -413,7 +413,7 @@ const SellingQuestions = () => {
                   Challenger Selling Choreography
                 </Tab>
                 <Tab fontWeight="medium">
-                  Selling Questions
+                  Discovery Questions
                 </Tab>
               </TabList>
 
