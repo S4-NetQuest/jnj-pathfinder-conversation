@@ -12,7 +12,7 @@ import {
 } from '@chakra-ui/react'
 import StepDetailModal from './StepDetailModal'
 
-// Static data for the choreography steps
+// Static data for the choreography steps - PRESERVED EXACTLY AS IN THE ORIGINAL
 const choreographySteps = [
   {
     id: 1,
@@ -401,37 +401,16 @@ const FlowConnector = ({ direction = 'horizontal' }) => {
   )
 }
 
+// Updated component with navigation functionality but preserving all original data
 const ChallengerSellingChoreography = ({ onNavigateToDiscovery }) => {
   const [selectedStep, setSelectedStep] = useState(null)
   const { isOpen, onOpen, onClose } = useDisclosure()
+  const toast = useToast()
 
   // Responsive layout configuration
   const isMobile = useBreakpointValue({ base: true, md: false })
   const gridColumns = useBreakpointValue({ base: 2, md: 6, lg: 12 })
   const spacing = useBreakpointValue({ base: 4, md: 6, lg: 0 })
-  const toast = useToast();
-
-  const handleNavigateToDiscovery = () => {
-    // If custom handler provided, use it
-    if (typeof onNavigateToDiscovery === 'function') {
-      onNavigateToDiscovery();
-    } else {
-      // Close modal first
-      onClose();
-
-      // Show feedback
-      toast({
-        title: "Navigation",
-        description: "Navigating to Discovery Questions...",
-        status: "info",
-        duration: 2000,
-        isClosable: true,
-      });
-
-      // Navigate (adjust path as needed)
-      navigate('/discovery-questions');
-    }
-  };
 
   const handleStepClick = (step) => {
     setSelectedStep(step)
@@ -452,6 +431,34 @@ const ChallengerSellingChoreography = ({ onNavigateToDiscovery }) => {
     }
   }
 
+  // NEW FUNCTION: Handle navigation to Discovery Questions
+  const handleNavigateToDiscovery = () => {
+    // First close the modal
+    onClose()
+
+    // Log for debugging
+    console.log("Attempting to navigate to Discovery Questions")
+
+    // Show toast for debugging
+    toast({
+      title: "Navigation in progress",
+      description: "Closing modal before tab change",
+      status: "info",
+      duration: 1000,
+      isClosable: true,
+    })
+
+    // Delay before calling the parent's navigation function to ensure modal is closed
+    setTimeout(() => {
+      if (typeof onNavigateToDiscovery === 'function') {
+        console.log("Calling parent navigation function")
+        onNavigateToDiscovery()
+      } else {
+        console.warn("No navigation function provided")
+      }
+    }, 100)
+  }
+
   const hasNextStep = selectedStep ? selectedStep.id < choreographySteps.length : false
   const hasPreviousStep = selectedStep ? selectedStep.id > 1 : false
 
@@ -460,46 +467,46 @@ const ChallengerSellingChoreography = ({ onNavigateToDiscovery }) => {
       {/* Header */}
       <Box textAlign="center" mb={4}>
         <Text fontSize="sm" color="jj.gray.500" mt={2}>
-          Tap any step to view detailed strategic guidance
+          Master the 6-step approach for challenging HCP thinking constructively. <br />Review strategic messaging for each phase: Warmer → Reframe → Rational Drowning → Emotional Impact → New Way → Solution
         </Text>
       </Box>
 
       {/* Flow Map */}
-{isMobile ? (
-  // Mobile Layout: 2-column grid with arrows between and after boxes
-  <VStack spacing={4} width="100%">
-    {/* Process steps in pairs */}
-    {[0, 2, 4].map((startIndex) => (
-      <HStack key={startIndex} spacing={3} justify="center" width="100%">
-        {/* First card */}
-        <StepCard
-          step={choreographySteps[startIndex]}
-          onClick={handleStepClick}
-          isActive={selectedStep?.id === choreographySteps[startIndex].id}
-        />
+      {isMobile ? (
+        // Mobile Layout: 2-column grid with arrows between and after boxes
+        <VStack spacing={4} width="100%">
+          {/* Process steps in pairs */}
+          {[0, 2, 4].map((startIndex) => (
+            <HStack key={startIndex} spacing={3} justify="center" width="100%">
+              {/* First card */}
+              <StepCard
+                step={choreographySteps[startIndex]}
+                onClick={handleStepClick}
+                isActive={selectedStep?.id === choreographySteps[startIndex].id}
+              />
 
-        {/* Arrow between cards in same row */}
-        {choreographySteps[startIndex + 1] && (
-          <FlowConnector direction="horizontal" />
-        )}
+              {/* Arrow between cards in same row */}
+              {choreographySteps[startIndex + 1] && (
+                <FlowConnector direction="horizontal" />
+              )}
 
-        {/* Second card */}
-        {choreographySteps[startIndex + 1] && (
-          <StepCard
-            step={choreographySteps[startIndex + 1]}
-            onClick={handleStepClick}
-            isActive={selectedStep?.id === choreographySteps[startIndex + 1].id}
-          />
-        )}
+              {/* Second card */}
+              {choreographySteps[startIndex + 1] && (
+                <StepCard
+                  step={choreographySteps[startIndex + 1]}
+                  onClick={handleStepClick}
+                  isActive={selectedStep?.id === choreographySteps[startIndex + 1].id}
+                />
+              )}
 
-        {/* Arrow after rightmost card (except for last row) */}
-        {startIndex < 4 && (
-          <FlowConnector direction="horizontal" />
-        )}
-      </HStack>
-    ))}
-  </VStack>
-) : (
+              {/* Arrow after rightmost card (except for last row) */}
+              {startIndex < 4 && (
+                <FlowConnector direction="horizontal" />
+              )}
+            </HStack>
+          ))}
+        </VStack>
+      ) : (
         // Desktop/Tablet Layout: Horizontal Flow
         <Box
           display="grid"
@@ -523,7 +530,7 @@ const ChallengerSellingChoreography = ({ onNavigateToDiscovery }) => {
         </Box>
       )}
 
-      {/* Step Detail Modal */}
+      {/* Step Detail Modal - NOTE: Added onNavigateToDiscovery prop */}
       <StepDetailModal
         isOpen={isOpen}
         onClose={onClose}

@@ -29,10 +29,21 @@ import {
   UnorderedList,
   ListItem,
   Grid,
-  GridItem
+  GridItem,
+  IconButton,
+  Tooltip,
+  Accordion,
+  AccordionItem,
+  AccordionButton,
+  AccordionPanel,
+  AccordionIcon,
+  useMediaQuery
 } from '@chakra-ui/react'
+import { ArrowBackIcon, ExternalLinkIcon } from '@chakra-ui/icons'
 import { useAuth } from '../contexts/AuthContext'
+import { referencesData } from '../data/referencesData.js'
 import { getPhilosophyColor, getPhilosophyVariant } from '../theme/theme'
+
 // Static data for the philosophies
 const philosophiesData = {
   philosophies: [
@@ -208,6 +219,57 @@ const philosophiesData = {
   ]
 }
 
+// Create a mapping of philosophy IDs to correct format expected by the References component
+const philosophyIdMapping = {
+  'ma': 'MA',
+  'ika': 'iKA',
+  'ka': 'KA',
+  'fa': 'FA'
+};
+
+// Fixed hasReferencesForPhilosophy function based on actual referencesData structure
+const hasReferencesForPhilosophy = (philosophyId) => {
+  // Convert to format used in references data (MA, KA, iKA, FA)
+  const formattedId = philosophyIdMapping[philosophyId] || philosophyId.toUpperCase();
+
+  // Guard check to ensure referencesData exists and is structured as expected
+  if (!referencesData || !referencesData.papers || !Array.isArray(referencesData.papers)) {
+    console.warn('References data is not available or not in the expected format');
+    return false;
+  }
+
+  // Check if there are any papers for this philosophy category
+  return referencesData.papers.some(paper => paper.category === formattedId);
+}
+
+const EvidenceButton = ({ philosophyId }) => {
+  const navigate = useNavigate();
+
+  // Only render button if references exist for this philosophy
+  if (!hasReferencesForPhilosophy(philosophyId)) {
+    return null;
+  }
+
+  const handleViewEvidence = () => {
+    // Use the correct format from our mapping to ensure proper filtering on References page
+    navigate(`/references?philosophy=${philosophyId}`)
+  }
+
+  return (
+    <Button
+      size="sm"
+      variant="outline"
+      colorScheme="blue"
+      onClick={handleViewEvidence}
+      leftIcon={<ExternalLinkIcon />}
+      fontSize="xs"
+      mt={2}
+    >
+      View Evidence
+    </Button>
+  )
+}
+
 const ParameterComparisonCard = ({ parameter, selectedPhilosophies, philosophies }) => {
   const bgColor = useColorModeValue('white', 'gray.800')
   const borderColor = useColorModeValue('gray.200', 'gray.600')
@@ -217,8 +279,16 @@ const ParameterComparisonCard = ({ parameter, selectedPhilosophies, philosophies
     selectedPhilosophies.includes(p.id)
   )
 
+  // Add a check for mobile screens
+  const [isMobileScreen] = useMediaQuery("(max-width: 768px)")
+
   const getGridTemplateColumns = () => {
     const count = selectedPhilosophiesData.length
+    // For mobile, return a single column layout
+    if (isMobileScreen) {
+      return "1fr"
+    }
+    // For desktop, keep the original behavior
     return `repeat(${count}, 1fr)`
   }
 
@@ -239,40 +309,91 @@ const ParameterComparisonCard = ({ parameter, selectedPhilosophies, philosophies
       </CardHeader>
 
       <CardBody p={0}>
-        <Grid templateColumns={getGridTemplateColumns()}>
-          {selectedPhilosophiesData.map((philosophy, index) => (
-            <GridItem key={philosophy.id}>
-              <Box
-                p={4}
-                borderRight={index < selectedPhilosophiesData.length - 1 ? "1px solid" : "none"}
-                borderColor={borderColor}
-                h="100%"
-              >
-                <VStack spacing={3} align="stretch" h="100%">
-                  <Badge
-                    variant={getPhilosophyVariant(philosophy.id)}  // Use variant instead of colorScheme
-                    fontSize="xs"
-                    fontWeight="normal"
-                    px={2}
-                    py={1}
-                    borderRadius="md"
-                    alignSelf="center"
-                  >
-                    {philosophy.abbreviation}
-                  </Badge>
-                  <Text
-                    fontSize="sm"
-                    lineHeight="1.5"
-                    color="gray.700"
-                    textAlign="center"
-                  >
-                    {philosophy.parameters[parameter.id]}
-                  </Text>
-                </VStack>
-              </Box>
-            </GridItem>
-          ))}
-        </Grid>
+        {isMobileScreen ? (
+          // Mobile view: Accordion-style layout
+          <Accordion allowToggle defaultIndex={[0]}>
+            {selectedPhilosophiesData.map((philosophy) => (
+              <AccordionItem key={philosophy.id} border="none">
+                <AccordionButton
+                  py={3}
+                  px={4}
+                  borderBottom="1px solid"
+                  borderBottomColor={borderColor}
+                  _last={{ borderBottom: "none" }}
+                >
+                  <HStack flex="1" spacing={2}>
+                    <Badge
+                      variant={getPhilosophyVariant(philosophy.id)}
+                      fontSize="xs"
+                      fontWeight="normal"
+                      px={2}
+                      py={1}
+                      borderRadius="md"
+                    >
+                      {philosophy.abbreviation}
+                    </Badge>
+                    <Text fontWeight="medium" fontSize="sm">
+                      {philosophy.name}
+                    </Text>
+                  </HStack>
+                  <AccordionIcon />
+                </AccordionButton>
+                <AccordionPanel pb={4} pt={3}>
+                  <VStack align="center" spacing={3}>
+                    <EvidenceButton philosophyId={philosophy.id} />
+                    <Text
+                      fontSize="sm"
+                      lineHeight="1.5"
+                      color="gray.700"
+                      textAlign="center"
+                    >
+                      {philosophy.parameters[parameter.id]}
+                    </Text>
+                  </VStack>
+                </AccordionPanel>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        ) : (
+          // Desktop view: Original grid layout
+          <Grid templateColumns={getGridTemplateColumns()}>
+            {selectedPhilosophiesData.map((philosophy, index) => (
+              <GridItem key={philosophy.id}>
+                <Box
+                  p={4}
+                  borderRight={index < selectedPhilosophiesData.length - 1 ? "1px solid" : "none"}
+                  borderColor={borderColor}
+                  h="100%"
+                >
+                  <VStack spacing={3} align="stretch" h="100%">
+                    <VStack spacing={1}>
+                      <Badge
+                        variant={getPhilosophyVariant(philosophy.id)}
+                        fontSize="xs"
+                        fontWeight="normal"
+                        px={2}
+                        py={1}
+                        borderRadius="md"
+                        alignSelf="center"
+                      >
+                        {philosophy.abbreviation}
+                      </Badge>
+                      <EvidenceButton philosophyId={philosophy.id} />
+                    </VStack>
+                    <Text
+                      fontSize="sm"
+                      lineHeight="1.5"
+                      color="gray.700"
+                      textAlign="center"
+                    >
+                      {philosophy.parameters[parameter.id]}
+                    </Text>
+                  </VStack>
+                </Box>
+              </GridItem>
+            ))}
+          </Grid>
+        )}
       </CardBody>
     </Card>
   )
@@ -293,7 +414,7 @@ const ClinicalTakeawaysCard = ({ philosophy }) => {
       <CardHeader pb={2}>
         <VStack spacing={2} align="center">
           <Badge
-            variant={getPhilosophyVariant(philosophy.id)}  // Use variant instead of colorScheme
+            variant={getPhilosophyVariant(philosophy.id)}
             fontSize="xs"
             fontWeight="normal"
             px={2}
@@ -311,6 +432,7 @@ const ClinicalTakeawaysCard = ({ philosophy }) => {
           >
             {philosophy.name}
           </Heading>
+          <EvidenceButton philosophyId={philosophy.id} />
         </VStack>
       </CardHeader>
 
@@ -347,6 +469,7 @@ const PhilosophySelectionFilter = ({
 }) => {
   const bgColor = useColorModeValue('white', 'gray.800')
   const borderColor = useColorModeValue('gray.200', 'gray.600')
+  const [isMobileScreen] = useMediaQuery("(max-width: 768px)")
 
   const handleSelectAllPhilosophies = () => {
     onPhilosophiesChange(philosophies.map(p => p.id))
@@ -366,7 +489,13 @@ const PhilosophySelectionFilter = ({
       shadow="sm"
     >
       <VStack spacing={4} align="stretch">
-        <Flex align="center" wrap="wrap" gap={2}>
+        <Flex
+          align="center"
+          wrap="wrap"
+          gap={2}
+          direction={isMobileScreen ? "column" : "row"}
+          alignItems={isMobileScreen ? "flex-start" : "center"}
+        >
           <Text fontWeight="medium" color="gray.700" minW="fit-content">
             Select Philosophies to Compare:
           </Text>
@@ -437,6 +566,7 @@ const ParameterCategoryFilter = ({
 }) => {
   const bgColor = useColorModeValue('white', 'gray.800')
   const borderColor = useColorModeValue('gray.200', 'gray.600')
+  const [isMobileScreen] = useMediaQuery("(max-width: 768px)")
 
   const handleSelectAllCategories = () => {
     onCategoriesChange(categories.map(c => c.id))
@@ -456,12 +586,21 @@ const ParameterCategoryFilter = ({
       shadow="sm"
     >
       <VStack spacing={4} align="stretch">
-        <Flex align="center" wrap="wrap" gap={2}>
+        <Flex
+          align="center"
+          wrap="wrap"
+          gap={2}
+          direction={isMobileScreen ? "column" : "row"}
+          alignItems={isMobileScreen ? "flex-start" : "center"}
+        >
           <Text fontWeight="medium" color="gray.700" minW="fit-content">
             Filter by Parameter Category:
           </Text>
           <Spacer />
           <HStack spacing={2}>
+            <Text fontSize="sm" color="gray.600">
+              Showing {filteredParametersCount} of {totalParametersCount} parameters
+            </Text>
             <Button
               size="sm"
               variant="outline"
@@ -469,7 +608,7 @@ const ParameterCategoryFilter = ({
               onClick={handleSelectAllCategories}
               isDisabled={selectedCategories.length === categories.length}
             >
-              Select All
+              All
             </Button>
             <Button
               size="sm"
@@ -478,7 +617,7 @@ const ParameterCategoryFilter = ({
               onClick={handleClearAllCategories}
               isDisabled={selectedCategories.length === 0}
             >
-              Clear All
+              None
             </Button>
           </HStack>
         </Flex>
@@ -487,45 +626,35 @@ const ParameterCategoryFilter = ({
           value={selectedCategories}
           onChange={onCategoriesChange}
         >
-          <Wrap spacing={4}>
+          <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4}>
             {categories.map((category) => (
-              <WrapItem key={category.id}>
-                <Checkbox
-                  value={category.id}
-                  colorScheme={category.color}
-                  size="lg"
-                >
-                  <VStack align="start" spacing={0} ml={2}>
-                    <Text fontSize="sm" fontWeight="medium">
-                      {category.name}
-                    </Text>
-                    <Text fontSize="xs" color="gray.500" maxW="200px">
-                      {category.description}
-                    </Text>
-                  </VStack>
-                </Checkbox>
-              </WrapItem>
-              ))}
-            </Wrap>
+              <Checkbox
+                key={category.id}
+                value={category.id}
+                colorScheme={category.color}
+              >
+                <VStack align="start" spacing={0} ml={2}>
+                  <Text fontSize="sm" fontWeight="medium">
+                    {category.name}
+                  </Text>
+                  <Text fontSize="xs" color="gray.500">
+                    {category.description}
+                  </Text>
+                </VStack>
+              </Checkbox>
+            ))}
+          </SimpleGrid>
         </CheckboxGroup>
-
-        <Box pt={2} borderTop="1px solid" borderColor={borderColor}>
-          <Text fontSize="sm" color="gray.600">
-            Showing {filteredParametersCount} of {totalParametersCount} parameters
-            {selectedCategories.length > 0 && selectedCategories.length < categories.length && (
-              <Text as="span" ml={2} fontWeight="medium">
-                • Filtered by: {selectedCategories.length} categories
-              </Text>
-            )}
-          </Text>
-        </Box>
       </VStack>
     </Box>
   )
 }
 
 const ComparePhilosophies = () => {
-  const { user } = useAuth()
+  const navigate = useNavigate()
+  const { isSalesRep } = useAuth()
+
+  // State variables
   const [philosophies, setPhilosophies] = useState([])
   const [parameters, setParameters] = useState([])
   const [categories, setCategories] = useState([])
@@ -584,25 +713,46 @@ const ComparePhilosophies = () => {
     return Math.min(count, 4)
   }
 
+  const handleGoBack = () => {
+    navigate(-1)
+  }
+
   return (
     <Box bg={bgColor} minH="100vh" pt="0px" pb="100px">
       <Container maxW="container.xl" py={4}>
         <VStack spacing={8} align="stretch">
-          {/* Header */}
-          <Box textAlign="center" px={4}>
-            <Text
-              fontSize={{ base: '24px', md: '32px' }}
-              fontFamily="heading"
-              color="jj.red"
-              mb={2}
-              lineHeight="1.2"
-            >
-              Compare Alignment Philosophies
-            </Text>
-            <Text color="gray.600" fontSize={{ base: 'sm', md: 'md' }}>
-              Compare surgical parameters and clinical takeaways across different alignment approaches
-            </Text>
-          </Box>
+          {/* Back Navigation */}
+          <Flex direction="row" alignItems="center" justifyContent="space-between" width="100%">
+            <Tooltip label="Go Back" placement="right">
+              <IconButton
+                icon={<ArrowBackIcon />}
+                onClick={handleGoBack}
+                colorScheme="red"
+                variant="outline"
+                size="md"
+                aria-label="Go back"
+              />
+            </Tooltip>
+
+            {/* Header */}
+            <Box textAlign="center" flex="1" px={4}>
+              <Text
+                fontSize={{ base: '24px', md: '32px' }}
+                fontFamily="heading"
+                color="jj.red"
+                mb={2}
+                lineHeight="1.2"
+              >
+                Compare Alignment Philosophies
+              </Text>
+              <Text color="gray.600" fontSize={{ base: 'sm', md: 'md' }}>
+                Compare surgical parameters and clinical takeaways across different alignment approaches
+              </Text>
+            </Box>
+
+            {/* Empty box for visual balance */}
+            <Box width={10} />
+          </Flex>
 
           {loading ? (
             <Box textAlign="center" py={12}>
@@ -704,6 +854,18 @@ const ComparePhilosophies = () => {
               )}
             </>
           )}
+
+          {/* Back Navigation (Bottom) */}
+          <Flex justifyContent="center" my={4}>
+            <Button
+              leftIcon={<ArrowBackIcon />}
+              colorScheme="red"
+              variant="outline"
+              onClick={handleGoBack}
+            >
+              Return to Previous Page
+            </Button>
+          </Flex>
         </VStack>
       </Container>
     </Box>

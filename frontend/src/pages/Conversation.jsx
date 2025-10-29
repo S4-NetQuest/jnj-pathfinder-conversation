@@ -9,6 +9,7 @@ import {
   Button,
   Card,
   CardBody,
+  Divider,
   Progress,
   Badge,
   Alert,
@@ -42,9 +43,10 @@ import {
 } from '@chakra-ui/icons'
 import ReactQuill from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
-import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer, Legend } from 'recharts'
-
 import { useAuth } from '../contexts/AuthContext'
+import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer, Legend } from 'recharts'
+import ImageViewerModal from '../components/ImageViewerModal';
+import { ZoomInIcon, ZoomOutIcon } from '../components/icons/ZoomIcons';
 import { useQuestions } from '../hooks/useQuestions'
 import api from '../services/api'
 import ScheduleFollowupModal from '../components/ScheduleFollowupModal'
@@ -92,6 +94,8 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
   const [completed, setCompleted] = useState(false)
   const [showDisclaimer, setShowDisclaimer] = useState(false)
   const [disclaimerAccepted, setDisclaimerAccepted] = useState(false)
+  const [imageViewerOpen, setImageViewerOpen] = useState(false)
+  const [currentImage, setCurrentImage] = useState(null)
 
   const effectiveConversationData = pdfMode ? pdfConversationData : conversation;
   const effectiveCompleted = pdfMode ? (pdfConversationData?.status === 'completed') : completed;
@@ -773,70 +777,95 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
     progressText = `${answeredQuestionsCount} of ${totalQuestionsCount} answered`
   }
 
+  // Updated renderHeaderButtons function with better mobile responsiveness
   const renderHeaderButtons = () => {
     if (pdfMode) return null; // Hide buttons in PDF mode
 
     return (
-      <HStack spacing={2}>
-        {user?.role === 'sales_rep' && id && (
-          <>
-            <Button
-              size="sm"
-              variant="outline"
-              leftIcon={<ViewIcon />}
-              onClick={onReviewOpen}
-              borderColor="#eb1700"
-              color="#eb1700"
-              _hover={{ bg: "#eb1700", color: "white" }}
-            >
-              {isMobile ? 'Review' : 'Review Conversation'}
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              leftIcon={<EditIcon />}
-              onClick={handleNotesOpen}
-              borderColor="#eb1700"
-              color="#eb1700"
-              _hover={{ bg: "#eb1700", color: "white" }}
-            >
-              {isMobile ? 'Notes' : 'Edit Notes'}
-            </Button>
-            <DownloadPDFButton
-              conversationId={id}
-              conversationData={conversation}
-            />
-          </>
-        )}
-        {!id && (
-          <Button
-            size="sm"
-            variant="outline"
-            leftIcon={<ArrowBackIcon />}
-            onClick={() => navigate('/')}
-            borderColor="#eb1700"
-            color="#eb1700"
-            _hover={{ bg: "#eb1700", color: "white" }}
-          >
-            Back to Home
-          </Button>
-        )}
-      </HStack>
+      <>
+      <VStack
+                spacing={2}
+          align="flex-end" // This aligns items to the start instead of stretching
+          width="auto"
+      >
+        <VStack
+          spacing={2}
+          align="flex-end" // This aligns items to the start instead of stretching
+          width="100%"
+        >
+          {user?.role === 'sales_rep' && id && (
+            <>
+              <Button
+                size="sm"
+                variant="outline"
+                leftIcon={<ViewIcon />}
+                onClick={onReviewOpen}
+                fontSize="xs"
+                borderColor="#eb1700"
+                color="#eb1700"
+                _hover={{ bg: "#eb1700", color: "white" }}
+                width="auto" // Explicitly set to auto width
+                maxWidth="200px" // Set a maximum width if desired
+              >
+                {isMobile ? 'Review' : 'Review Conversation'}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                leftIcon={<EditIcon />}
+                onClick={handleNotesOpen}
+                fontSize="xs"
+                borderColor="#eb1700"
+                color="#eb1700"
+                _hover={{ bg: "#eb1700", color: "white" }}
+                width="auto" // Explicitly set to auto width
+                maxWidth="200px" // Set a maximum width if desired
+              >
+                {isMobile ? 'Notes' : 'Edit Notes'}
+              </Button>
+              <DownloadPDFButton
+                conversationId={id}
+                fontSize="xs"
+                width="auto" // Explicitly set to auto width
+                maxWidth="200px" // Set a maximum width if desired
+              />
+            </>
+          )}
+        </VStack>
+        <Divider  />
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleSellingQuestions}
+                fontSize="xs"
+                borderColor="#eb1700"
+                color="#FFF"
+                backgroundColor="#eb1700"
+                _hover={{ bg: "#eb1700", color: "white" }}
+                width="auto"
+                maxWidth="200px"
+
+              >
+                {isMobile ? 'Challenger Mindset' : 'Applying the Challenger Mindset'}
+              </Button>
+      </VStack>
+      </>
     );
   };
 
-  // Modify the action buttons in the results section
+  // Updated renderActionButtons function with better mobile responsiveness
   const renderActionButtons = () => {
     if (pdfMode) return null; // Hide action buttons in PDF mode
 
     return (
-      <>
-        {/* Buttons Section */}
+      <VStack spacing={6} align="stretch" width="100%">
+        {/* Main Buttons Section */}
         <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={4} align="start">
           <Button
             colorScheme="red"
             size="lg"
             onClick={handleExploreKinematicRestoration}
+            width="100%"
           >
             Start Your Learning Journey
           </Button>
@@ -845,6 +874,7 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
             colorScheme="red"
             size="lg"
             onClick={handleComparePhilosophies}
+            width="100%"
           >
             Compare Philosophies Tool
           </Button>
@@ -853,6 +883,7 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
             colorScheme="red"
             size="lg"
             onClick={handleSellingQuestions}
+            width="100%"
           >
             Applying the Challenger Mindset
           </Button>
@@ -861,19 +892,28 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
             colorScheme="red"
             size="lg"
             onClick={handleReferences}
+            width="100%"
           >
             Evidence Resources
           </Button>
         </SimpleGrid>
 
+        <Divider />
+
         {/* Actions */}
-        <HStack justify="center" spacing={4}>
+        <Flex
+          direction={{ base: "column", md: "row" }}
+          justify="center"
+          gap={4}
+          width="100%"
+        >
           <Button
             variant="outline"
             onClick={handleRestart}
             borderColor="#eb1700"
             color="#eb1700"
             _hover={{ bg: "#eb1700", color: "white" }}
+            width={{ base: "100%", md: "auto" }}
           >
             Restart Assessment
           </Button>
@@ -882,19 +922,21 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
             colorScheme="red"
             variant="outline"
             onClick={() => setIsScheduleOpen(true)}
+            width={{ base: "100%", md: "auto" }}
           >
             Schedule Follow-up
           </Button>
           <Button
             leftIcon={<CalendarIcon />}
             colorScheme="red"
-            variant="outline"
-            onClick={handleMedTechCalendar}
+            variant="solid"
+            onClick={() => {/* Action here */}}
+            width={{ base: "100%", md: "auto" }}
           >
-            EdTech Training Calendar
+            Training Calendar
           </Button>
-        </HStack>
-      </>
+        </Flex>
+      </VStack>
     );
   };
 
@@ -938,25 +980,30 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
                 {effectiveConversationData && (
                   <VStack align="start" spacing={1}>
                     <Text fontSize="sm" color="#81766f">
-                      Hospital: {effectiveConversationData.hospital_name || effectiveConversationData.hospitalName}
+                      Hospital: <Text as="span" fontWeight="500">{effectiveConversationData.hospital_name || effectiveConversationData.hospitalName}</Text>
                     </Text>
                     <Text fontSize="sm" color="#81766f">
-                      Affiliated Surgery Center: {effectiveConversationData.surgery_center_name || effectiveConversationData.surgeryCenterName}
+                      Affiliated Surgery Center: <Text as="span" fontWeight="500">{effectiveConversationData.surgery_center_name || effectiveConversationData.surgeryCenterName}</Text>
                     </Text>
                     <Text fontSize="sm" color="#81766f">
-                      Surgeon Knee Arthroplasty Volume / Year: {effectiveConversationData.surgeon_volume_per_year || effectiveConversationData.surgeonVolumePerYear}
+                      Surgeon Knee Arthroplasty Volume / Year: <Text as="span" fontWeight="500">{effectiveConversationData.surgeon_volume_per_year || effectiveConversationData.surgeonVolumePerYear}</Text>
                     </Text>
                     <Text fontSize="sm" color="#81766f">
-                      Surgeon is currently using robotics: {(effectiveConversationData.uses_robotics || effectiveConversationData.usesRobotics) ? 'Yes' : 'No'}
+                      Surgeon is currently using robotics: <Text as="span" fontWeight="500">{(effectiveConversationData.uses_robotics || effectiveConversationData.usesRobotics) ? 'Yes' : 'No'}</Text>
                     </Text>
                     <Text fontSize="sm" color="#81766f">
                       {(() => {
                         const alignment = effectiveConversationData.current_alignment || effectiveConversationData.currentAlignment;
-                        return `Current Alignment Philosophy: ${alignment === 'UNKNOWN' ? 'N/A' : alignment || 'N/A'}`;
+                        const alignmentValue = alignment === 'UNKNOWN' ? 'N/A' : alignment || 'N/A';
+                        return (
+                          <>
+                            Current Alignment Philosophy: <Text as="span" fontWeight="500">{alignmentValue}</Text>
+                          </>
+                        );
                       })()}
                     </Text>
                     <Text fontSize="sm" color="#81766f">
-                      Date: {new Date(effectiveConversationData.conversation_date || effectiveConversationData.conversationDate).toLocaleDateString()}
+                      Date: <Text as="span" fontWeight="500">{new Date(effectiveConversationData.conversation_date || effectiveConversationData.conversationDate).toLocaleDateString()}</Text>
                     </Text>
                     {/* Show completion status for completed conversations */}
                     {effectiveCompleted && (
@@ -1145,7 +1192,22 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
                     </CardBody>
                   </Card>
                   <Card h="100%" bg="white">
-                    <CardBody p={0} display="flex" alignItems="center" justifyContent="center">
+                    <CardBody
+                      p={0}
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="center"
+                      position="relative"
+                      cursor="zoom-in"
+                      onClick={() => {
+                        setCurrentImage({
+                          src: alignmentImages[recommendedAlignment?.abbreviation],
+                          alt: `${recommendedAlignment?.name} Summary Diagram`,
+                          type: recommendedAlignment
+                        });
+                        setImageViewerOpen(true);
+                      }}
+                    >
                       <Image
                         src={alignmentImages[recommendedAlignment?.abbreviation]}
                         alt={`${recommendedAlignment?.name} Summary Diagram`}
@@ -1154,7 +1216,42 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
                         objectFit="contain"
                         objectPosition="center"
                       />
+
+                      {/* Floating pill - consistently positioned at bottom */}
+                      <Box
+                        position="absolute"
+                        left="50%"
+                        bottom="16px"
+                        transform="translateX(-50%)"
+                        bg="#eb1700"
+                        color="white"
+                        borderRadius="full"
+                        px={4}
+                        py={1}
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="center"
+                        boxShadow="0px 2px 8px rgba(0,0,0,0.2)"
+                        fontSize={{ base: "sm", md: "sm" }}
+                        fontWeight="medium"
+                        opacity="0.9"
+                        _hover={{ opacity: 1 }}
+                        transition="opacity 0.2s"
+                      >
+                        <ZoomInIcon boxSize={{ base: 4, md: 5 }} mr={2} />
+                        <Text>{isMobile ? 'Tap to enlarge' : 'Click to enlarge'}</Text>
+                      </Box>
                     </CardBody>
+                    {/* <CardBody p={0} display="flex" alignItems="center" justifyContent="center">
+                      <Image
+                        src={alignmentImages[recommendedAlignment?.abbreviation]}
+                        alt={`${recommendedAlignment?.name} Summary Diagram`}
+                        w="100%"
+                        h="100%"
+                        objectFit="contain"
+                        objectPosition="center"
+                      />
+                    </CardBody> */}
                   </Card>
                 </SimpleGrid>
               )
@@ -1332,6 +1429,14 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
             isOpen={showDisclaimer}
             onClose={handleDisclaimerClose}
             onAccept={handleDisclaimerAccept}
+          />
+
+          <ImageViewerModal
+            isOpen={imageViewerOpen}
+            onClose={() => setImageViewerOpen(false)}
+            imageSrc={currentImage?.src}
+            imageAlt={currentImage?.alt}
+            alignmentType={currentImage?.type}
           />
 
         </>

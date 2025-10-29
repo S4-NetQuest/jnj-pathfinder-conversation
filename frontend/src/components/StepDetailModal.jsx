@@ -35,7 +35,8 @@ const StepDetailModal = ({
   onPreviousStep,
   onNextStep,
   hasNextStep,
-  hasPreviousStep
+  hasPreviousStep,
+  onNavigateToDiscovery, // Navigation handler prop
 }) => {
   const bgColor = useColorModeValue('white', 'gray.800')
   const borderColor = useColorModeValue('jj.gray.200', 'gray.600')
@@ -52,6 +53,11 @@ const StepDetailModal = ({
     }
   }, [currentStep?.id]);
 
+  // Log when navigation prop changes
+  useEffect(() => {
+    console.log("Modal received navigation handler:", !!onNavigateToDiscovery);
+  }, [onNavigateToDiscovery]);
+
   // Toggle expanded state for a specific card
   const toggleCardExpansion = (index) => {
     setExpandedCards(prev => ({
@@ -60,19 +66,26 @@ const StepDetailModal = ({
     }));
   };
 
-  // Handle Discovery navigation when no implementation is provided
+  // Handle navigation to Discovery Questions with debug logging
   const handleNavigateToDiscovery = () => {
+    console.log("Navigate button clicked in modal");
+
+    // Show toast for visual feedback
+    toast({
+      title: "Navigation",
+      description: "Navigating from StepDetailModal...",
+      status: "info",
+      duration: 2000,
+      isClosable: true,
+    });
+
+    // Call the navigation handler from props
     if (typeof onNavigateToDiscovery === 'function') {
+      console.log("Calling navigation function from props");
       onNavigateToDiscovery();
     } else {
-      toast({
-        title: "Navigation",
-        description: "Navigating to Discovery Questions...",
-        status: "info",
-        duration: 2000,
-        isClosable: true,
-      });
-      // Close the current modal
+      console.warn("No navigation function provided to modal");
+      // Just close the modal if no handler provided
       onClose();
     }
   };
@@ -388,6 +401,7 @@ const StepDetailModal = ({
                   colorScheme="red"
                   onClick={handleNavigateToDiscovery}
                   ml={2}
+                  id="discovery-button" // Add an ID for easier debugging
                 >
                   Continue to Discovery Questions
                 </Button>

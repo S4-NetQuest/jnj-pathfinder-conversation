@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
+  Card,
   Container,
   VStack,
   HStack,
@@ -15,6 +16,8 @@ import {
   useColorModeValue,
   Collapse,
   Icon,
+  UnorderedList,
+  ListItem,
   Flex,
   Spacer,
   Tabs,
@@ -22,14 +25,15 @@ import {
   TabPanels,
   Tab,
   TabPanel,
+  useToast,
 } from '@chakra-ui/react'
 import { ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons'
 import { useAuth } from '../contexts/AuthContext'
 import ChallengerSellingChoreography from '../components/ChallengerSellingChoreography'
 
-// Import your selling questions JSON data
+// Import your Discovery Questions JSON data
 // You can either import it as a static file or fetch it from an API
-const sellingQuestionsData = {
+const discoveryQuestionsData = {
   "questions": [
     {
       "id": 1,
@@ -216,8 +220,6 @@ const QuestionCard = ({ question, categories }) => {
   )
 }
 
-
-
 const SellingQuestionsFilter = ({
   categories,
   selectedCategories,
@@ -321,78 +323,146 @@ const SellingQuestions = () => {
   const [filteredQuestions, setFilteredQuestions] = useState([])
   const [selectedCategories, setSelectedCategories] = useState([])
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState(0) // 0 = Challenger Selling, 1 = Selling Questions
+  const [activeTab, setActiveTab] = useState(0) // 0 = Challenger Selling, 1 = Discovery Questions
+  const toast = useToast()
 
   const bgColor = useColorModeValue('gray.50', 'gray.900')
+
+  // Create a stable reference to the navigation function
+  const navigateToDiscoveryQuestions = useCallback(() => {
+    // First show a toast for visual feedback
+    toast({
+      title: "Navigating...",
+      description: "Going to Discovery Questions",
+      status: "info",
+      duration: 2000,
+      isClosable: true,
+    });
+
+    // Use setTimeout to ensure modal has time to close first
+    setTimeout(() => {
+      setActiveTab(1); // This should switch to the "Discovery Questions" tab
+
+      // For debugging - log the tab change
+      console.log("Tab changed to:", 1);
+    }, 300);
+  }, [toast]);
+
+  // Effect to monitor tab changes for debugging
+  useEffect(() => {
+    console.log("Active tab is now:", activeTab);
+  }, [activeTab]);
 
   useEffect(() => {
     // Simulate loading delay and load static data
     const loadData = async () => {
-      setLoading(true)
+      setLoading(true);
       try {
         // In a real app, you might fetch this from an API
         // const response = await api.get('/selling-questions')
         // const data = response.data
 
         // For now, use static data
-        const data = sellingQuestionsData
+        const data = discoveryQuestionsData;
 
-        setQuestions(data.questions)
-        setCategories(data.categories)
-        setFilteredQuestions(data.questions)
+        setQuestions(data.questions);
+        setCategories(data.categories);
+        setFilteredQuestions(data.questions);
 
         // Set all categories as selected by default
-        setSelectedCategories(data.categories.map(cat => cat.name))
+        setSelectedCategories(data.categories.map(cat => cat.name));
       } catch (error) {
-        console.error('Error loading selling questions:', error)
+        console.error('Error loading Discovery Questions:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load Discovery Questions data",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    loadData()
-  }, [])
+    loadData();
+  }, [toast]);
 
   useEffect(() => {
     if (selectedCategories.length === 0) {
-      setFilteredQuestions(questions)
+      setFilteredQuestions(questions);
     } else {
       const filtered = questions.filter(question =>
         question.categories.some(category =>
           selectedCategories.includes(category)
         )
-      )
-      setFilteredQuestions(filtered)
+      );
+      setFilteredQuestions(filtered);
     }
-  }, [selectedCategories, questions])
+  }, [selectedCategories, questions]);
 
   const handleCategoryChange = (values) => {
-    setSelectedCategories(values)
-  }
+    setSelectedCategories(values);
+  };
 
   const handleTabChange = (index) => {
-    setActiveTab(index)
-  }
+    console.log("Tab manually changed to:", index);
+    setActiveTab(index);
+  };
 
   return (
     <Box bg={bgColor} minH="100vh" pt="0px" pb="100px">
       <Container maxW="container.xl" py={4}>
         <VStack spacing={8} align="stretch">
           {/* Header */}
-          <Box textAlign="center" px={4}>
-            <Text
-              fontSize={{ base: '24px', md: '32px' }}
-              fontFamily="heading"
-              color="jj.red"
-              mb={2}
-              lineHeight="1.2"
-            >
-              Applying the Challenger Mindset
-            </Text>
-            <Text color="jj.gray.600" fontSize={{ base: 'sm', md: 'md' }}>
-              Strategic approaches and questions for Kinematic Restoration conversations
-            </Text>
-          </Box>
+
+
+<Card
+  bg="white"
+  borderRadius="md"
+  boxShadow="sm"
+  p={4}
+  mb={2}
+>
+  <Box borderLeft="4px solid" borderColor="jj.red" pl={4} py={1}>
+    <Text
+      fontWeight="medium"
+      color="jj.gray.700"
+      fontSize={{ base: 'sm', md: 'md' }}
+      mb={0}
+    >
+      Prepare for strategic HCP Conversations
+    </Text>
+    <Text
+      fontWeight="regular"
+      color="jj.gray.600"
+      fontSize={{ base: 'sm', md: 'sm' }}
+      mb={1}
+    >
+      Use this section before your HCP interactions to build confidence and clinical credibility:
+    </Text>
+
+    <UnorderedList
+      spacing={0}
+      color="jj.gray.600"
+      fontSize={{ base: 'sm', md: 'sm' }}
+      pl={4}
+    >
+      <ListItem>
+        <Text fontSize={{ base: 'sm', md: 'sm' }} color="jj.gray.600">
+          Review each phase of the <Text as="span" fontWeight="500">Challenger Selling Choreography</Text>
+        </Text>
+      </ListItem>
+      <ListItem>
+        <Text>Practice key questions that uncover alignment preferences</Text>
+      </ListItem>
+      <ListItem>
+        <Text>Prepare evidence-based responses that position Kinematic Restoration</Text>
+      </ListItem>
+    </UnorderedList>
+  </Box>
+</Card>
+
 
           {loading ? (
             <Box textAlign="center" py={12}>
@@ -407,6 +477,7 @@ const SellingQuestions = () => {
               index={activeTab}
               onChange={handleTabChange}
               defaultIndex={0}
+              isLazy={false}
             >
               <TabList>
                 <Tab fontWeight="medium">
@@ -420,11 +491,19 @@ const SellingQuestions = () => {
               <TabPanels>
                 {/* Challenger Selling Choreography Tab */}
                 <TabPanel px={0} py={6}>
-                  <ChallengerSellingChoreography />
+                  <ChallengerSellingChoreography
+                    onNavigateToDiscovery={navigateToDiscoveryQuestions}
+                  />
                 </TabPanel>
 
-                {/* Selling Questions Tab */}
+                {/* Discovery Questions Tab */}
                 <TabPanel px={0} py={6}>
+                  <Box textAlign="center" mb={4}>
+                    <Text fontSize="sm" color="jj.gray.500" mt={2}>
+                      Discover your surgeons TKA alignment philosophy, use these conversation starters to identify preferences and tailor your approach.
+                    </Text>
+                  </Box>
+
                   <VStack spacing={6} align="stretch">
                     {/* Filter Section */}
                     <SellingQuestionsFilter

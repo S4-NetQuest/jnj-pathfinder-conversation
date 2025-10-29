@@ -179,6 +179,7 @@ const DownloadPDFButton = ({ conversationId, conversationData, isTestMode = fals
       leftIcon={<DownloadIcon />}
       colorScheme={isTestMode ? "blue" : "red"}
       onClick={handleDownloadPDF}
+      fontSize={"xs"}
       isLoading={isGenerating}
       loadingText={isTestMode ? "Testing PDF..." : "Generating PDF..."}
       borderColor={isTestMode ? "blue.500" : "#eb1700"}

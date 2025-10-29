@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import {
   Container,
   VStack,
@@ -32,6 +33,7 @@ import {
   ChevronUpIcon,
   DownloadIcon,
   ExternalLinkIcon,
+  ArrowBackIcon
 } from '@chakra-ui/icons'
 
 import { referencesData } from '../data/referencesData'  // Adjust the path as necessary
@@ -39,6 +41,8 @@ import roboticsIcon from '../assets/icons/JJMT_Icon_Robotics_RGB.svg'  // Adjust
 import { getPhilosophyColor, getPhilosophyVariant } from '../theme/theme'
 
 const References = () => {
+  const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [selectedSubcategory, setSelectedSubcategory] = useState('all')
@@ -46,17 +50,60 @@ const References = () => {
   const [selectedTechnology, setSelectedTechnology] = useState('all')
   const [selectedFollowUp, setSelectedFollowUp] = useState('all')
   const [sortBy, setSortBy] = useState('year-desc')
-  const { isOpen: isFiltersOpen, onToggle: onFiltersToggle } = useDisclosure({ defaultIsOpen: false })
+
+  // FIX: Replace useDisclosure with manual state for filter visibility
+  // This gives us full control over the toggle behavior
+  const [isFiltersVisible, setIsFiltersVisible] = useState(true)
+  const [fromComparePhilosophies, setFromComparePhilosophies] = useState(false)
+
+  // Custom toggle function that works reliably
+  const toggleFilters = () => {
+    setIsFiltersVisible(!isFiltersVisible);
+  }
+
+  // Check for URL parameters on component mount
+  useEffect(() => {
+    const philosophyParam = searchParams.get('philosophy')
+    console.log('Philosophy param from URL:', philosophyParam)
+
+    if (philosophyParam) {
+      // Map the URL param value to the expected category value format
+      let mappedCategory = philosophyParam;
+
+      // Convert lowercase param to expected format if needed
+      if (philosophyParam === 'ka') {
+        mappedCategory = 'KA';
+      } else if (philosophyParam === 'ma') {
+        mappedCategory = 'MA';
+      } else if (philosophyParam === 'ika') {
+        mappedCategory = 'iKA';
+      } else if (philosophyParam === 'fa') {
+        mappedCategory = 'FA';
+      }
+
+      console.log('Setting category to:', mappedCategory);
+      setSelectedCategory(mappedCategory);
+      setFromComparePhilosophies(true);
+
+      // IMPORTANT: Don't force toggles here, just set the state directly
+      setIsFiltersVisible(true);
+    }
+  }, [searchParams]);
 
   // Filter and sort papers
   const filteredAndSortedPapers = useMemo(() => {
+    console.log('Filtering with category:', selectedCategory);
+
     let filtered = referencesData.papers.filter(paper => {
       const matchesSearch = searchTerm === '' ||
         paper.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         paper.authors.some(author => author.toLowerCase().includes(searchTerm.toLowerCase())) ||
         paper.summary.toLowerCase().includes(searchTerm.toLowerCase())
 
-      const matchesCategory = selectedCategory === 'all' || paper.category === selectedCategory
+      // Check if category matches (case insensitive)
+      const matchesCategory = selectedCategory === 'all' ||
+        paper.category.toLowerCase() === selectedCategory.toLowerCase();
+
       const matchesSubcategory = selectedSubcategory === 'all' || paper.subcategory === selectedSubcategory
       const matchesStudyType = selectedStudyType === 'all' || paper.studyType === selectedStudyType
       const matchesTechnology = selectedTechnology === 'all' || paper.technology === selectedTechnology
@@ -77,6 +124,7 @@ const References = () => {
       }
     })
 
+    console.log('Filtered papers count:', filtered.length);
     return filtered
   }, [searchTerm, selectedCategory, selectedSubcategory, selectedStudyType, selectedTechnology, selectedFollowUp, sortBy])
 
@@ -87,6 +135,14 @@ const References = () => {
     setSelectedStudyType('all')
     setSelectedTechnology('all')
     setSelectedFollowUp('all')
+  }
+
+  const handleGoBack = () => {
+    if (fromComparePhilosophies) {
+      navigate('/compare-philosophies')
+    } else {
+      navigate(-1)
+    }
   }
 
   const getPdfUrl = (filename) => {
@@ -121,95 +177,141 @@ const References = () => {
     return fullPath
   }
 
+  // Get philosophy name for header if filtered
+  const getFilteredPhilosophyName = () => {
+    switch(selectedCategory.toLowerCase()) {
+      case 'ma': return 'Mechanical Alignment'
+      case 'ika': return 'Inverse Kinematic Alignment'
+      case 'ka': return 'Kinematic Alignment'
+      case 'fa': return 'Functional Alignment'
+      default: return null
+    }
+  }
+
+  const filteredPhilosophyName = getFilteredPhilosophyName()
+
   return (
     <Box bg="gray.50" minH="100vh" pt="20px" pb="100px">
       <Container maxW="container.xl" py={4}>
         <VStack spacing={6} align="stretch">
-          {/* Header */}
-          <Box textAlign="center" px={4}>
-            <Text
-              fontSize={{ base: '28px', md: '36px' }}
-              fontFamily="heading"
-              color="#eb1700"
-              mb={2}
-              lineHeight="1.2"
-            >
-              References & Citations
-            </Text>
-            <Text color="gray.600" fontSize={{ base: 'md', md: 'lg' }}>
-              Comprehensive collection of kinematic alignment research
-            </Text>
-            <HStack justify="center" mt={3} spacing={4}>
-              <Badge colorScheme="blue" fontSize="sm" fontWeight={"500"} px={3} py={1} userSelect={'none'}>
-                {referencesData.metadata.totalPapers} Papers
-              </Badge>
-              <Badge colorScheme="green" fontSize="sm" fontWeight={"500"} px={3} py={1} userSelect={'none'}>
-                10 iKA Studies
-              </Badge>
-              <Badge colorScheme="orange" fontSize="sm" fontWeight={"500"} px={3} py={1} userSelect={'none'}>
-                17 KA Studies
-              </Badge>
-            </HStack>
-          </Box>
 
-          {/* Search and Filter Bar */}
-          <Card>
-            <CardBody>
-              <VStack spacing={4}>
-                {/* Search */}
-                <InputGroup size="lg">
-                  <InputLeftElement pointerEvents="none">
-                    <SearchIcon color="gray.400" />
-                  </InputLeftElement>
-                  <Input
-                    placeholder="Search by title, author, or keywords..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    bg="white"
-                    focusBorderColor="#eb1700"
-                  />
-                </InputGroup>
+        {/* Back Navigation */}
+          <Flex direction="row" alignItems="top" justifyContent="space-between" width="100%">
+            {fromComparePhilosophies && (
+            <Tooltip label="Go Back" placement="right">
+              <IconButton
+                icon={<ArrowBackIcon />}
+                onClick={handleGoBack}
+                colorScheme="red"
+                variant="outline"
+                size="md"
+                aria-label="Go back"
+              />
+            </Tooltip>
+            )}
 
-                {/* Filter Toggle */}
-                <HStack w="full" justify="space-between">
-                  <Button
-                    leftIcon={isFiltersOpen ? <ChevronUpIcon /> : <ChevronDownIcon />}
-                    onClick={onFiltersToggle}
-                    variant="outline"
-                    colorScheme="gray"
-                    size="sm"
+            {/* Header */}
+            <Box textAlign="center" flex="1">
+              <Text
+                fontSize={{ base: '24px', md: '32px' }}
+                fontFamily="heading"
+                color="jj.red"
+                mb={2}
+                lineHeight="1.2"
+              >
+                Clinical References Library
+              </Text>
+
+              {filteredPhilosophyName ? (
+                <HStack justify="center" spacing={2}>
+                  <Badge
+                    colorScheme={getPhilosophyColor(selectedCategory)}
+                    variant={getPhilosophyVariant(selectedCategory)}
+                    fontSize="md"
+                    py={1}
+                    px={2}
+                    borderRadius="md"
                   >
-                    {isFiltersOpen ? 'Hide Filters' : 'Show Filters'}
-                  </Button>
+                    {selectedCategory}
+                  </Badge>
+                  <Text color="gray.600" fontSize={{ base: 'sm', md: 'md' }}>
+                    {filteredPhilosophyName} Research Papers
+                  </Text>
+                </HStack>
+              ) : (
+                <Text color="gray.600" fontSize={{ base: 'sm', md: 'md' }}>
+                  Evidence-based resources for surgeons and sales teams
+                </Text>
+              )}
+            </Box>
+
+            {/* Empty box for visual balance */}
+            <Box width={{ base: '0', md: '40px' }} />
+          </Flex>
+
+          {/* Filter Card */}
+          <Card>
+            <CardBody py={4}>
+              <VStack spacing={4} align="stretch">
+                <Flex
+                  justify="space-between"
+                  align="center"
+                  wrap="wrap"
+                  gap={3}
+                >
+                  {/* Search */}
+                  <InputGroup maxW={{ base: "100%", md: "400px" }} size="md">
+                    <InputLeftElement pointerEvents='none'>
+                      <SearchIcon color='gray.300' />
+                    </InputLeftElement>
+                    <Input
+                      placeholder="Search by title, author, or keyword..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </InputGroup>
 
                   <HStack spacing={2}>
-                    <Text fontSize="sm" color="gray.600">
-                      {filteredAndSortedPapers.length} of {referencesData.metadata.totalPapers} papers
-                    </Text>
-                    <Button size="sm" variant="ghost" onClick={clearFilters}>
-                      Clear Filters
+                    {/* Clear button conditionally shown if any filters are active */}
+                    {(searchTerm || selectedCategory !== 'all' || selectedSubcategory !== 'all' ||
+                     selectedStudyType !== 'all' || selectedTechnology !== 'all' || selectedFollowUp !== 'all') && (
+                      <Button
+                        size="md"
+                        variant="ghost"
+                        onClick={clearFilters}
+                      >
+                        Clear
+                      </Button>
+                    )}
+
+                    {/* Toggle Filters */}
+                    <Button
+                      rightIcon={isFiltersVisible ? <ChevronUpIcon /> : <ChevronDownIcon />}
+                      onClick={toggleFilters}
+                      variant="outline"
+                    >
+                      {isFiltersVisible ? 'Hide Filters' : 'Show Filters'}
                     </Button>
                   </HStack>
-                </HStack>
+                </Flex>
 
-                {/* Expandable Filters */}
-                <Collapse in={isFiltersOpen} animateOpacity>
-                  <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={4} w="full">
+                <Collapse in={isFiltersVisible} animateOpacity>
+                  <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 5 }} spacing={4} pt={2}>
                     <Box>
-                      <Text fontSize="sm" fontWeight="medium" mb={2}>Category</Text>
+                      <Text fontSize="sm" fontWeight="medium" mb={2}>Philosophy</Text>
                       <Select
                         value={selectedCategory}
                         onChange={(e) => setSelectedCategory(e.target.value)}
                         size="sm"
                       >
-                        <option value="all">All Categories</option>
+                        <option value="all">All Philosophies</option>
                         {referencesData.filterOptions.categories.map(cat => (
                           <option key={cat} value={cat}>{cat}</option>
                         ))}
                       </Select>
                     </Box>
 
-                    {/* <Box>
+                    <Box>
                       <Text fontSize="sm" fontWeight="medium" mb={2}>Study Type</Text>
                       <Select
                         value={selectedStudyType}
@@ -221,7 +323,7 @@ const References = () => {
                           <option key={type} value={type}>{type}</option>
                         ))}
                       </Select>
-                    </Box> */}
+                    </Box>
 
                     <Box>
                       <Text fontSize="sm" fontWeight="medium" mb={2}>Technology</Text>
@@ -244,14 +346,15 @@ const References = () => {
                         onChange={(e) => setSelectedFollowUp(e.target.value)}
                         size="sm"
                       >
-                        <option value="all">All Periods</option>
+                        <option value="all">All Follow-up Periods</option>
                         {referencesData.filterOptions.followUpPeriods.map(period => (
                           <option key={period} value={period}>{period}</option>
                         ))}
                       </Select>
                     </Box>
 
-                    {/* <Box>
+                    {/* Subcategory Filter - hidden for now
+                    <Box>
                       <Text fontSize="sm" fontWeight="medium" mb={2}>Subcategory</Text>
                       <Select
                         value={selectedSubcategory}
@@ -444,6 +547,18 @@ const References = () => {
               </CardBody>
             </Card>
           )}
+
+          {/* Back Navigation (Bottom) */}
+          <Flex justifyContent="center" mt={4}>
+            <Button
+              leftIcon={<ArrowBackIcon />}
+              colorScheme="red"
+              variant="outline"
+              onClick={handleGoBack}
+            >
+              Return to Compare Philosophies
+            </Button>
+          </Flex>
         </VStack>
       </Container>
     </Box>

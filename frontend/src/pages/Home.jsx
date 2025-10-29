@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import {
+  AbsoluteCenter,
   Box,
   Container,
+  Divider,
   Text,
   Button,
   HStack,
@@ -26,7 +28,7 @@ import DevLogin from '../components/DevLogin'
 import config from '../config/config'
 import { getPdfUrl } from '../utils/urlUtils'
 
-// Import new assets
+// Import assets
 import pathfinderWordmark from '../assets/images/FINAL-JJMT_Wordmark_Pathfinder Conversation Guide_RGB_Red.png'
 import pathfinderCompass from '../assets/images/home-compass.png'
 
@@ -36,10 +38,13 @@ const Home = () => {
   const toast = useToast()
   const [imagesLoaded, setImagesLoaded] = useState({ wordmark: false, compass: false })
 
+  // New state for mobile animation
+  const [mobileAnimationPhase, setMobileAnimationPhase] = useState('initial') // 'initial', 'compass', 'buttons'
+
   // Responsive layout configuration
   const isMobile = useBreakpointValue({ base: true, md: false })
   const compassSize = useBreakpointValue({
-    base: { w: '0px', h: '0px' },
+    base: { w: '300px', h: '300px' }, // Set proper size for mobile display
     md: { w: '520px', h: '520px' },
     lg: { w: '550px', h: '550px' },
     xl: { w: '600px', h: '600px' }
@@ -62,6 +67,24 @@ const Home = () => {
     onClose: onLoadClose
   } = useDisclosure()
 
+  // Animation sequence for mobile
+  useEffect(() => {
+    if (isMobile && imagesLoaded.compass) {
+      // Start with compass visible
+      setMobileAnimationPhase('compass')
+
+      // After compass is shown for a few seconds, transition to buttons
+      const timer = setTimeout(() => {
+        setMobileAnimationPhase('buttons')
+      }, 3000) // 3 seconds compass display
+
+      return () => clearTimeout(timer)
+    } else if (!isMobile) {
+      // On desktop, just show buttons directly
+      setMobileAnimationPhase('buttons')
+    }
+  }, [isMobile, imagesLoaded.compass])
+
   // Preload images
   useEffect(() => {
     const preloadImage = (src, key) => {
@@ -82,15 +105,6 @@ const Home = () => {
 
   const handleConversationCreated = (conversationId) => {
     onCreateClose()
-    /*
-    toast({
-      title: 'Conversation Created',
-      description: `Successfully created conversation with ID: ${conversationId}`,
-      status: 'success',
-      duration: 3000,
-      isClosable: true,
-    })
-    */
     navigate(`/conversation/${conversationId}`)
   }
 
@@ -158,10 +172,22 @@ const Home = () => {
     <Box
       minH={availableHeight}
       bg="white"
-      overflow="hidden"
+      overflowX="hidden"
+      overflowY="auto"
+      pb={{ base: 6, md: 0 }}
     >
-      <Container maxW="container.xl" h={availableHeight}>
-        <VStack spacing={{ base: 4, md: 6 }} h="full" py={{ base: 0, md: 0 }}>
+      <Container
+        maxW="container.xl"
+        minH={availableHeight}
+        overflow="auto"
+        py={{ base: 4, md: 6 }}
+      >
+        <VStack
+          spacing={{ base: 4, md: 6 }}
+          w="full"
+          py={{ base: 2, md: 4 }}
+          align="stretch"
+        >
           <Box textAlign="center" w="full" p={0}>
             <Image
               src={pathfinderWordmark}
@@ -194,79 +220,142 @@ const Home = () => {
               maxW="900px"
               mx="auto"
             >
-              {/* The PATHFINDER Kinematic Restoration Conversation Guide will help identify {isSalesRep ? "your customer's" : "your"} alignment philosophy in Total Knee Arthroplasty (TKA). */}
-              Let’s talk about alignment philosophies in Total Knee Arthroplasty (TKA).
+              Let's talk about alignment philosophies in Total Knee Arthroplasty (TKA).
             </Text>
           </Box>
 
-          <Box flex={1} w="full">
-            <Flex h="full" align="center" justify="center">
+          <Box w="full" my={{ base: 2, md: 4 }}>
+            <Flex
+              direction="column"
+              align="center"
+              justify="flex-start"
+              w="full"
+            >
               {isMobile ? (
-                <VStack spacing={6} w="full" maxW="400px" px={4}>
-                  <VStack spacing={4} w="full">
-                    <Button
-                      leftIcon={<AddIcon />}
-                      colorScheme="red"
-                      size="lg"
-                      onClick={onCreateOpen}
-                      w="full"
-                      fontSize="sm"
-                      py={6}
-                      shadow="lg"
-                      _hover={{ shadow: "xl", transform: "translateY(-2px)" }}
-                      transition="all 0.2s"
-                    >
-                      {isSalesRep ? 'Start New Conversation' : 'Start New Assessment'}
-                    </Button>
+                // Mobile View with Animation
+                <Box
+                  position="relative"
+                  w="full"
+                  maxW="400px"
+                  h={{ base: "600px", sm: "650px" }}
+                  px={4}
+                >
+                  {/* Compass Image Layer - Shows first, then fades out */}
+                  <Flex
+                    position="absolute"
+                    top="0"
+                    left="0"
+                    right="0"
+                    bottom="0"
+                    alignItems="center"
+                    justifyContent="center"
+                    opacity={mobileAnimationPhase === 'compass' ? 1 : 0}
+                    transform={mobileAnimationPhase === 'compass'
+                      ? "scale(1)"
+                      : mobileAnimationPhase === 'buttons'
+                        ? "scale(0.9)"
+                        : "scale(1.1)"
+                    }
+                    zIndex={mobileAnimationPhase === 'compass' ? 10 : 1}
+                    transition="opacity 0.8s ease-in-out, transform 1s ease-in-out"
+                    bg="white"
+                  >
+                    <Image
+                      src={pathfinderCompass}
+                      alt="PATHFINDER Compass"
+                      maxW="85%"
+                      maxH="85%"
+                      opacity={imagesLoaded.compass ? 1 : 0}
+                      transition="opacity 0.3s ease-in-out"
+                      objectFit="contain"
+                      filter="drop-shadow(0 8px 24px rgba(0,0,0,0.15))"
+                    />
+                  </Flex>
 
-                    <Button
-                      leftIcon={<SearchIcon />}
-                      colorScheme="red"
-                      size="lg"
-                      onClick={onLoadOpen}
-                      w="full"
-                      fontSize="sm"
-                      py={6}
-                      shadow="lg"
-                      _hover={{ shadow: "xl", transform: "translateY(-2px)" }}
-                      transition="all 0.2s"
-                    >
-                      {isSalesRep ? 'Load Existing Conversation' : 'Load Previous Assessment'}
-                    </Button>
+                  {/* Buttons Layer - Initially hidden, then fades in */}
+                  <VStack
+                    spacing={6}
+                    w="full"
+                    align="center"
+                    opacity={mobileAnimationPhase === 'buttons' ? 1 : 0}
+                    transform={mobileAnimationPhase === 'buttons' ? "translateY(0)" : "translateY(20px)"}
+                    transition="opacity 0.8s ease-in-out, transform 0.8s ease-in-out"
+                    zIndex={mobileAnimationPhase === 'buttons' ? 10 : 1}
+                    position="relative"
+                    pt={2}
+                  >
+                    <VStack spacing={4} w="full" align="center">
+                      {/* Enhanced Start New Conversation Button - MORE PROMINENT */}
+                      <Box
+                        w="full"
+                        display="flex"
+                        justifyContent="center"
+                        position="relative"
+                        my={3}
+                      >
+                        {/* Glow effect underneath the button */}
+                        <Box
+                          position="absolute"
+                          top="0"
+                          left="50%"
+                          transform="translateX(-50%)"
+                          width="125%"
+                          maxWidth="400px"
+                          height="70px"
+                          my={4}
+                          borderRadius="lg"
+                          bg="rgba(235, 23, 0, 0.15)"
+                          filter="blur(8px)"
+                          zIndex={0}
+                        />
+                        <Button
+                          leftIcon={<AddIcon boxSize={5} />}
+                          colorScheme="red"
+                          size="lg"
+                          onClick={onCreateOpen}
+                          fontSize="md"
+                          h="70px"
+                          w="125%"
+                          maxW="400px"
+                          fontWeight="500"
+                          my={4}
+                          shadow="xl"
+                          position="relative"
+                          zIndex={1}
+                          _hover={{
+                            transform: "translateY(-3px)",
+                            shadow: "2xl",
+                            bg: "red.600",
+                          }}
+                          _active={{
+                            transform: "translateY(1px)",
+                            shadow: "md",
+                          }}
+                          transition="all 0.3s"
+                        >
 
-                    <Button
-                      colorScheme="red"
-                      size="lg"
-                      onClick={handleExploreKinematicRestoration}
-                      w="full"
-                      fontSize="sm"
-                      py={6}
-                      shadow="lg"
-                      _hover={{ shadow: "xl", transform: "translateY(-2px)" }}
-                      transition="all 0.2s"
-                    >
-                      Start Your Learning Journey
-                    </Button>
+                          <VStack spacing={1}>
+                            <Text>
+                              {isSalesRep ? 'Start New Conversation' : 'Start New Assessment'}
+                            </Text>
+                            <Text
+                              fontSize="xs"
+                              fontWeight="normal"
+                              opacity={0.8}
+                              lineHeight={1.2}
+                            >
+                              Begin HCP alignment assessment
+                            </Text>
+                          </VStack>
+                        </Button>
+                      </Box>
 
-                    <Button
-                      colorScheme="red"
-                      size="lg"
-                      onClick={handleComparePhilosophies}
-                      w="full"
-                      fontSize="sm"
-                      py={6}
-                      shadow="lg"
-                      _hover={{ shadow: "xl", transform: "translateY(-2px)" }}
-                      transition="all 0.2s"
-                    >
-                      Compare Philosophies Tool
-                    </Button>
-
-                    {isSalesRep && (
+                      {/* Normal Buttons */}
                       <Button
+                        leftIcon={<SearchIcon boxSize={5} />}
                         colorScheme="red"
                         size="lg"
-                        onClick={handleSellingQuestions}
+                        onClick={onLoadOpen}
                         w="full"
                         fontSize="sm"
                         py={6}
@@ -274,87 +363,165 @@ const Home = () => {
                         _hover={{ shadow: "xl", transform: "translateY(-2px)" }}
                         transition="all 0.2s"
                       >
-                        Applying the Challenger Mindset
-                      </Button>
-                    )}
-
-                    <Text fontSize="sm" fontWeight="medium" color="gray.600" mt={4}>
-                      Additional Resources
-                    </Text>
-
-                    {/* Fixed mobile layout for additional resources */}
-                    <VStack spacing={3} w="full">
-                      <Button
-                        as={Link}
-                        href={getPdfUrl('Solutions-In-Motion-KR-Clinical-Value-Proposition-M_EM_ORT_DGSR_399044.pdf')}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        leftIcon={<DownloadIcon />}
-                        colorScheme="red"
-                        variant="outline"
-                        size="md"
-                        w="full"
-                        fontSize="xs"
-                        whiteSpace="normal"
-                        textAlign="center"
-                        minH="44px"
-                        px={2}
-                      >
-                        Clinical Value Proposition
+                        <VStack spacing={1}>
+                            <Text>
+                              {isSalesRep ? 'Load Existing Conversation' : 'Load Previous Assessment'}
+                            </Text>
+                            <Text
+                              fontSize="xs"
+                              fontWeight="normal"
+                              opacity={0.8}
+                              lineHeight={1.2}
+                            >
+                              Continue previous assessment
+                            </Text>
+                          </VStack>
                       </Button>
 
                       <Button
-                        as={Link}
-                        href={getPdfUrl('Kinematic-Restoration-Brochure-US_DPS_JRKN_393603.pdf')}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        leftIcon={<DownloadIcon />}
                         colorScheme="red"
-                        variant="outline"
-                        size="md"
+                        size="lg"
+                        onClick={handleExploreKinematicRestoration}
                         w="full"
-                        fontSize="xs"
-                        whiteSpace="normal"
-                        textAlign="center"
-                        minH="44px"
-                        px={2}
+                        fontSize="sm"
+                        py={6}
+                        shadow="lg"
+                        _hover={{ shadow: "xl", transform: "translateY(-2px)" }}
+                        transition="all 0.2s"
                       >
-                        KR Brochure
+                        <VStack spacing={1}>
+                          <Text>
+                            Start Your Learning Journey
+                          </Text>
+                          <Text
+                            fontSize="xs"
+                            fontWeight="normal"
+                            opacity={0.8}
+                            lineHeight={1.2}
+                          >
+                            Access training materials and evidence
+                          </Text>
+                        </VStack>
                       </Button>
 
                       <Button
-                        as={Link}
-                        href={getPdfUrl('CPAK-Job-Aid.pdf')}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        leftIcon={<DownloadIcon />}
                         colorScheme="red"
-                        variant="outline"
-                        size="md"
+                        size="lg"
+                        onClick={handleComparePhilosophies}
                         w="full"
-                        fontSize="xs"
-                        whiteSpace="normal"
-                        textAlign="center"
-                        minH="44px"
-                        px={2}
+                        fontSize="sm"
+                        py={6}
+                        shadow="lg"
+                        _hover={{ shadow: "xl", transform: "translateY(-2px)" }}
+                        transition="all 0.2s"
                       >
-                        CPAK Job-Aid
+                        <VStack spacing={1}>
+                          <Text>
+                            Compare Philosophies Tool
+                          </Text>
+                          <Text
+                            fontSize="xs"
+                            fontWeight="normal"
+                            opacity={0.8}
+                            lineHeight={1.2}
+                          >
+                            Side-by-side alignment philosophy comparison
+                          </Text>
+                        </VStack>
                       </Button>
+
+                      {isSalesRep && (
+                        <Button
+                          colorScheme="red"
+                          size="lg"
+                          onClick={handleSellingQuestions}
+                          w="full"
+                          fontSize="sm"
+                          py={6}
+                          shadow="lg"
+                          _hover={{ shadow: "xl", transform: "translateY(-2px)" }}
+                          transition="all 0.2s"
+                        >
+                          <VStack spacing={1}>
+                            <Text>
+                              Applying the Challenger Mindset
+                            </Text>
+                            <Text
+                              fontSize="xs"
+                              fontWeight="normal"
+                              opacity={0.8}
+                              lineHeight={1.2}
+                            >
+                              Strategic sales conversation technique
+                            </Text>
+                          </VStack>
+                        </Button>
+                      )}
+
+                      <Text fontSize="sm" fontWeight="medium" color="gray.600" mt={6}>
+                        Supporting Materials
+                      </Text>
+
+                      <VStack spacing={2} w="full">
+                        <Button
+                          as={Link}
+                          href={getPdfUrl('Solutions-In-Motion-KR-Clinical-Value-Proposition-M_EM_ORT_DGSR_399044.pdf')}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          leftIcon={<DownloadIcon />}
+                          colorScheme="red"
+                          variant="outline"
+                          size="md"
+                          w="full"
+                          fontSize="xs"
+                          whiteSpace="normal"
+                          textAlign="center"
+                          px={2}
+                        >
+                          Clinical Value Proposition
+                        </Button>
+
+                        <Button
+                          as={Link}
+                          href={getPdfUrl('Kinematic-Restoration-Brochure-US_DPS_JRKN_393603.pdf')}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          leftIcon={<DownloadIcon />}
+                          colorScheme="red"
+                          variant="outline"
+                          size="md"
+                          w="full"
+                          fontSize="xs"
+                          whiteSpace="normal"
+                          textAlign="center"
+                          px={2}
+                        >
+                          KR Brochure
+                        </Button>
+
+                        <Button
+                          as={Link}
+                          href={getPdfUrl('CPAK-Job-Aid.pdf')}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          leftIcon={<DownloadIcon />}
+                          colorScheme="red"
+                          variant="outline"
+                          size="md"
+                          w="full"
+                          fontSize="xs"
+                          whiteSpace="normal"
+                          textAlign="center"
+                          px={2}
+                        >
+                          CPAK Job-Aid
+                        </Button>
+                      </VStack>
                     </VStack>
                   </VStack>
-
-                  <Box textAlign="center">
-                    <Image
-                      src={pathfinderCompass}
-                      alt="PATHFINDER Compass"
-                      {...compassSize}
-                      opacity={imagesLoaded.compass ? 1 : 0}
-                      transition="opacity 0.3s ease-in-out"
-                      objectFit="contain"
-                    />
-                  </Box>
-                </VStack>
+                </Box>
               ) : (
+                // Desktop layout (unchanged)
                 <Grid
                   templateColumns={{ md: "1fr 1fr", lg: "1.2fr 0.8fr" }}
                   gap={{ md: 8, lg: 12, xl: 16 }}
@@ -365,20 +532,67 @@ const Home = () => {
                   <GridItem>
                     <VStack spacing={6} align="stretch">
                       <VStack spacing={4} align="stretch">
-                        <Button
-                          leftIcon={<AddIcon />}
-                          colorScheme="red"
-                          size="lg"
-                          onClick={onCreateOpen}
-                          fontSize="md"
-                          py={7}
-                          shadow="lg"
-                          _hover={{ shadow: "xl", transform: "translateY(-2px)" }}
-                          transition="all 0.2s"
+                        {/* Enhanced Start New Conversation Button - MORE PROMINENT */}
+                        <Box
+                          position="relative"
+                          w="full"
+                          my={5}
                         >
-                          {isSalesRep ? 'Start New Conversation' : 'Start New Assessment'}
-                        </Button>
+                          {/* Glow effect underneath the button */}
+                          <Box
+                            position="absolute"
+                            top="-4px"
+                            left="-4px"
+                            right="-4px"
+                            bottom="-4px"
+                            borderRadius="sm"
+                            bg="rgba(235, 23, 0, 0.25)"
+                            filter="blur(8px)"
+                            zIndex={0}
+                          />
 
+
+                          <Button
+                            leftIcon={<AddIcon boxSize={5} />}
+                            colorScheme="red"
+                            size="lg"
+                            onClick={onCreateOpen}
+                            fontSize="lg"
+                            h="auto"  // Change from fixed height to auto to accommodate content
+                            py={4}    // Padding top and bottom
+                            shadow="xl"
+                            fontWeight="500"
+                            position="relative"
+                            zIndex={1}
+                            w="full"
+                            _hover={{
+                              transform: "translateY(-3px)",
+                              shadow: "2xl",
+                              bg: "red.600",
+                            }}
+                            _active={{
+                              transform: "translateY(1px)",
+                              shadow: "md",
+                            }}
+                            transition="all 0.3s"
+                          >
+                            <VStack spacing={1}>
+                              <Text>
+                                {isSalesRep ? 'Start New Conversation' : 'Start New Assessment'}
+                              </Text>
+                              <Text
+                                fontSize="xs"
+                                fontWeight="normal"
+                                opacity={0.8}
+                                lineHeight={1.2}
+                              >
+                                Begin HCP alignment assessment
+                              </Text>
+                            </VStack>
+                          </Button>
+                        </Box>
+
+                        {/* Normal buttons */}
                         <Button
                           leftIcon={<SearchIcon />}
                           colorScheme="red"
@@ -390,7 +604,19 @@ const Home = () => {
                           _hover={{ shadow: "xl", transform: "translateY(-2px)" }}
                           transition="all 0.2s"
                         >
-                          {isSalesRep ? 'Load Existing Conversation' : 'Load Previous Assessment'}
+                          <VStack spacing={1}>
+                            <Text>
+                              {isSalesRep ? 'Load Existing Conversation' : 'Load Previous Assessment'}
+                            </Text>
+                            <Text
+                              fontSize="xs"
+                              fontWeight="normal"
+                              opacity={0.8}
+                              lineHeight={1.2}
+                            >
+                              Continue previous assessment
+                            </Text>
+                          </VStack>
                         </Button>
 
                         <Button
@@ -403,7 +629,19 @@ const Home = () => {
                           _hover={{ shadow: "xl", transform: "translateY(-2px)" }}
                           transition="all 0.2s"
                         >
-                          Start Your Learning Journey
+                          <VStack spacing={1}>
+                            <Text>
+                              Start Your Learning Journey
+                            </Text>
+                            <Text
+                              fontSize="xs"
+                              fontWeight="normal"
+                              opacity={0.8}
+                              lineHeight={1.2}
+                            >
+                              Access training materials and evidence
+                            </Text>
+                          </VStack>
                         </Button>
 
                         <Button
@@ -416,7 +654,19 @@ const Home = () => {
                           _hover={{ shadow: "xl", transform: "translateY(-2px)" }}
                           transition="all 0.2s"
                         >
-                          Compare Philosophies Tool
+                          <VStack spacing={1}>
+                            <Text>
+                              Compare Philosophies Tool
+                            </Text>
+                            <Text
+                              fontSize="xs"
+                              fontWeight="normal"
+                              opacity={0.8}
+                              lineHeight={1.2}
+                            >
+                              Side-by-side alignment philosophy comparison
+                            </Text>
+                          </VStack>
                         </Button>
 
                         {isSalesRep && (
@@ -430,14 +680,29 @@ const Home = () => {
                             _hover={{ shadow: "xl", transform: "translateY(-2px)" }}
                             transition="all 0.2s"
                           >
-                            Applying the Challenger Mindset
+                            <VStack spacing={1}>
+                              <Text>
+                                Applying the Challenger Mindset
+                              </Text>
+                              <Text
+                                fontSize="xs"
+                                fontWeight="normal"
+                                opacity={0.8}
+                                lineHeight={1.2}
+                              >
+                                Strategic sales conversation technique
+                              </Text>
+                            </VStack>
                           </Button>
                         )}
-
-                        <Text fontSize="sm" fontWeight="medium" color="gray.600" mt={4} mb={2}>
-                          Additional Resources
-                        </Text>
-
+                        <Box position='relative' mt={6} mb={2}>
+                          <Divider />
+                          <AbsoluteCenter bg='white' px='4'>
+                            <Text fontSize="sm" fontWeight="medium" color="gray.600">
+                              Supporting Materials
+                            </Text>
+                          </AbsoluteCenter>
+                        </Box>
                         {/* Desktop layout - HStack with taller buttons */}
                         <HStack spacing={4} align="stretch">
                           <Button
@@ -449,12 +714,12 @@ const Home = () => {
                             colorScheme="red"
                             variant="outline"
                             size="md"
-                            fontSize="sm"
+                            fontSize="xs"
                             flex={1}
-                            minH="60px"
+                            minH="46px"
                             whiteSpace="normal"
                             textAlign="center"
-                            lineHeight="1.3"
+                            lineHeight="1.0"
                             px={3}
                           >
                             Clinical Value Proposition
@@ -469,12 +734,12 @@ const Home = () => {
                             colorScheme="red"
                             variant="outline"
                             size="md"
-                            fontSize="sm"
+                            fontSize="xs"
                             flex={1}
-                            minH="60px"
+                            minH="46px"
                             whiteSpace="normal"
                             textAlign="center"
-                            lineHeight="1.3"
+                            lineHeight="1.0"
                             px={3}
                           >
                             KR Brochure
@@ -489,12 +754,12 @@ const Home = () => {
                             colorScheme="red"
                             variant="outline"
                             size="md"
-                            fontSize="sm"
+                            fontSize="xs"
                             flex={1}
-                            minH="60px"
+                            minH="46px"
                             whiteSpace="normal"
                             textAlign="center"
-                            lineHeight="1.3"
+                            lineHeight="1.0"
                             px={3}
                           >
                             CPAK Job-Aid

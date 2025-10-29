@@ -1,0 +1,204 @@
+/* HomeStyles.scss */
+
+// Variables based on the J&J color palette
+$jj-red: #eb1700;
+$jj-dark-red: #c41400;
+$jj-darker-red: #a31100;
+$jj-gray-08: #312c2a;
+$jj-gray-05: #a39992;
+
+// Main container
+.home-container {
+  min-height: 100vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+
+  // Ensure content is visible above footer
+  padding-bottom: 60px;
+}
+
+// Header styles
+.header {
+  background-color: $jj-red;
+  color: white;
+  padding: 12px 16px;
+
+  &__title {
+    font-weight: bold;
+    font-size: 1.25rem;
+  }
+}
+
+// Main content area
+.content {
+  flex: 1;
+  background-color: white;
+
+  &__intro {
+    font-size: 1rem;
+    color: #4A5568;
+    line-height: 1.5;
+
+    @media (min-width: 768px) {
+      font-size: 1.125rem;
+    }
+  }
+
+  &__button-grid {
+    width: 100%;
+    max-width: 550px;
+    margin: 0 auto;
+  }
+}
+
+// Pathfinder branding
+.pathfinder-branding {
+  margin-bottom: 1.5rem;
+
+  &__logo {
+    max-height: 100px;
+    margin: 0 auto 0.5rem;
+
+    @media (max-width: 768px) {
+      max-height: 65px;
+    }
+
+    @media (max-width: 480px) {
+      max-height: 50px;
+    }
+  }
+}
+
+// Button styling
+.action-button {
+  width: 100%;
+  position: relative;
+  transition: all 0.2s ease-in-out;
+
+  &-container {
+    width: 100%;
+    margin-bottom: 0.5rem;
+
+    // Increase prominence for primary button
+    &.primary-button-container {
+      margin-top: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+  }
+
+  // Primary button styling
+  &.primary-button {
+    height: 66px !important; // 20% taller
+    font-size: 1rem !important;
+    box-shadow: 0 0 15px rgba(235, 23, 0, 0.3) !important;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 20px rgba(235, 23, 0, 0.4) !important;
+    }
+  }
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+}
+
+// Button subtitle
+.button-subtitle {
+  text-align: left;
+  padding-left: 0.5rem;
+  color: #718096;
+  font-size: 0.75rem;
+}
+
+// Supporting materials section
+.supporting-materials {
+  margin-top: 1rem;
+  margin-bottom: 1.5rem;
+
+  &__title {
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    text-align: left;
+  }
+}
+
+// Supporting material buttons
+.supporting-button {
+  font-size: 0.75rem !important;
+  height: 44px !important;
+
+  @media (max-width: 480px) {
+    height: 40px !important;
+    font-size: 0.7rem !important;
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
+}
+
+// Compass image container
+.compass-image-container {
+  margin-top: 1rem;
+  text-align: center;
+
+  @media (max-width: 480px) {
+    margin-top: 0.5rem;
+  }
+}
+
+.compass-image {
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+
+  @media (max-width: 768px) {
+    max-height: 350px;
+  }
+
+  @media (min-width: 992px) {
+    max-height: 450px;
+  }
+}
+
+// Footer styles
+.footer {
+  background-color: $jj-gray-08;
+  color: white;
+  padding: 12px 16px;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  z-index: 10;
+
+  &__company {
+    font-size: 0.875rem;
+  }
+
+  &__copyright {
+    font-size: 0.75rem;
+    color: #CBD5E0;
+
+    @media (max-width: 480px) {
+      font-size: 0.7rem;
+    }
+  }
+}
+
+// Media queries for better responsive behavior
+@media (max-width: 480px) {
+  .header__title {
+    font-size: 1.125rem;
+  }
+
+  .content__intro {
+    font-size: 0.875rem;
+  }
+
+  .button-subtitle {
+    font-size: 0.7rem;
+  }
+}
