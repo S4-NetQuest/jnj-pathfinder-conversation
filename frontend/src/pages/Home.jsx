@@ -308,46 +308,52 @@ const Home = () => {
                           filter="blur(8px)"
                           zIndex={0}
                         />
-                        <Button
-                          leftIcon={<AddIcon boxSize={5} />}
-                          colorScheme="red"
-                          size="lg"
-                          onClick={onCreateOpen}
-                          fontSize="md"
-                          h="70px"
-                          w="125%"
-                          maxW="400px"
-                          fontWeight="500"
-                          my={4}
-                          shadow="xl"
-                          position="relative"
-                          zIndex={1}
-                          _hover={{
-                            transform: "translateY(-3px)",
-                            shadow: "2xl",
-                            bg: "red.600",
-                          }}
-                          _active={{
-                            transform: "translateY(1px)",
-                            shadow: "md",
-                          }}
-                          transition="all 0.3s"
-                        >
+                                                  <Button
+                            colorScheme="red"
+                            size="lg"
+                            onClick={onCreateOpen}
+                            fontSize="lg"
+                            h="auto"
+                            py={4}
+                            px={0}  // Remove default horizontal padding
+                            shadow="xl"
+                            fontWeight="500"
+                            position="relative"
+                            zIndex={1}
+                            w="full"
+                            _hover={{
+                              transform: "translateY(-3px)",
+                              shadow: "2xl",
+                              bg: "red.600",
+                            }}
+                            _active={{
+                              transform: "translateY(1px)",
+                              shadow: "md",
+                            }}
+                            transition="all 0.3s"
+                          >
+                            <HStack width="100%" spacing={0} alignItems="center">
+                              {/* Left-aligned icon with padding */}
+                              <Box pl={4} pr={2}>
+                                <AddIcon boxSize={5} />
+                              </Box>
 
-                          <VStack spacing={1}>
-                            <Text>
-                              {isSalesRep ? 'Start New Conversation' : 'Start New Assessment'}
-                            </Text>
-                            <Text
-                              fontSize="xs"
-                              fontWeight="normal"
-                              opacity={0.8}
-                              lineHeight={1.2}
-                            >
-                              Begin HCP alignment assessment
-                            </Text>
-                          </VStack>
-                        </Button>
+                              {/* Center-aligned text content */}
+                              <VStack spacing={1} flex={1} pr={6}>  {/* Added right padding to visually center */}
+                                <Text>
+                                  {isSalesRep ? 'Start New Conversation' : 'Start New Conversation'}
+                                </Text>
+                                <Text
+                                  fontSize="xs"
+                                  fontWeight="normal"
+                                  opacity={0.8}
+                                  lineHeight={1.2}
+                                >
+                                  Identify current HCP alignment technique
+                                </Text>
+                              </VStack>
+                            </HStack>
+                          </Button>
                       </Box>
 
                       {/* Normal Buttons */}
@@ -373,7 +379,7 @@ const Home = () => {
                               opacity={0.8}
                               lineHeight={1.2}
                             >
-                              Continue previous assessment
+                              Continue previous session
                             </Text>
                           </VStack>
                       </Button>
@@ -417,7 +423,7 @@ const Home = () => {
                       >
                         <VStack spacing={1}>
                           <Text>
-                            Compare Philosophies Tool
+                            Compare Philosophies
                           </Text>
                           <Text
                             fontSize="xs"
@@ -444,7 +450,7 @@ const Home = () => {
                         >
                           <VStack spacing={1}>
                             <Text>
-                              Applying the Challenger Mindset
+                              Apply the Challenger Mindset
                             </Text>
                             <Text
                               fontSize="xs"
@@ -550,16 +556,14 @@ const Home = () => {
                             filter="blur(8px)"
                             zIndex={0}
                           />
-
-
                           <Button
-                            leftIcon={<AddIcon boxSize={5} />}
                             colorScheme="red"
                             size="lg"
                             onClick={onCreateOpen}
                             fontSize="lg"
-                            h="auto"  // Change from fixed height to auto to accommodate content
-                            py={4}    // Padding top and bottom
+                            h="auto"
+                            py={4}
+                            px={0}  // Remove default horizontal padding
                             shadow="xl"
                             fontWeight="500"
                             position="relative"
@@ -576,19 +580,27 @@ const Home = () => {
                             }}
                             transition="all 0.3s"
                           >
-                            <VStack spacing={1}>
-                              <Text>
-                                {isSalesRep ? 'Start New Conversation' : 'Start New Assessment'}
-                              </Text>
-                              <Text
-                                fontSize="xs"
-                                fontWeight="normal"
-                                opacity={0.8}
-                                lineHeight={1.2}
-                              >
-                                Begin HCP alignment assessment
-                              </Text>
-                            </VStack>
+                            <HStack width="100%" spacing={0} alignItems="center">
+                              {/* Left-aligned icon with padding */}
+                              <Box pl={4} pr={2}>
+                                <AddIcon boxSize={5} />
+                              </Box>
+
+                              {/* Center-aligned text content */}
+                              <VStack spacing={1} flex={1} pr={6}>  {/* Added right padding to visually center */}
+                                <Text>
+                                  {isSalesRep ? 'Start New Conversation' : 'Start New Conversation'}
+                                </Text>
+                                <Text
+                                  fontSize="xs"
+                                  fontWeight="normal"
+                                  opacity={0.8}
+                                  lineHeight={1.2}
+                                >
+                                  Identify current HCP alignment technique
+                                </Text>
+                              </VStack>
+                            </HStack>
                           </Button>
                         </Box>
 
@@ -614,7 +626,7 @@ const Home = () => {
                               opacity={0.8}
                               lineHeight={1.2}
                             >
-                              Continue previous assessment
+                              Continue previous session
                             </Text>
                           </VStack>
                         </Button>
@@ -656,7 +668,7 @@ const Home = () => {
                         >
                           <VStack spacing={1}>
                             <Text>
-                              Compare Philosophies Tool
+                              Compare Philosophies
                             </Text>
                             <Text
                               fontSize="xs"
@@ -682,7 +694,7 @@ const Home = () => {
                           >
                             <VStack spacing={1}>
                               <Text>
-                                Applying the Challenger Mindset
+                                Apply the Challenger Mindset
                               </Text>
                               <Text
                                 fontSize="xs"
