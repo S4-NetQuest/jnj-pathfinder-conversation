@@ -53,6 +53,8 @@ import ScheduleFollowupModal from '../components/ScheduleFollowupModal'
 import DownloadPDFButton from '../components/DownloadPDFButton'
 import ReviewConversationModal from '../components/ReviewConversationModal'
 import DisclaimerModal from '../components/DisclaimerModal'
+import TextWithReferences from '../components/TextWithReferences'
+import ReferencesModal from '../components/ReferencesModal'
 import kaSummaryImg from '../assets/images/ka-summary.png'
 import ikaSummaryImg from '../assets/images/ika-summary.png'
 import faSummaryImg from '../assets/images/fa-summary.png'
@@ -76,6 +78,8 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
 
   const { isOpen: isNotesOpen, onOpen: onNotesOpen, onClose: onNotesClose } = useDisclosure()
   const { isOpen: isReviewOpen, onOpen: onReviewOpen, onClose: onReviewClose } = useDisclosure()
+  const { isOpen: isReferencesModalOpen, onOpen: onReferencesModalOpen, onClose: onReferencesModalClose } = useDisclosure()
+  const [selectedReference, setSelectedReference] = useState(null)
   const [isScheduleOpen, setIsScheduleOpen] = useState(false)
   const [conversation, setConversation] = useState(null)
   const [salesRep, setSalesRep] = useState(null)
@@ -673,6 +677,11 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
     setCompleted(false)
   }
 
+  const handleReferenceClick = (refNumber) => {
+    setSelectedReference(refNumber)
+    onReferencesModalOpen()
+  }
+
   useEffect(() => {
     if (pdfMode) {
       // In PDF mode, load responses from pdfConversationData
@@ -801,9 +810,9 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
                 leftIcon={<ViewIcon />}
                 onClick={onReviewOpen}
                 fontSize="xs"
-                borderColor="#eb1700"
-                color="#eb1700"
-                _hover={{ bg: "#eb1700", color: "white" }}
+                borderColor="#C8102E"
+                color="#C8102E"
+                _hover={{ bg: "#C8102E", color: "white" }}
                 width="auto" // Explicitly set to auto width
                 maxWidth="200px" // Set a maximum width if desired
               >
@@ -815,9 +824,9 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
                 leftIcon={<EditIcon />}
                 onClick={handleNotesOpen}
                 fontSize="xs"
-                borderColor="#eb1700"
-                color="#eb1700"
-                _hover={{ bg: "#eb1700", color: "white" }}
+                borderColor="#C8102E"
+                color="#C8102E"
+                _hover={{ bg: "#C8102E", color: "white" }}
                 width="auto" // Explicitly set to auto width
                 maxWidth="200px" // Set a maximum width if desired
               >
@@ -838,10 +847,10 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
                 variant="outline"
                 onClick={handleSellingQuestions}
                 fontSize="xs"
-                borderColor="#eb1700"
+                borderColor="#C8102E"
                 color="#FFF"
-                backgroundColor="#eb1700"
-                _hover={{ bg: "#eb1700", color: "white" }}
+                backgroundColor="#C8102E"
+                _hover={{ bg: "#C8102E", color: "white" }}
                 width="auto"
                 maxWidth="200px"
 
@@ -910,9 +919,9 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
           <Button
             variant="outline"
             onClick={handleRestart}
-            borderColor="#eb1700"
-            color="#eb1700"
-            _hover={{ bg: "#eb1700", color: "white" }}
+            borderColor="#C8102E"
+            color="#C8102E"
+            _hover={{ bg: "#C8102E", color: "white" }}
             width={{ base: "100%", md: "auto" }}
           >
             Restart Assessment
@@ -971,7 +980,7 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
           <CardBody>
             <Flex justify="space-between" align="start" mb={4}>
               <Box>
-                <Text fontSize="xl" color="#eb1700" mb={2}>
+                <Text fontSize="xl" color="#C8102E" mb={2}>
                   {effectiveConversationData ?
                     `Conversation with ${effectiveConversationData.surgeon_name || effectiveConversationData.surgeonName}` :
                     'Alignment Philosophy Assessment'
@@ -1084,15 +1093,15 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
                         whiteSpace="normal"
                         textAlign="left"
                         justifyContent="flex-start"
-                        bg={responses[currentQuestion.id] === option.id ? '#eb1700' : 'white'}
+                        bg={responses[currentQuestion.id] === option.id ? '#C8102E' : 'white'}
                         color={responses[currentQuestion.id] === option.id ? 'white' : '#6e6259'}
                         borderWidth="2px"
-                        borderColor={responses[currentQuestion.id] === option.id ? '#eb1700' : '#e8e6e3'}
+                        borderColor={responses[currentQuestion.id] === option.id ? '#C8102E' : '#e8e6e3'}
                         borderRadius="md"
                         transition="all 0.2s"
                         _hover={{
-                          borderColor: '#eb1700',
-                          bg: responses[currentQuestion.id] === option.id ? '#9e0000' : '#eb1700',
+                          borderColor: '#C8102E',
+                          bg: responses[currentQuestion.id] === option.id ? '#9e0000' : '#C8102E',
                           color: 'white'
                         }}
                         onClick={() => handleResponse(currentQuestion.id, option.id)}
@@ -1110,15 +1119,15 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
                     leftIcon={<ArrowBackIcon />}
                     onClick={handlePrevious}
                     isDisabled={currentQuestionIndex === 0}
-                    borderColor="#eb1700"
-                    color="#eb1700"
-                    _hover={{ bg: "#eb1700", color: "white" }}
+                    borderColor="#C8102E"
+                    color="#C8102E"
+                    _hover={{ bg: "#C8102E", color: "white" }}
                   >
                     Previous
                   </Button>
 
                   <Button
-                    bg="#eb1700"
+                    bg="#C8102E"
                     color="white"
                     rightIcon={currentQuestionIndex === questions.length - 1 ? <CheckCircleIcon /> : <ArrowForwardIcon />}
                     onClick={handleNext}
@@ -1185,8 +1194,15 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
                           </Alert>
                         )}
 
-                        <Text color="#81766f" lineHeight="1.6">
+                        {/* <Text color="#81766f" lineHeight="1.6">
                           {recommendedAlignment.fullDescription}
+                        </Text> */}
+                        <Text color="#81766f" lineHeight="1.6">
+                          <TextWithReferences
+                            text={recommendedAlignment.fullDescription}
+                            onReferenceClick={handleReferenceClick}
+                            citationVariant="superscript"
+                          />
                         </Text>
                       </VStack>
                     </CardBody>
@@ -1223,7 +1239,7 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
                         left="50%"
                         bottom="16px"
                         transform="translateX(-50%)"
-                        bg="#eb1700"
+                        bg="#C8102E"
                         color="white"
                         borderRadius="full"
                         px={4}
@@ -1281,8 +1297,8 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
                         <Radar
                           name="Score"
                           dataKey="score"
-                          stroke="#eb1700"
-                          fill="#eb1700"
+                          stroke="#C8102E"
+                          fill="#C8102E"
                           fillOpacity={0.2}
                           strokeWidth={2}
                           isAnimationActive={!pdfMode}
@@ -1305,7 +1321,7 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
                       const percentage = getPercentageScore(key)
                       //console.log(`Alignment: ${key}, Percentage: ${percentage}`)
                       return (
-                        <Box key={key} p={5} bg="#f1efed" borderRadius="md">
+                        <Box key={key} p={5} bg="#F4F4F4" borderRadius="md">
                           <Flex justify="space-between" align="start" mb={2}>
                             <Text fontSize="sm" fontWeight="medium" color="#6e6259" pt={0} ml={2} mr={2}>
                               {alignment.name}
@@ -1361,8 +1377,8 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
           <Modal isOpen={isNotesOpen} onClose={onNotesClose} size="xl">
             <ModalOverlay />
             <ModalContent>
-              <ModalHeader color="white" fontWeight="500">Edit Notes</ModalHeader>
-              <ModalCloseButton color="white" />
+              <ModalHeader bg="jj.gray.50" color="jj.red">Edit Notes</ModalHeader>
+              <ModalCloseButton color="jj.red" />
 
               <ModalBody>
                 <ReactQuill
@@ -1392,14 +1408,14 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
                       variant="outline"
                       mr={3}
                       onClick={onNotesClose}
-                      borderColor="#eb1700"
-                      color="#eb1700"
-                      _hover={{ bg: "#eb1700", color: "white" }}
+                      borderColor="#C8102E"
+                      color="#C8102E"
+                      _hover={{ bg: "#C8102E", color: "white" }}
                     >
                       Cancel
                     </Button>
                     <Button
-                      bg="#eb1700"
+                      bg="#C8102E"
                       color="white"
                       _hover={{ bg: "#9e0000" }}
                       onClick={handleSaveNotes}
@@ -1437,6 +1453,12 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
             imageSrc={currentImage?.src}
             imageAlt={currentImage?.alt}
             alignmentType={currentImage?.type}
+          />
+
+          <ReferencesModal
+            isOpen={isReferencesModalOpen}
+            onClose={onReferencesModalClose}
+            referenceNumber={selectedReference}
           />
 
         </>

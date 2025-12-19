@@ -441,14 +441,14 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
     >
       <ModalOverlay />
       <ModalContent maxH="90vh">
-        <ModalHeader bg="#f1efed" borderBottom="1px solid" borderColor="#e8e6e3">
+        <ModalHeader backgroundColor="jj.gray.50" borderBottom="1px solid">
           <HStack spacing={3}>
-            <Icon as={CalendarIcon} color="#eb1700" />
-            <Text color="#eb1700" fontSize="lg" fontWeight="500">
+            <Icon as={CalendarIcon} color="#C8102E" />
+            <Text color="#C8102E" fontSize="lg" fontWeight="500">
               Load Existing Conversation
             </Text>
             {questionsLoading && (
-              <Spinner size="sm" color="#eb1700" />
+              <Spinner size="sm" color="#C8102E" />
             )}
           </HStack>
         </ModalHeader>
@@ -478,7 +478,7 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
                   placeholder="Search by surgeon, hospital, surgery center, alignment, or volume..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  focusBorderColor="#eb1700"
+                  focusBorderColor="#C8102E"
                   bg="white"
                   isDisabled={editingCard !== null}
                 />
@@ -487,7 +487,7 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
               <Select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                focusBorderColor="#eb1700"
+                focusBorderColor="#C8102E"
                 bg="white"
                 isDisabled={editingCard !== null}
               >
@@ -504,7 +504,7 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
             {loading ? (
               <Center py={8}>
                 <VStack spacing={4}>
-                  <Spinner size="lg" color="#eb1700" />
+                  <Spinner size="lg" color="#C8102E" />
                   <Text color="#6e6259">Loading conversations...</Text>
                 </VStack>
               </Center>
@@ -532,12 +532,12 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
                     bg={editingCard === conversation.id ? editBg : cardBg}
                     borderRadius="md"
                     borderWidth="2px"
-                    borderColor={editingCard === conversation.id ? '#eb1700' : '#e8e6e3'}
+                    borderColor={editingCard === conversation.id ? '#C8102E' : '#e8e6e3'}
                     transition="all 0.2s"
                     opacity={editingCard !== null && editingCard !== conversation.id ? 0.5 : 1}
                     _hover={editingCard === null ? {
                       bg: hoverBg,
-                      borderColor: '#eb1700',
+                      borderColor: '#C8102E',
                       shadow: 'md'
                     } : {}}
                   >
@@ -551,7 +551,7 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
                               <Input
                                 value={editData.surgeon_name}
                                 onChange={(e) => setEditData(prev => ({ ...prev, surgeon_name: e.target.value }))}
-                                focusBorderColor="#eb1700"
+                                focusBorderColor="#C8102E"
                                 size="sm"
                               />
                             </FormControl>
@@ -575,7 +575,7 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
                               <Input
                                 value={editData.hospital_name}
                                 onChange={(e) => setEditData(prev => ({ ...prev, hospital_name: e.target.value }))}
-                                focusBorderColor="#eb1700"
+                                focusBorderColor="#C8102E"
                                 size="sm"
                               />
                             </FormControl>
@@ -584,7 +584,7 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
                               <Input
                                 value={editData.surgery_center_name}
                                 onChange={(e) => setEditData(prev => ({ ...prev, surgery_center_name: e.target.value }))}
-                                focusBorderColor="#eb1700"
+                                focusBorderColor="#C8102E"
                                 size="sm"
                               />
                             </FormControl>
@@ -594,7 +594,7 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
                                 type="date"
                                 value={editData.conversation_date}
                                 onChange={(e) => setEditData(prev => ({ ...prev, conversation_date: e.target.value }))}
-                                focusBorderColor="#eb1700"
+                                focusBorderColor="#C8102E"
                                 size="sm"
                               />
                             </FormControl>
@@ -641,7 +641,7 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
                               <Select
                                 value={editData.surgeon_volume_per_year}
                                 onChange={(e) => setEditData(prev => ({ ...prev, surgeon_volume_per_year: e.target.value }))}
-                                focusBorderColor="#eb1700"
+                                focusBorderColor="#C8102E"
                                 size="sm"
                               >
                                 <option value="">Select volume...</option>
@@ -655,7 +655,7 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
                               <Select
                                 value={editData.uses_robotics}
                                 onChange={(e) => setEditData(prev => ({ ...prev, uses_robotics: e.target.value }))}
-                                focusBorderColor="#eb1700"
+                                focusBorderColor="#C8102E"
                                 size="sm"
                               >
                                 <option value="true">Yes</option>
@@ -696,7 +696,7 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
                             <Select
                               value={editData.current_alignment}
                               onChange={(e) => setEditData(prev => ({ ...prev, current_alignment: e.target.value }))}
-                              focusBorderColor="#eb1700"
+                              focusBorderColor="#C8102E"
                               size="sm"
                             >
                               <option value="">Select alignment...</option>
@@ -787,7 +787,7 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
 
                       {/* Sales Rep Info (for surgeons viewing conversations) */}
                       {editingCard !== conversation.id && user.role === 'surgeon' && conversation.sales_rep_name && (
-                        <Box pt={2} borderTop="1px solid" borderColor="#f1efed">
+                        <Box pt={2} borderTop="1px solid" borderColor="jj.gray.50">
                           <Text fontSize="xs" color="#a39992">
                             Sales Representative: <Text as="span" fontWeight="medium">{conversation.sales_rep_name}</Text>
                           </Text>
@@ -810,7 +810,7 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
                             </Button>
                             <Button
                               size="sm"
-                              bg="#eb1700"
+                              bg="#C8102E"
                               color="white"
                               _hover={{ bg: "#9e0000" }}
                               onClick={() => handleSaveEdit(conversation.id)}
@@ -834,7 +834,7 @@ const LoadConversationModal = ({ isOpen, onClose, onConversationSelected }) => {
                             />
                             <Button
                               size="sm"
-                              bg="#eb1700"
+                              bg="#C8102E"
                               color="white"
                               _hover={{ bg: "#9e0000" }}
                               onClick={() => handleLoadConversation(conversation.id)}

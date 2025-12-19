@@ -20,7 +20,7 @@ const AlignmentSummaryImage = ({ alignment }) => {
         minH={{ base: "200px", md: "250px", lg: "300px" }}
         alignItems="center"
         justifyContent="center"
-        bg="#f1efed"
+        bg="jj.gray.50"
         color="#81766f"
         borderRadius="md"
       >
@@ -56,7 +56,7 @@ const AlignmentSummaryImage = ({ alignment }) => {
         >
           <Spinner
             size="lg"
-            color="#eb1700"
+            color="#C8102E"
             thickness="3px"
           />
         </Flex>

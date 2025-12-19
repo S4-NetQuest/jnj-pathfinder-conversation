@@ -52,18 +52,18 @@ const Footer = () => {
             align="center"
             justify={isMobile ? "center" : "flex-start"}
             flex={isMobile ? "none" : "0 0 auto"}
+            maxW="80%"
           >
-            <Image
-              src={JNJLogo}
-              alt="Johnson & Johnson MedTech"
-              h="20px"
-              w="auto"
-              fallback={
-                <Text color={textColor} fontSize="sm" fontWeight="medium">
-                  J&J MedTech
-                </Text>
-              }
-            />
+
+            <Text
+              color={textColor}
+              fontSize="xs"
+              lineHeight="1.3"
+              fontWeight="400"
+              minW="600px"
+            >
+              Important Information: Prior to use, refer to the instructions for use supplied with the device(s) for indications, contraindications, side effects, warnings and precautions. Product(s) may not be commercially available in all markets and may not be commercialized nor promoted unless regulatory approval has been granted for all the products referenced.
+            </Text>
           </Flex>
 
           {/* Copyright and Confidentiality Text */}
@@ -78,8 +78,9 @@ const Footer = () => {
               fontSize="xs"
               lineHeight="1.3"
               fontWeight="400"
+              minW="25%"
             >
-              © Johnson & Johnson and its affiliates {currentYear}. All rights reserved.
+              ©DePuy Synthes and its affiliates {currentYear}
             </Text>
             <Text
               color={textColor}
@@ -87,7 +88,7 @@ const Footer = () => {
               lineHeight="1.3"
               fontWeight="400"
             >
-              CONFIDENTIAL. FOR INTERNAL USE ONLY. NOT FOR USE WITH ANY CUSTOMER OR FOR EXTERNAL DISTRIBUTION.
+              M_US_ORT_JRKN_408990
             </Text>
           </VStack>
         </Flex>

@@ -72,7 +72,7 @@ const ConversationPDFView = () => {
           padding: '40px',
           textAlign: 'center',
           fontFamily: 'Arial, sans-serif',
-          color: '#eb1700'
+          color: '#C8102E'
         }}>
           <h3>Error Loading Conversation</h3>
           <p>{error}</p>
@@ -93,7 +93,7 @@ const ConversationPDFView = () => {
           padding: '40px',
           textAlign: 'center',
           fontFamily: 'Arial, sans-serif',
-          color: '#eb1700'
+          color: '#C8102E'
         }}>
           No conversation data available
         </div>

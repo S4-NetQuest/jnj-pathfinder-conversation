@@ -45,7 +45,7 @@ const ComparePhilosophiesModal = ({ isOpen, onClose }) => {
       <ModalOverlay />
       <ModalContent maxH="90vh">
         <ModalHeader bg="gray.50" borderBottom="1px solid" borderColor={borderColor}>
-          <Text color="#eb1700" fontSize="lg" fontWeight="bold">
+          <Text color="#C8102E" fontSize="lg" fontWeight="bold">
             Applying the Challenger Mindset
           </Text>
         </ModalHeader>
@@ -56,7 +56,7 @@ const ComparePhilosophiesModal = ({ isOpen, onClose }) => {
             {loading ? (
               <Center py={8}>
                 <VStack spacing={3}>
-                  <Spinner size="lg" color="#eb1700" />
+                  <Spinner size="lg" color="#C8102E" />
                   <Text color="gray.500">Loading questions ...</Text>
                 </VStack>
               </Center>
@@ -70,7 +70,7 @@ const ComparePhilosophiesModal = ({ isOpen, onClose }) => {
                     colorScheme="red"
                     size="sm"
                     onClick={handleRetry}
-                    bg="#eb1700"
+                    bg="#C8102E"
                     _hover={{ bg: "#9e0000" }}
                   >
                     Try Again

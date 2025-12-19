@@ -182,9 +182,9 @@ const DownloadPDFButton = ({ conversationId, conversationData, isTestMode = fals
       fontSize={"xs"}
       isLoading={isGenerating}
       loadingText={isTestMode ? "Testing PDF..." : "Generating PDF..."}
-      borderColor={isTestMode ? "blue.500" : "#eb1700"}
-      color={isTestMode ? "blue.500" : "#eb1700"}
-      _hover={{ bg: isTestMode ? "blue.500" : "#eb1700", color: "white" }}
+      borderColor={isTestMode ? "blue.500" : "#C8102E"}
+      color={isTestMode ? "blue.500" : "#C8102E"}
+      _hover={{ bg: isTestMode ? "blue.500" : "#C8102E", color: "white" }}
       _disabled={{ opacity: 0.6, cursor: 'not-allowed' }}
       isDisabled={!isTestMode && !conversationId}
     >

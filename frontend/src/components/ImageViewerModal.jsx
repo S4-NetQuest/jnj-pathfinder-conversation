@@ -33,7 +33,7 @@ const ImageViewerModal = ({
 }) => {
   const [resetKey, setResetKey] = useState(0); // Key to force remount
   const bgColor = useColorModeValue('white', 'gray.800');
-  const headerBg = useColorModeValue('#eb1700', '#eb1700');
+  const headerBg = useColorModeValue('#C8102E', '#C8102E');
 
   return (
     <Modal

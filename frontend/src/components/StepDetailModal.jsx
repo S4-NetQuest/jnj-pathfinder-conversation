@@ -24,9 +24,12 @@ import {
   Flex,
   Spacer,
   useToast,
+  useDisclosure,
 } from '@chakra-ui/react'
 import { ChevronLeftIcon, ChevronRightIcon, ArrowBackIcon, ChevronDownIcon, ChevronUpIcon, ArrowForwardIcon } from '@chakra-ui/icons'
 import { MdCheckCircle } from 'react-icons/md'
+import TextWithReferences from './TextWithReferences'
+import ReferencesModal from './ReferencesModal'
 
 const StepDetailModal = ({
   isOpen,
@@ -45,6 +48,13 @@ const StepDetailModal = ({
 
   // State to track which cards have details expanded
   const [expandedCards, setExpandedCards] = useState({});
+
+  const {
+    isOpen: isRefModalOpen,
+    onOpen: onRefModalOpen,
+    onClose: onRefModalClose
+  } = useDisclosure()
+  const [selectedRef, setSelectedRef] = useState(null)
 
   // Reset expanded state when step changes
   useEffect(() => {
@@ -92,6 +102,11 @@ const StepDetailModal = ({
 
   // Is this the final step?
   const isFinalStep = currentStep && currentStep.id === 6;
+
+  const handleReferenceClick = (refNum) => {
+    setSelectedRef(refNum)
+    onRefModalOpen()
+  }
 
   // Swipe handling
   useEffect(() => {
@@ -327,7 +342,11 @@ const StepDetailModal = ({
                           <ListItem key={i} display="flex">
                             <ListIcon as={MdCheckCircle} color="jj.red" mt="3px" />
                             <Text fontSize="sm" lineHeight="1.5">
-                              {bullet}
+                              <TextWithReferences
+                                text={bullet}
+                                onReferenceClick={handleReferenceClick}
+                                citationVariant="superscript"
+                              />
                             </Text>
                           </ListItem>
                         ))}
@@ -357,13 +376,20 @@ const StepDetailModal = ({
                         borderWidth="1px"
                         borderColor="gray.200"
                       >
-                        <Text
+                        {/* <Text
                           fontSize="sm"
                           lineHeight="1.7"
                           color="jj.gray.700"
                           whiteSpace="pre-line"
                         >
                           {card.expandedMessage}
+                        </Text> */}
+                        <Text fontSize="sm" lineHeight="1.5">
+                          <TextWithReferences
+                            text={card.expandedMessage}
+                            onReferenceClick={handleReferenceClick}
+                            citationVariant="superscript"
+                          />
                         </Text>
                       </Box>
                     </Collapse>
@@ -432,7 +458,15 @@ const StepDetailModal = ({
           </Flex>
         </ModalFooter>
       </ModalContent>
+
+      <ReferencesModal
+        isOpen={isRefModalOpen}
+        onClose={onRefModalClose}
+        referenceNumber={selectedRef}
+      />
     </Modal>
+
+
   )
 }
 

@@ -29,14 +29,14 @@ import config from '../config/config'
 import { getPdfUrl } from '../utils/urlUtils'
 
 // Import assets
-import pathfinderWordmark from '../assets/images/FINAL-JJMT_Wordmark_Pathfinder Conversation Guide_RGB_Red.png'
 import pathfinderCompass from '../assets/images/home-compass.png'
+import DPSLogo from '../assets/images/DPS_Logo_NoSig_RGB.png'
 
 const Home = () => {
   const { user, logout, isSalesRep, isSurgeon } = useAuth()
   const navigate = useNavigate()
   const toast = useToast()
-  const [imagesLoaded, setImagesLoaded] = useState({ wordmark: false, compass: false })
+  const [imagesLoaded, setImagesLoaded] = useState({ compass: false, dpsLogo: false })
 
   // New state for mobile animation
   const [mobileAnimationPhase, setMobileAnimationPhase] = useState('initial') // 'initial', 'compass', 'buttons'
@@ -99,7 +99,7 @@ const Home = () => {
       img.src = src
     }
 
-    preloadImage(pathfinderWordmark, 'wordmark')
+    preloadImage(DPSLogo, 'dpsLogo')
     preloadImage(pathfinderCompass, 'compass')
   }, [])
 
@@ -140,23 +140,29 @@ const Home = () => {
         <Container maxW="container.md">
           <VStack spacing={8} align="center">
             <Box textAlign="center">
-              <Image
-                src={pathfinderWordmark}
-                alt="Kinematic Restoration"
-                maxH={{ base: '80px', md: '100px' }}
-                w="auto"
-                fallback={
-                  <Text
-                    fontSize={{ base: 'xl', md: '2xl' }}
-                    fontWeight="bold"
-                    color="red.500"
-                    textAlign="center"
-                  >
-                    PATHFINDER<br />
-                    Kinematic Restoration Conversation Guide
-                  </Text>
-                }
-              />
+              <Text
+                fontSize={{ base: 'xl', md: '2xl' }}
+                fontWeight="bold"
+                color="white"
+                textAlign="center"
+                bg="red.500"
+                px={4}
+                py={2}
+                borderRadius="md"
+              >
+                Pathfinder
+              </Text>
+              <Text
+                mt={1}
+                fontSize={{ base: 'sm', md: 'md' }}
+                fontWeight="medium"
+                color="red.500"
+                textAlign="center"
+                letterSpacing="wider"
+                textTransform="uppercase"
+              >
+                CONVERSATION GUIDE
+              </Text>
             </Box>
 
             <Box w="full" maxW="480px">
@@ -180,55 +186,54 @@ const Home = () => {
         maxW="container.xl"
         minH={availableHeight}
         overflow="auto"
-        py={{ base: 4, md: 6 }}
+        /* py={{ base: 4, md: 6 }} */
       >
-        <VStack
-          spacing={{ base: 4, md: 6 }}
-          w="full"
-          py={{ base: 2, md: 4 }}
-          align="stretch"
-        >
-          <Box textAlign="center" w="full" p={0}>
-            <Image
-              src={pathfinderWordmark}
-              alt="Kinematic Restoration"
-              maxH={{ base: '50px', md: '65px', lg: '100px' }}
-              w="auto"
-              mx="auto"
-              opacity={imagesLoaded.wordmark ? 1 : 0}
-              transition="opacity 0.3s ease-in-out"
-              fallback={
-                <Text
-                  fontSize={{ base: 'md', md: 'lg', lg: 'xl' }}
-                  fontWeight="bold"
-                  color="red.500"
-                  textAlign="center"
-                  className="font-display"
-                >
-                  Kinematic Restoration
-                </Text>
-              }
-            />
-          </Box>
-
-          <Box w="full" textAlign="center" px={{ base: 4, md: 6, lg: 8 }}>
+        <HStack>
+          <Box textAlign="left" mb={6} mt={1} ml={2}>
             <Text
-              fontSize={{ base: "md", md: "lg", lg: "xl" }}
-              color="gray.700"
-              className="font-text"
-              lineHeight="1.4"
-              maxW="900px"
-              mx="auto"
+              fontSize="15.5px"
+              fontWeight="medium"
+              color="red.500"
+              letterSpacing="wider"
+              textTransform="uppercase"
+              minW='200px'
             >
-              Let's talk about alignment philosophies in Total Knee Arthroplasty (TKA).
+              CONVERSATION GUIDE
             </Text>
           </Box>
 
+          <Box w="full" textAlign="center" px={{ base: 4, md: 6, lg: 8 }} position="relative" mt={0} mb={6}>
+            {/* DPS Logo - Top right aligned on the page */}
+            <Box
+              position="absolute"
+              right="2%"
+              height="50px"
+              display={{ base: "none", md: "block" }}
+              zIndex={1}
+            >
+              <Image
+                src={DPSLogo}
+                alt="DePuy Synthes"
+                height="100%"
+                opacity={imagesLoaded.dpsLogo ? 1 : 0}
+                transition="opacity 0.3s ease-in-out"
+              />
+            </Box>
+          </Box>
+        </HStack>
+
+        <VStack
+        mt={14}
+          spacing={{ base: 0, md: 6 }}
+          w="full"
+          py={{ base: 0, md: 0 }}
+          align="stretch"
+        >
           <Box w="full" my={{ base: 2, md: 4 }}>
             <Flex
               direction="column"
               align="center"
-              justify="flex-start"
+              justify="center"
               w="full"
             >
               {isMobile ? (
@@ -236,9 +241,10 @@ const Home = () => {
                 <Box
                   position="relative"
                   w="full"
-                  maxW="400px"
+                  maxW="500px"
                   h={{ base: "600px", sm: "650px" }}
-                  px={4}
+                  px={0}
+                  mx="auto"
                 >
                   {/* Compass Image Layer - Shows first, then fades out */}
                   <Flex
@@ -268,7 +274,7 @@ const Home = () => {
                       opacity={imagesLoaded.compass ? 1 : 0}
                       transition="opacity 0.3s ease-in-out"
                       objectFit="contain"
-                      filter="drop-shadow(0 8px 24px rgba(0,0,0,0.15))"
+                      /* filter="drop-shadow(0 8px 24px rgba(0,0,0,0.15))" */
                     />
                   </Flex>
 
@@ -532,13 +538,24 @@ const Home = () => {
                   templateColumns={{ md: "1fr 1fr", lg: "1.2fr 0.8fr" }}
                   gap={{ md: 8, lg: 12, xl: 16 }}
                   w="full"
-                  alignItems="center"
+                  alignItems="flex-start"
+                  justifyItems="center"
                   maxW="1200px"
+                  mx="auto"
                 >
                   <GridItem>
                     <VStack spacing={6} align="stretch">
+                  <Box>
+                    <Text
+                      fontSize={{ base: "md", md: "md", lg: "md" }}
+                      color="gray.700"
+                      className="font-text"
+                      lineHeight="1.4"
+                    >
+                      Let's talk about alignment philosophies in Total Knee Arthroplasty (TKA).
+                    </Text>
+                  </Box>
                       <VStack spacing={4} align="stretch">
-                        {/* Enhanced Start New Conversation Button - MORE PROMINENT */}
                         <Box
                           position="relative"
                           w="full"
@@ -707,7 +724,7 @@ const Home = () => {
                             </VStack>
                           </Button>
                         )}
-                        <Box position='relative' mt={6} mb={2}>
+                        <Box position='relative' mt={6} mb={2} textAlign="center" w="full">
                           <Divider />
                           <AbsoluteCenter bg='white' px='4'>
                             <Text fontSize="sm" fontWeight="medium" color="gray.600">
@@ -782,7 +799,7 @@ const Home = () => {
                   </GridItem>
 
                   <GridItem>
-                    <Flex justify="center" align="center" h="full" marginTop={"-50px"}>
+                    <Flex justify="center" align="center" h="full" marginTop={"0px"}>
                       <Image
                         src={pathfinderCompass}
                         alt="PATHFINDER Compass"
@@ -790,7 +807,7 @@ const Home = () => {
                         opacity={imagesLoaded.compass ? 1 : 0}
                         transition="opacity 0.3s ease-in-out"
                         objectFit="contain"
-                        filter="drop-shadow(0 10px 25px rgba(0,0,0,0.1))"
+                        /* filter="drop-shadow(0 10px 25px rgba(0,0,0,0.1))" */
                       />
                     </Flex>
                   </GridItem>

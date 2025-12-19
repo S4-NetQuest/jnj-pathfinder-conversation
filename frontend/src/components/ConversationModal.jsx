@@ -243,8 +243,8 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
     >
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader bg="#f1efed" borderBottom="1px solid" borderColor="#e8e6e3">
-          <Text color="#eb1700" fontSize="lg" fontWeight="500">
+        <ModalHeader bg="jj.gray.50" borderBottom="1px solid">
+          <Text color="#C8102E" fontSize="lg" fontWeight="500">
             Create New Conversation
           </Text>
         </ModalHeader>
@@ -260,7 +260,7 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
                 value={formData.surgeon_name}
                 onChange={(e) => handleInputChange('surgeon_name', e.target.value)}
                 placeholder={user?.role === 'surgeon' ? 'Your name' : 'Enter Surgeon name'}
-                focusBorderColor="#eb1700"
+                focusBorderColor="#C8102E"
                 bg="white"
                 isReadOnly={user?.role === 'surgeon'}
                 isDisabled={loading}
@@ -275,7 +275,7 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
                 value={formData.hospital_name}
                 onChange={(e) => handleInputChange('hospital_name', e.target.value)}
                 placeholder="Enter Hospital name"
-                focusBorderColor="#eb1700"
+                focusBorderColor="#C8102E"
                 bg="white"
                 isDisabled={loading}
               />
@@ -289,7 +289,7 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
                 value={formData.surgery_center_name}
                 onChange={(e) => handleInputChange('surgery_center_name', e.target.value)}
                 placeholder="Enter Surgery Center name"
-                focusBorderColor="#eb1700"
+                focusBorderColor="#C8102E"
                 bg="white"
                 isDisabled={loading}
               />
@@ -303,7 +303,7 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
                 value={formData.surgeon_volume_per_year}
                 onChange={(e) => handleInputChange('surgeon_volume_per_year', e.target.value)}
                 placeholder="Select volume range"
-                focusBorderColor="#eb1700"
+                focusBorderColor="#C8102E"
                 bg="white"
                 isDisabled={loading}
               >
@@ -342,7 +342,7 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
                 value={formData.current_alignment}
                 onChange={(e) => handleInputChange('current_alignment', e.target.value)}
                 placeholder="Select current alignment approach"
-                focusBorderColor="#eb1700"
+                focusBorderColor="#C8102E"
                 bg="white"
                 isDisabled={loading}
               >
@@ -362,7 +362,7 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
                 type="date"
                 value={formData.conversation_date}
                 onChange={(e) => handleInputChange('conversation_date', e.target.value)}
-                focusBorderColor="#eb1700"
+                focusBorderColor="#C8102E"
                 bg="white"
                 isDisabled={loading}
               />
@@ -370,18 +370,6 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
                 You can schedule conversations for future dates
               </Text>
             </FormControl>
-
-            {/* User Info for development only */}
-            {/*
-            {process.env.NODE_ENV === 'development' && (
-              <Box p={3} bg="#f1efed" borderRadius="md" fontSize="xs">
-                <Text fontWeight="bold" color="#312c2a">Development Info:</Text>
-                <Text color="#6e6259">Role: {user?.role}</Text>
-                <Text color="#6e6259">Name: {user?.name}</Text>
-                <Text color="#6e6259">ID: {user?.id}</Text>
-              </Box>
-            )}
-             */}
           </VStack>
         </ModalBody>
 
@@ -393,12 +381,12 @@ const ConversationModal = ({ isOpen, onClose, onConversationCreated }) => {
             isDisabled={loading}
             borderColor="#d5cfc9"
             color="#312c2a"
-            _hover={{ borderColor: "#cbc4bc", bg: "#f1efed" }}
+            _hover={{ borderColor: "#cbc4bc", bg: "jj.gray.50" }}
           >
             Cancel
           </Button>
           <Button
-            bg="#eb1700"
+            bg="#C8102E"
             color="white"
             _hover={{ bg: "#9e0000" }}
             _active={{ bg: "#9e0000" }}

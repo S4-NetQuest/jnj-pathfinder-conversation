@@ -52,12 +52,12 @@ const DisclaimerModal = ({ isOpen, onClose, onAccept }) => {
       <ModalContent
         bg={bgColor}
         border="2px solid"
-        borderColor="#eb1700" // J&J Red
+        borderColor="#C8102E" // J&J Red
         borderRadius="md"
         mx={4} // Mobile margin
       >
         <ModalHeader
-          bg="#eb1700"
+          bg="#C8102E"
           color="white"
           borderRadius="sm sm 0 0"
           py={4}
@@ -126,7 +126,7 @@ const DisclaimerModal = ({ isOpen, onClose, onAccept }) => {
               Cancel
             </Button>
             <Button
-              bg="#eb1700"
+              bg="#C8102E"
               color="white"
               _hover={{ bg: "#d11400" }}
               _active={{ bg: "#b81200" }}

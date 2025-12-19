@@ -21,22 +21,22 @@ const choreographySteps = [
       {
         conversationalAnchor: "I speak with your peers on a weekly basis...",
         bulletText: [
-          "Many surgeons shifting from MA to patient-specific alignment",
-          "KA and iKA adoption growing with robotic assistance",
-          "Clinical data shows improved early function",
-          "Patient satisfaction higher with anatomy-respecting alignment"
+          "Surgeons are exploring patient-specific alignment approaches [7]",
+          "KA and iKA techniques are frequently described in the literature using robotic assistance [5][7][20]",
+          "Clinical studies have reported improvements in early functional outcomes [5][12]",
+          "Higher patient satisfaction has been reported with alignment approaches that aim to respect native anatomy [7][10]"
         ],
-        expandedMessage: "...many of whom are transitioning their alignment strategies. Across multiple practices, we're seeing a growing shift from the traditional Mechanical Alignment (MA) model toward more patient-specific alignment strategies like Kinematic Alignment (KA) and Inverse Kinematic Alignment (iKA), particularly when utilizing robotic assisted surgical devices. The clinical data consistently shows improved early function and higher patient satisfaction when alignment respects individual joint lines and pre-disease anatomy."
+        expandedMessage: "....and what I'm hearing is a growing interest in patient-specific alignment strategies such as Kinematic Alignment (KA) and Inverse Kinematic Alignment (iKA)[7][10]. In those conversations, these approaches are often discussed alongside robotic-assisted technologies, which are used to support more precise execution.[5][7][20] Clinically, studies report improvements in early functional outcomes[5][12], and higher patient satisfaction[7][10] has been reported in cohorts treated with patient-specific alignment approaches that aim to respect native anatomy."
       },
       {
         conversationalAnchor: "This can often be a difficult...",
         bulletText: [
           "Balancing OR throughput with patient satisfaction demands",
-          "Evolution from traditional alignment to evidence-based approaches",
-          "Integration challenges resolved through systematic adoption",
-          "Improved consistency in complex soft tissue cases"
+          "Ongoing evaluation of traditional alignment strategies alongside emerging evidence-based approaches [10][11][12]",
+          "Navigating integration challenges during adoption of new alignment strategies",
+          "More predictable management of complex soft-tissue envelopes [7][9][11]"
         ],
-        expandedMessage: "...transition. Balancing the demands of high OR throughput, addressing patient dissatisfaction, and keeping up with evolving evidence can be overwhelming. We work with several orthopaedic surgeons who initially had concerns about changing their approach to TKA alignment but found that integrating these principles simplified intraoperative decisions and improved consistency, especially in cases where soft tissue management was previously challenging."
+        expandedMessage: "....transition. Surgeons evolving their alignment strategies often face pressure to balance OR efficiency, patient satisfaction, and emerging clinical evidence. Studies evaluating kinematic and inverse kinematic alignment describe approaches that account for native joint line orientation and patient-specific anatomy,[9][11][20] and report favorable clinical outcomes and reduced need for soft-tissue releases in selected cohorts.[5][7][12] These principles may help simplify intraoperative decision-making, particularly in cases with challenging soft-tissue envelopes."
       }
     ]
   },
@@ -49,10 +49,10 @@ const choreographySteps = [
         bulletText: [
           "Clinical outcomes and patient satisfaction both matter",
           "Informed patients have higher expectations than ever",
-          "Natural-feeling knee is increasingly the benchmark",
-          "Patient-reported outcomes now drive success metrics"
+          "A natural feeling knee is increasingly emphasized as a key indicator of success [7][10]",
+          "Patient-reported outcomes are increasingly used to evaluate success in clinical studies [7][12]"
         ],
-        expandedMessage: "consistently deliver excellent clinical outcomes while also improving patient satisfaction, particularly in a climate where patients are more informed, and their expectations for a natural-feeling knee are higher than ever."
+        expandedMessage: "...consistently deliver strong clinical outcomes while also meeting rising patient expectations. Surgeons tell us today's patients are more informed and place greater emphasis not only on traditional clinical measures, but also on how their knee feels after surgery. As a result, many increasingly view a natural-feeling knee and patient-reported outcomes as important indicators of success, alongside established clinical outcomes.[7][10][12]"
       },
       {
         conversationalAnchor: "Most...",
@@ -60,39 +60,39 @@ const choreographySteps = [
           "Surgeons want excellent clinical outcomes",
           "Patient satisfaction drives referrals and reputation",
           "Informed patients research before surgery",
-          "Natural knee feel becomes the new standard"
+          "Natural knee feel is increasingly emphasized as an important indicator of success [7][10][12]"
         ],
         expandedMessage: "Orthopaedic Surgeons"
       },
       {
         conversationalAnchor: "go about this...",
         bulletText: [
-          "Many surgeons rely primarily on MA principles",
+          "Many surgeons rely primarily on mechanical alignment principles [1]",
           "Traditional approaches prioritize mechanical targets",
           "Standardized techniques don’t account for individual anatomy",
-          "One-size-fits-all may not optimize all patients"
+          "One-size-fits-all may not optimize all patients [2][3]"
         ],
-        expandedMessage: "...still rely primarily on Mechanical Alignment (MA) principles..."
+        expandedMessage: "...still rely primarily on Mechanical Alignment (MA) principles.[2][3]"
       },
       {
         conversationalAnchor: "Many believe...",
         bulletText: [
-          "MA considered gold standard for longevity",
-          "Surgical consistency important for reproducibility",
-          "Mechanical principles well-established in literature",
-          "Traditional TKA training emphasizes neutral alignment"
+          "MA considered gold standard for longevity [2][3]",
+          "Mechanical principles well established in training",
+          "Long-term data historically supported neutral alignment [1][2][3]",
+          "Newer evidence highlights meaningful anatomic variation [4]"
         ],
-        expandedMessage: "...believing it to be the gold standard for achieving implant longevity and surgical consistency."
+        expandedMessage: "...it to be the gold standard for implant longevity and surgical consistency. Early survivorship data associated alignment outside neutral thresholds with higher risk, reinforcing mechanical alignment as reliable and reproducible approach.[1][2] More recent evidence shows substantial variation in native limb alignment, challenging the assumption that a single neutral target reflects all patients' anatomy.[4]"
       },
       {
         conversationalAnchor: "Unfortunately, what they fail to realize is...",
         bulletText: [
-          "Mechanical alignment alters natural joint line",
-          "Unnatural kinematics lead to slower recovery",
-          "Soft tissue imbalance causes persistent dissatisfaction",
-          "Up to 20% of TKA patients remain unsatisfied"
+          "Mechanical alignment can alter native joint-line orientation [9][11]",
+          "Non-anatomic alignment can affect knee kinematics [9]",
+          "Balancing demands can drive soft-tissue releases and imbalance may contribute to symptoms/dissatisfaction [17]",
+          "~10-20% of TKA patients report they are not fully satisfied [17]"
         ],
-        expandedMessage: "....that by focusing solely on mechanical alignment targets, they unintentionally alter the patient's natural joint line and soft-tissue balance, leading to unnatural knee kinematics, slower functional recovery, and persistent dissatisfaction in up to 20% of TKA patients."
+        expandedMessage: "...Mechanical alignment can change joint-line orientation and component position relative to the knees kinematic axes.[9][11] In pursuit of a neutral mechanical axis, soft-tissue releases are frequently required to achieve balance.[17] Despite excellent survivorship, approximately 10-20% of patients report they are not fully satisfied following total knee arthroplasty."
       }
     ]
   },
@@ -103,52 +103,52 @@ const choreographySteps = [
       {
         conversationalAnchor: "Imagine how this would impact...",
         bulletText: [
-          "Altered joint lines create unnatural gait patterns",
-          "Patients experience limited range of motion",
-          "Ongoing discomfort affects daily activities",
-          "High dissatisfaction rates, up to 1 in 5 TKA patients"
+          "Altered joint-line orientation can influence gait mechanics",
+          "Patients may experience limitation in range of motion",
+          "Persistent discomfort can affect daily activities",
+          "Dissatisfaction persists in up to 1 in 5 TKA patients [7]"
         ],
-        expandedMessage: "...your patient outcomes...when the joint line is altered and soft tissues are imbalanced, patients can experience unnatural gait patterns, limited range of motion, and ongoing discomfort, which directly contributes to high patient dissatisfaction rates in up to 1 in 5 TKA patients"
+        expandedMessage: "...your patient outcomes...when the joint line is altered and soft tissues are imbalanced, patients may demonstrate changes in gait mechanics, limitations in range of motion, and persistent discomfort.[9][11][16][17] Despite successful implant survivorship, dissatisfaction following total knee arthroplasty persists in approximately 10-20% of patients.[17]"
       },
       {
         conversationalAnchor: "A study has shown that...",
         bulletText: [
-          "Kinematic Alignment improves functional outcomes",
-          "Higher patient satisfaction vs. mechanical alignment",
-          "Superior patient-reported joint scores",
-          "Faster return to post-operative activity levels"
+          "Kinematic alignment is associated with improved functional outcomes [12]",
+          "Higher patient satisfaction vs. mechanical alignment [7]",
+          "Higher patient-reported joint scores [9]",
+          "Faster functional recovery following surgery [12][18]"
         ],
-        expandedMessage: "...kinematic alignment in TKA can lead to significantly improved functional outcomes and higher patient satisfaction compared to mechanical alignment. For example, research by Vendittoli et al. demonstrated superior Forgotten Joint Scores and faster return to post-operative activity levels in patients who underwent kinematically aligned TKA."
+        expandedMessage: "...Kinematic alignment in total knee arthroplasty has been associated with improved functional outcomed and higher patient satisfaction compared with mechanical alignment. Randomized and comparitive clinical studies report pain, function, and range-of-motion scores, along with higher rates of patient satisfaction, following kinematically aligned techniques. Additional evidence suggests that restoration of more native joint mechanics may support earlier functional recovery and return to activity when compared with mechanically aligned approaches.[7][9][12][18]"
       },
       {
         conversationalAnchor: "Let's take a look at how this could negatively impact a hospital / practice like yours.",
         bulletText: [
-          "Persistent dissatisfaction leads to increased post-op visits",
-          "Higher physical therapy costs and resource utilization",
-          "Lower patient-reported outcome scores",
-          "Reimbursement metrics tied to hospital quality ratings"
+          "Persistent dissatisfaction increases follow-up visits and additional care demands [1][2]",
+          "Higher physical therapy utilization can accompany unmet expectations [1][3]",
+          "Lower PROMs can negatively impact reported quality metrics [4]",
+          "Many reimbursement programs incorporate PROM-linked quality ratings [5]"
         ],
-        expandedMessage: "Persistent dissatisfaction after TKA not only leads to increased post-op visits, physical therapy costs, and resource utilization, but can also contribute to lower patient-reported outcome scores, which are increasingly tied to reimbursement metrics and hospital quality ratings."
+        expandedMessage: "Persistent dissatisfaction following total knee arthroplasty has been associated with increased follow-up visits, greater utilization of post-operative physical therapy, and lower patient-reported outcome measures (PROMs). As PROMs are increasingly incorporated into hospital quality programs and reimbursement frameworks, unmet patient expectations may influence both clinical resource utilization and administrative performance metrics.[4][5][12][13]"
       },
       {
         conversationalAnchor: "Not to mention...",
         bulletText: [
-          "Increasing number of patients research options beforehand",
-          "Younger, more active populations demand better outcomes",
-          "Higher functional demands and lifestyle expectations",
-          "Patients won’t accept knees that limit their activities"
+          "More patients research their options before surgery [20]",
+          "Younger, more active patients expect strong functional outcomes [7][19]",
+          "Patients have higher functional demands and expectations [7][18]",
+          "Patients are less willing to accept limitations in lifestyle or mobility [19]"
         ],
-        expandedMessage: "...the increasing number of patients who come into consultations having researched their options, asking for a knee that 'feels natural,' especially in younger, more active populations who have higher functional demands and are less willing to accept a knee that limits their lifestyle."
+        expandedMessage: "...more patients are entering surgical consultations having already researched their treatment options.[20] In parallel, a growing proportion of younger and more active patients report higher expectations for functional recovery and return to activity following TKA.[7][19] These patients are increasingly less willing to accept residual limitation in mobility or lifestyle following surgery.[10]"
       },
       {
         conversationalAnchor: "Now, let me ask you something...",
         bulletText: [
-          "Patients seem clinically successful on X-ray but report dissatisfaction",
-          "Knee function complaints despite good radiographic results",
-          "Troubleshooting patient expectations after technically sound procedures",
-          "Gap between surgical success and patient satisfaction"
+          "Patients seem clinically successful on X-ray but report dissatisfaction [3][7]",
+          "Knee function complaints despite good radiographic results [3][11]",
+          "Troubleshooting patient expectations after technically sound procedures [7][10]",
+          "Gap between surgical success and patient satisfaction [3][7]"
         ],
-        expandedMessage: "...have you noticed patients who seem clinically 'successful' on X-ray but still report dissatisfaction with their knee function or overall outcome? How often do you find yourself troubleshooting patient expectations after what you'd consider a technically well-executed procedure?"
+        expandedMessage: "...have you noticed patients who appear clinically successful on X-ray, yet still report dissatisfaction with their knee outcome?[3][7] Even when radiographic results look good, patients may describe stiffness, altered gait, or functional limitations.[3][11] How often do you find yourself troubleshooting patient expectations after what you would consider a technically well-executed procedure, given the recognized gap between surgical success and patient satisfaction?[3][7][10]"
       }
     ]
   },
@@ -159,42 +159,42 @@ const choreographySteps = [
       {
         conversationalAnchor: "Let me share a story with you...",
         bulletText: [
-          "Surgeon frustrated with patients saying, “my knee just doesn’t feel right.”",
-          "X-rays looked perfect but patients still complained",
-          "Overall knee alignment hit traditional mechanical targets",
-          "Technical success didn’t translate to patient satisfaction"
+          "Surgeon frustrated with patients saying, “my knee just doesn’t feel right.[12][20]”",
+          "X-rays looked perfect but patients still complained [12]",
+          "Overall knee alignment hit traditional mechanical targets [1][2][3]",
+          "Technical success didn’t translate to patient satisfaction [7][10]"
         ],
-        expandedMessage: "...about a surgeon I worked with who was frustrated by seeing too many patients come back post-op saying, 'my knee just doesn't feel right,' even though their X-rays looked perfect and their overall knee alignment hit all the traditional mechanical targets."
+        expandedMessage: "...about a surgeon I worked with who grew frustrated seeing patients return after surgery saying their knee did not feel 'natural' or 'right,' even though their X-rays looked perfect.[12][20] Despite achieveing traditional mechanical alignment targets long considered the standard,[1][2][3] several patients still reported stiffness, altered gait, or an unnatural feel. Comparative studies have shown that technical success and implant survivorship do not always translate to patient satisfaction.[7][10]"
       },
       {
         conversationalAnchor: "Unfortunately...",
         bulletText: [
-          "Mechanical alignment protocols followed precisely",
-          "Younger, more active patients especially affected",
-          "Mid-flexion instability and patella tracking issues reported",
-          "Difficulty returning to pre-surgery activities and sports"
+          "Mechanical alignment protocols followed precisely [1][2][3]",
+          "Younger, more active patients especially affected [7][8][19]",
+          "Mid-flexion instability and patella tracking issues reported [4][16][17]",
+          "Difficulty returning to pre-surgery activities and sports [7][8][9]"
         ],
-        expandedMessage: "...despite following mechanical alignment protocols precisely, this surgeon kept encountering patients, especially younger and more active ones, who reported stiffness, mid-flexion instability, patella tracking issues, and difficulty returning to activities they enjoyed before surgery."
+        expandedMessage: "...despite following mechanical alignment protocols precisely,[1][2][3] this surgeon continued to see patients, particularly younger more active  individuals (Refs 7-9), return with complaints of stiffness, mid-flexion instability, and patellar tracking issues.[4][16][17] Many also struggled to return to the activities they enjoyed prior to surgery, even though the procedure met traditional standards for technical success.[7][8][9]"
       },
       {
         conversationalAnchor: "As a result...",
         bulletText: [
-          "Surgeon explored Kinematic Restoration principles",
-          "VELYS™ Robotic-Assisted Solution used for precision",
-          "Individualized implant positioning restored pre-disease joint lines",
-          "Patients reported more natural knee function and quicker return to activities"
+          "Surgeon explored Kinematic Restoration principles [6][18]",
+          "VELYS™  Robotic-Assisted Solution used to support precise execution [8][14]",
+          "Individualized implant positioning based on pre-disease joint lines [6][18]",
+          "Patients described a more natural knee feel and earlier return to daily activities [7][15]"
         ],
-        expandedMessage: "...the surgeon decided to explore Kinematic Restoration principles using the VELYS™ Robotic-Assisted Solution. By individualizing implant positioning to restore pre-disease joint lines and respecting native soft-tissue tension, they saw a noticeable shift—patients reported more natural knee function, quicker return to daily activities, and overall higher satisfaction scores within the first few months post-op."
+        expandedMessage: "...the surgeon elected to explore Kinematic Restoration principles based on emerging evidence supporting restoration of native joint alignment and ligament balance.[6][18] Robotic assistance with the VELYS™ Robotic-Assisted Solution was incorporated to support accurate and repeatable execution of individualized alignment targets.[8][14] By individualizing implant positioning to better reflect each patient's pre-disease joint line orientation,[6][18] patients frequently described a knee that felt more natural and reported returning to daily activities earlier than expected.[7][15]"
       },
       {
         conversationalAnchor: "I'm curious...",
         bulletText: [
-          "Patients with uncomplicated TKA still express frustration",
-          "Smooth recovery but knee “feels different or performs differently",
-          "Technical aspects performed well, but satisfaction falls short",
-          "Gap between surgical success and patient experience"
+          "Patients with uncomplicated TKA still express frustration [7][12][14]",
+          "Smooth recovery but knee \"feels different or performs differently\" [7][11]",
+          "Technical aspects performed well, but satisfaction falls short [9][12]",
+          "Gap between surgical success and patient experience [7]"
         ],
-        expandedMessage: "...have you noticed certain patients who, despite an uncomplicated index TKA procedure and smooth recovery, still express frustration with how their knee feels or performs? How do you typically handle those conversations when the technical aspects of the surgery went well, but patient satisfaction falls short?"
+        expandedMessage: "...have you noticed certain patients who, despite an uncomplicated index TKA procedure and smooth recovery, still express frustration with how their knee feels or performs?[7][12] How do you typically handle those conversations when the technical aspects of the surgery went well, radiographic alignment targets were achieved,[9][12] but patient satisfaction still falls short?"
       }
     ]
   },
@@ -205,42 +205,42 @@ const choreographySteps = [
       {
         conversationalAnchor: "Imagine if you were able to...",
         bulletText: [
-          "Consistently restore each patient’s pre-disease joint line",
-          "Maintain natural knee kinematics",
-          "Maintain surgical efficiency while reducing variability",
-          "Eliminate guesswork that comes with soft-tissue balancing"
+          "Restore each patient's pre-disease joint line orientation [5][6][8]",
+          "Recreate their native soft-tissue balance and ligament tensioning [7][16]",
+          "Support more natural knee kinematics and patellofemoral behavior [5][6]",
+          "Eliminate guesswork that comes with soft-tissue balancing [16]"
         ],
-        expandedMessage: "...consistently restore each patient's pre-disease joint line and natural knee kinematics—while also maintaining surgical efficiency and reducing the variability that often comes with soft-tissue balancing."
+        expandedMessage: "...consistently restore each patient's pre-disease joint line and natural knee kinematics[5][6][8] while recreating native soft-tissue balance and ligament tensioning.[7][16] This approach supports more physiologic knee and patellofemoral behavior[5][6] and helps reduce the variability and subjectivity that often comes with traditional soft-tissue balancing techniques.[16]"
       },
       {
         conversationalAnchor: "Many...",
         bulletText: [
-          "Leading surgeons already adopting kinematic restoration approaches",
-          "VELYS™ Robotic-Assisted Solution provides digital precision",
-          "Personalized TKA approach gaining adoption",
-          "Quicker return to function and improved patient satisfaction"
+          "Leading surgeons are already adopting Kinematic Restoration approaches in appropriate patients [9]",
+          "Robotic and navigation enabled systems, including the VELYS™ Robotic-Assisted Solution, provide digital intraoperative information to support precise, patient-specific execution [14]",
+          "Personalized TKA approaches that respect pre-disease joint lines and native anatomy are gaining adoption and show promising clinical and satisfaction outcomes in published literature [12]",
+          "These strategies have been associated with improvements in early function and patient-reported outcomes in selected studies [7]"
         ],
-        expandedMessage: "...leading surgeons have already adopted a kinematic restoration approach, leveraging the VELYS™ Robotic-Assisted Solution digital intraoperative data to personalize TKA. They're reporting not only quicker return to function milestones but also improvements in patient satisfaction, especially among younger, more active patient populations."
+        expandedMessage: "...leading surgeons have already begun adopting a kinematic restoration approach,[9] applying KA or iKA principles and, in some cases, using enabling technologies such as the VELYS™ Robotic-Assisted Solution[14] to personalize TKA. In their experience and in published literature, these personalized approaches have been associated with improved patient-reported outcomes and, in some reports, faster return to function and higher satisfaction,[7][12] particularly in younger, more active patients who place greater demands on their knees."
       },
       {
         conversationalAnchor: "This has led to...",
         bulletText: [
-          "Faster recovery times for patients",
-          "Reduced post-operative complaints around stiffness",
-          "Unnatural feel eliminated with noticeable outcome improvements",
-          "Surgeons maintain consistency and efficiency in workflows"
+          "Faster recovery times for patients [10]",
+          "Reduced post-operative complaints around stiffness [8]",
+          "Unnatural feel eliminated with noticeable outcome improvements [7]",
+          "Surgeons maintain consistency and efficiency in workflows [14]"
         ],
-        expandedMessage: "...faster recovery times, reduced post-operative complaints around stiffness or unnatural feel, and a noticeable improvement in patient-reported outcomes—while allowing surgeons to maintain consistency and efficiency in their surgical workflow."
+        expandedMessage: "...faster recovery times,[10] reduced post-operative complaints related to stiffness or unnatural feel,[7][8] and a noticeable improvement in patient-reported outcomes when alignment respects native anatomy,[7] all while helping surgeons maintain greater workflow consistency and efficiency using digitally guided techniques.[14]"
       },
       {
         conversationalAnchor: "What other steps do you think...",
         bulletText: [
-          "Opportunities to elevate patient satisfaction further",
-          "Streamline intraoperative decision-making process",
-          "Explore strategies beyond traditional alignment targets",
-          "Individualize treatment approaches for better outcomes"
+          "Opportunities to elevate patient satisfaction further [13]",
+          "Streamline intraoperative decision-making process [14]",
+          "Explore strategies beyond traditional alignment targets [12]",
+          "Individualize treatment approaches for better outcomes [11]"
         ],
-        expandedMessage: "...could help elevate your patient satisfaction or streamline your intraoperative decision-making process? Are you currently exploring any strategies to individualize treatment beyond traditional alignment targets?"
+        expandedMessage: "...could help elevate your patient satisfaction or streamline your intraoperative decision-making process?[13][14] Many surgeons are now exploring strategies that move beyond traditional alignment targets to better account for individual patient anatomy and expectations.[11][12] Are you currently considering any TKA approaches that further individualize your patients' treatment?"
       }
     ]
   },
@@ -249,34 +249,34 @@ const choreographySteps = [
     title: "Solution",
     cards: [
       {
-        conversationalAnchor: "We're proud to tell you that J&J MedTech has a solution for you...",
+        conversationalAnchor: "We're proud to tell you that DePuy Synthes has a solution for you...",
         bulletText: [
-          "Kinematic Restoration approaches powered by VELYS™ Robotic-Assisted Solution",
-          "Personalize alignment to each patient’s unique anatomy",
-          "Restore natural joint kinematics with OR precision",
-          "Maintain consistency and efficiency in today’s OR environment "
+          "Kinematic Restoration approaches powered by VELYS™ Robotic-Assisted Solution [14]",
+          "Personalize alignment to each patient’s unique anatomy [6]",
+          "Restore natural joint kinematics with OR precision [11]",
+          "Maintain consistency and efficiency in today’s OR environment [14]"
         ],
-        expandedMessage: "...with our Kinematic Restoration approach, powered by the VELYS™ Robotic-Assisted Solution. This enables you to personalize alignment to each patient's unique anatomy, restore natural joint kinematics, and do so with the precision, consistency, and efficiency required by todays OR environment."
+        expandedMessage: "...with our Kinematic Restoration approach, powered by the VELYS™ Robotic-Assisted Solution, you can personalize alignment to each patient's unique anatomy using real-time intraoperative data.[6][14] This supports restoring native joint line orientation and kinematic patterns with OR-level precision,[11] while maintaining the consistency, reproducibility, and efficiency required in today's operating room environment.[14]"
       },
       {
         conversationalAnchor: "Specifically, you'll be able to...",
         bulletText: [
-          "Individualize bone resections based on pre-disease anatomy",
-          "Optimize soft tissue balance without excessive releases",
-          "Achieve more natural knee kinematics",
-          "Maintain efficient, reproducible surgical workflows"
+          "Individualize bone resections based on pre-disease anatomy [6]",
+          "Optimize soft tissue balance without excessive releases [17]",
+          "Achieve more natural knee kinematics [11]",
+          "Maintain efficient, reproducible surgical workflows [14]"
         ],
-        expandedMessage: "...individualize bone resections based on each patient's pre-disease anatomy, optimize soft tissue balance without the need for excessive soft-tissue releases, and achieve more natural knee kinematics—all while maintaining an efficient and reproducible surgical workflow through intuitive robotic-assisted planning and execution."
+        expandedMessage: "...individualize bone resections based on each patient's pre-disease anatomy,[6] optimize soft-tissue balance without the need for excessive releases,[17] and achieve more natural knee kinematics through restoration of native joint line orientation,[11] while maintaining an efficient and reproducible surgical workflow supported by robotic-assisted planning and execution with the VELYS™ Robotic-Assisted Solution.[14]"
       },
       {
         conversationalAnchor: "We offer...",
         bulletText: [
           "Comprehensive solution pairing VELYS™ Robotic-Assisted Solution with the ATTUNE™ Knee System",
-          "Enhanced stability, improved ROM, and natural feeling knee",
-          "Extensive clinical evidence and intuitive surgical workflows",
-          "Full educational resources and surgeon-to-surgeon mentorship"
+          "Designed to support stability, range of motion goals, and a more natural-feeling knee",
+          "Built on clinically established implants and intuitive, digitally enabled surgical workflows",
+          "Supported by education, training, and surgeon-to-surgeon collaboration"
         ],
-        expandedMessage: "...a comprehensive solution that pairs the VELYS™ Robotic-Assisted Solution with the clinically proven ATTUNE™ Knee System—designed to deliver enhanced stability, improved ROM, and a more natural-feeling knee. This combination is backed by extensive clinical evidence, intuitive surgical workflows, and a full suite of educational resources, including surgeon-to-surgeon mentorship and procedural support, to help you successfully adopt Kinematic Restoration in your practice."
+        expandedMessage: "...a comprehensive solution that pairs the VELYS™ Robotic-Assisted Solution with the ATTUNE™ Knee System, designed to support stability, range of motion goals, and a more natural feeling knee. This solution combines digitally enabled workflows with clinically established implant design, supported by education, training, and surgeon-to-surgeon collaboration to help you confidently adopt Kinematic Restoration in your practice."
       },
       {
         conversationalAnchor: "As a next step...",
@@ -286,7 +286,7 @@ const choreographySteps = [
           "Arrange peer-to-peer discussion or case observation",
           "See firsthand how KR translates in the OR with DePuy Synthes KOL surgeon"
         ],
-        expandedMessage: "...I'd recommend we set up a time to review your current alignment approach in more detail (PATHFINDER) and explore how integrating kinematic restoration could compliment your goals. We can also arrange a peer-to-peer discussion or case observation with a KOL surgeon who has successfully implemented this approach, so you can see firsthand how it translates in the OR."
+        expandedMessage: "...I'd recommend we set up a time to review your current alignment approach in more detail (PATHFINDER) and explore how integrating Kinematic Restoration could compliment your goals. We can also arrange a peer-to-peer discussion or case observation with a KOL surgeon who has successfully implemented this approach, so you can see firsthand how it translates in the OR."
       }
     ]
   }

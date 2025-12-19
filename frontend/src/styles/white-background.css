@@ -1,0 +1,28 @@
+/* white-background.css */
+
+/* White background for all main containers */
+.chakra-container,
+.chakra-box,
+.chakra-stack,
+.chakra-card,
+.chakra-card__body,
+main,
+section,
+article,
+.content-area,
+.page-content,
+.page-wrapper {
+  background-color: white !important;
+}
+
+/* Philosophy-specific card backgrounds */
+[data-theme*="philosophy"] .chakra-card,
+[data-philosophy] .chakra-card,
+[class*="philosophy"] .chakra-card {
+  background-color: white !important;
+}
+
+/* Specific philosophy card variants - keep border color but force white background */
+.chakra-card[data-variant*="philosophy"] {
+  background-color: white !important;
+}

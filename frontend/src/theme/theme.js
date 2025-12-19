@@ -5,12 +5,11 @@ import { extendTheme } from '@chakra-ui/react'
 const colors = {
   // Override the default 'red' palette with J&J Red variations
   red: {
-    50: '#fef2f2',   // Very light tint of J&J Red
     100: '#fee2e2',  // Light tint
     200: '#fecaca',  // Lighter tint
     300: '#fca5a5',  // Light tint
     400: '#f87171',  // Medium-light tint
-    500: '#eb1700',  // J&J Red (base color)
+    500: '#C8102E',  // J&J Red (base color)
     600: '#dc2626',  // Slightly darker
     700: '#b91c1c',  // Darker
     800: '#991b1b',  // Much darker
@@ -19,20 +18,20 @@ const colors = {
 
   // Custom J&J color palette
   jj: {
-    red: '#eb1700',
+    red: '#C8102E',
     white: '#ffffff',
-    black: '#000000',
+    black: '#050404ff',
 
     // Grays
     gray: {
-      50: '#f1efed',   // Gray 01
+      50: '#F4F4F4',   // Gray 01
       100: '#e8e6e3',  // Gray 02
       200: '#d5cfc9',  // Gray 03
       300: '#cbc4bc',  // Gray 04
-      400: '#a39992',  // Gray 05
+      400: '#BBBCBC',  // Gray 05
       500: '#81766f',  // Gray 06
       600: '#6e6259',  // Gray 07
-      700: '#312c2a',  // Gray 08
+      700: '#212121',  // Gray 08
     },
 
     // Accent colors
@@ -323,7 +322,7 @@ const components = {
         field: {
           _focus: {
             borderColor: 'red.500',
-            boxShadow: '0 0 0 1px #eb1700',
+            boxShadow: '0 0 0 1px #C8102E',
           },
         },
       },
@@ -336,7 +335,7 @@ const components = {
         field: {
           _focus: {
             borderColor: 'red.500',
-            boxShadow: '0 0 0 1px #eb1700',
+            boxShadow: '0 0 0 1px #C8102E',
           },
         },
       },
@@ -348,7 +347,7 @@ const components = {
       outline: {
         _focus: {
           borderColor: 'red.500',
-          boxShadow: '0 0 0 1px #eb1700',
+          boxShadow: '0 0 0 1px #C8102E',
         },
       },
     },
@@ -391,7 +390,7 @@ const components = {
 const styles = {
   global: {
     body: {
-      bg: 'jj.gray.50',
+      bg: 'white',
       color: 'jj.gray.700',
     },
   },

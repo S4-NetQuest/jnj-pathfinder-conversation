@@ -82,7 +82,7 @@ const GlossaryModal = ({ isOpen, onClose }) => {
             Medical Glossary
           </Text>
         </ModalHeader>
-        <ModalCloseButton />
+        <ModalCloseButton color="jj.red" />
 
         <ModalBody p={0}>
           <Box p={4} borderBottom="1px solid" borderColor={borderColor}>

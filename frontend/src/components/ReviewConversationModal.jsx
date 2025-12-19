@@ -54,8 +54,8 @@ const ReviewConversationModal = ({
       <ModalOverlay />
       <ModalContent maxH="90vh">
         <ModalHeader
-          bg="#eb1700"
-          color="white"
+          bg="jj.gray.50"
+          color="jj.red"
           borderRadius="md md 0 0"
           py={4}
         >
@@ -69,7 +69,7 @@ const ReviewConversationModal = ({
             )}
           </HStack>
         </ModalHeader>
-        <ModalCloseButton color="white" />
+        <ModalCloseButton color="jj.red" />
 
         <ModalBody py={6}>
           <VStack spacing={6} align="stretch">
@@ -124,7 +124,7 @@ const ReviewConversationModal = ({
             </Box>
 
             {/* Summary Stats */}
-            <Card bg="#f1efed" borderWidth="0">
+            <Card bg="jj.gray.50" borderWidth="0">
               <CardBody>
                 <HStack justify="space-between" wrap="wrap">
                   <VStack align="start" spacing={1}>
@@ -136,7 +136,7 @@ const ReviewConversationModal = ({
                     </Text>
                   </VStack>
                   <VStack align="end" spacing={1}>
-                    <Text fontSize="lg" color="#eb1700">
+                    <Text fontSize="lg" color="#C8102E">
                       {completionPercentage}%
                     </Text>
                     <Text fontSize="xs" color="#81766f">

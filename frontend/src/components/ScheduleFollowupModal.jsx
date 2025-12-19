@@ -116,11 +116,11 @@ Contact: ${salesRep?.email || '[Email]'} | ${salesRep?.phone || '[Phone]'}`
     <Modal isOpen={isOpen} onClose={onClose} size="xl" scrollBehavior="inside">
       <ModalOverlay />
       <ModalContent maxH="90vh">
-        <ModalHeader bg="#f1efed" borderBottom="1px solid" borderColor="#e8e6e3">
+        <ModalHeader bg="gg.gray.50" borderBottom="1px solid" borderColor="#e8e6e3">
 
           <HStack spacing={2}>
             <Icon as={CalendarIcon} color="red" />
-            <Text color="#eb1700" fontSize="lg" fontWeight="500">Schedule Follow-up</Text>
+            <Text color="#C8102E" fontSize="lg" fontWeight="500">Schedule Follow-up</Text>
           </HStack>
         </ModalHeader>
         <ModalCloseButton />
@@ -177,7 +177,7 @@ Contact: ${salesRep?.email || '[Email]'} | ${salesRep?.phone || '[Phone]'}`
             <Divider />
 
             {/* Always Visible Copy Buttons */}
-            <HStack spacing={1} justify="center" bg="#f1efed" p={2} borderRadius="md">
+            <HStack spacing={1} justify="center" bg="jj.gray.50" p={2} borderRadius="md">
               <Button
                 leftIcon={emailCopied ? <CheckIcon /> : <CopyIcon />}
                 colorScheme={emailCopied ? 'green' : 'red'}
