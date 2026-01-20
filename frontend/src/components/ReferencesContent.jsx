@@ -344,7 +344,7 @@ const ReferencesContent = ({
                         {paper.title}
                       </Text>
                       <Text color="gray.600" fontSize="md">
-                        {paper.authors.join(", ")} ({paper.year})
+                        {paper.authors.join(", ")}
                       </Text>
                     </Box>
 
@@ -422,7 +422,7 @@ const ReferencesContent = ({
                     {paper.filename ? (
                       <>
                         <Text fontSize="xs" color="gray.500" noOfLines={1}>
-                          {getPdfUrl(paper.filename)}
+                          {/* {getPdfUrl(paper.filename)} */}
                         </Text>
 
                         <HStack spacing={2}>

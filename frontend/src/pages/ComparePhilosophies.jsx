@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
+  AspectRatio,
   Container,
   VStack,
   HStack,
@@ -30,6 +31,7 @@ import {
   ListItem,
   Grid,
   GridItem,
+  Icon,
   IconButton,
   Tooltip,
   Accordion,
@@ -46,6 +48,15 @@ import { referencesData } from '../data/referencesData.js'
 import { getPhilosophyColor, getPhilosophyVariant } from '../theme/theme'
 import ReferencesModal from '../components/ReferencesModal'
 import TextWithReferences from '../components/TextWithReferences'
+import VideoModal from '../components/VideoModal'
+import kaVideo from '../assets/video/KA_Alignment Philosophy_M_US_ORT_DGSR_409952.mp4'
+import ikaVideo from '../assets/video/iKA_Alignment Philosophy_M_US_ORT_DGSR_409953.mp4'
+import faVideo from '../assets/video/FA_Alignment Philosophy_M_US_ORT_DGSR_409954.mp4'
+import maVideo from '../assets/video/MA_Alignment Philosophy_M_US_ORT_DGSR_409951.mp4'
+import maThumbnail from '../assets/images/thumbnails/ma-thumbnail.jpg'
+import kaThumbnail from '../assets/images/thumbnails/ka-thumbnail.jpg'
+import ikaThumbnail from '../assets/images/thumbnails/ika-thumbnail.jpg'
+import faThumbnail from '../assets/images/thumbnails/fa-thumbnail.jpg'
 
 // Static data for the philosophies
 const philosophiesData = {
@@ -56,8 +67,8 @@ const philosophiesData = {
       abbreviation: 'MA',
       parameters: {
         surgical_objective: 'Neutral mechanical axis (0° HKA) [3][4]',
-        femoral_cut_reference: 'Perpendicular to mechanical axis [3][19]',
-        tibial_cut_reference: 'Perpendicular to mechanical axis [20]',
+        femoral_cut_reference: 'Perpendicular to mechanical axis [3][6]',
+        tibial_cut_reference: 'Perpendicular to mechanical axis [19]',
         resection_sequence: 'Femur or Tibia First (Surgeon-dependent)',
         soft_tissue_management: 'Releases common to achieve neutral alignment [5][6]',
         technology_requirement: 'Optional (manual instrumentation sufficient) [5][7]',
@@ -67,7 +78,7 @@ const philosophiesData = {
       },
       clinical_takeaways: [
         'Emphasizes reproducibility and long-term implant survivorship. [1][2]',
-        'Corrects all patients toward neutral alignment, which may alter native joint-line orientation and soft-tissue balance. [3][4]',
+        'Aims to achieve neutral alignment, which may alter native joint-line orientation and soft-tissue balance. [3][4]',
         'Increasing interest in personalization reflects data showing a broader range of acceptable coronal alignment. [1][2][3]'
       ]
     },
@@ -76,20 +87,20 @@ const philosophiesData = {
       name: 'Inverse Kinematic Alignment',
       abbreviation: 'iKA',
       parameters: {
-        surgical_objective: 'Aims to restore the native tibial joint line with a tibia-first approach [11][20]',
+        surgical_objective: 'Aims to restore the native tibial joint line with a tibia-first approach [11][19]',
         femoral_cut_reference: 'Native distal femoral anatomy [11]',
-        tibial_cut_reference: 'Parallel to native tibial joint line, adjusted to maintain native posterior slope [20]',
+        tibial_cut_reference: 'Parallel to native tibial joint line, adjusted to maintain native posterior slope [19]',
         resection_sequence: 'Tibia first [11]',
         soft_tissue_management: 'Minimized releases; soft tissue envelope informs femoral cuts [7]',
         technology_requirement: 'Optional - iKA can be performed with conventional instrumentation, but precise execution is important for restoring native anatomy',
-        joint_line_orientation: 'Partially - Restores the femoral joint line and maintains tibial join-line obliquity within restricted boundaries. [7][20]',
+        joint_line_orientation: 'Partially - Restores the femoral joint line and maintains tibial join-line obliquity within restricted boundaries. [7][19]',
         ideal_use_case: 'Surgeons transitioning from MA to personalization [7]',
-        key_clinical_insight: 'Preserves native alignment and soft-tissue balance, reducing the likelihood that corrective soft-tissue releases will be required when compared with techniques that force neutral alignment [6][7][20]'
+        key_clinical_insight: 'Preserves native alignment and soft-tissue balance, reducing the likelihood that corrective soft-tissue releases will be required when compared with techniques that force neutral alignment [6][7][19]'
       },
       clinical_takeaways: [
-        'Tibia-first, gap-balancing technique designed to restore native tibial joint-line obliquity within defined boundaries. [20]',
-        'Uses controlled adjustments of the femoral cuts guided by soft-tissue tension, which may reduce the need for ligament releases. [19][20]',
-        'Provides a boundary-based personalization strategy that accommodates a broad range of native limb phenotypes and may appeal to surgeons transitioning from MA. [19]'
+        'Tibia-first, gap-balancing technique designed to restore native tibial joint-line obliquity within defined boundaries. [19]',
+        'Uses controlled adjustments of the femoral cuts guided by soft-tissue tension, which may reduce the need for ligament releases. [6][19]',
+        'Provides a boundary-based personalization strategy that accommodates a broad range of native limb phenotypes and may appeal to surgeons transitioning from MA. [6]'
       ]
     },
     {
@@ -129,7 +140,7 @@ const philosophiesData = {
         key_clinical_insight: 'Alignment emerges as a result of ligament-guided gap balancing rather than a predefined alignment target [18]'
       },
       clinical_takeaways: [
-        'Uses real-time ligament tension and robotic planning to guide component positioning and bone resections. [17][18]',
+        'Uses real-time ligament tension and planning to guide component positioning and bone resections. [17][18]',
         'Dynamically adjusts resections to achieve symmetric extension gaps and controlled lateral opening in flexion, reflecting physiologic ligament patterns. [18]',
         'Early evidence shows restoration of native alignment and ligament balance with recovery at 6-12 months comparable to or faster than adjusted mechanical alignment. [18]'
       ]
@@ -449,7 +460,7 @@ const ClinicalTakeawaysCard = ({ philosophy }) => {
     const citations = {
       'ma': '[1][2][3][4]',
       'ka': '[5][6][7][8][9][10][12]',
-      'ika': '[9][10][11][12][14][15][19][20]',
+      'ika': '[6][9][10][11][12][14][15][19]',
       'fa': '[16][17][18]'
     } */
     return citations[philosophyId] || ''
@@ -529,6 +540,117 @@ const ClinicalTakeawaysCard = ({ philosophy }) => {
             </ListItem>
           ))}
         </UnorderedList>
+      </CardBody>
+    </Card>
+  )
+}
+
+const VelysExecutionCard = ({ philosophy, onVideoClick }) => {
+  const bgColor = useColorModeValue('white', 'gray.800')
+
+  // Map philosophy IDs to video thumbnails (you'll need to create these)
+  const thumbnails = {
+    'ma': maThumbnail,
+    'ka': kaThumbnail,
+    'ika': ikaThumbnail,
+    'fa': faThumbnail
+  }
+
+  return (
+    <Card
+      borderWidth="2px"
+      borderColor={`${philosophy.color}.200`}
+      bg={bgColor}
+      shadow="md"
+      _hover={{ shadow: 'lg', transform: 'translateY(-2px)' }}
+      transition="all 0.2s"
+      cursor="pointer"
+      onClick={() => onVideoClick(philosophy.id)}
+      h="100%"
+    >
+      <CardHeader pb={2}>
+        <VStack spacing={2} align="center">
+          <Badge
+            variant={getPhilosophyVariant(philosophy.id)}
+            fontSize="xs"
+            fontWeight="normal"
+            px={2}
+            py={1}
+            borderRadius="md"
+            alignSelf="center"
+          >
+            {philosophy.abbreviation}
+          </Badge>
+{/*           <Heading
+            size="md"
+            color={`${philosophy.color}.600`}
+            textAlign="center"
+            lineHeight="1.2"
+          >
+            {philosophy.name}
+          </Heading> */}
+        </VStack>
+      </CardHeader>
+
+      <CardBody pt={0}>
+        <VStack spacing={3}>
+          <Box
+            position="relative"
+            width="100%"
+            borderRadius="md"
+            overflow="hidden"
+            bg="gray.100"
+          >
+            <AspectRatio ratio={16 / 9}>
+              <Box
+                bgImage={thumbnails[philosophy.id]}
+                bgSize="cover"
+                bgPosition="center"
+                bgRepeat="no-repeat"
+              >
+                {/* Play button overlay */}
+                <Flex
+                align="center"
+                justify="center"
+                h="100%"
+                bg="transparent"
+                transition="background 0.2s"
+              >
+                <Box
+                  bg="whiteAlpha.900"
+                  borderRadius="full"
+                  p={4}
+                  _hover={{ bg: 'white', transform: 'scale(1.1)' }}
+                  transition="all 0.2s"
+                >
+                  {/* Replace the Icon component with this SVG */}
+                  <svg
+                    width="32px"
+                    height="32px"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M8 5v14l11-7z"
+                      fill="#C8102E"
+                    />
+                  </svg>
+                </Box>
+              </Flex>
+              </Box>
+            </AspectRatio>
+          </Box>
+
+          <Text
+            fontSize="xs"
+            color="gray.600"
+            textAlign="center"
+            fontWeight="medium"
+          >
+            Click to watch execution guide
+          </Text>
+        </VStack>
       </CardBody>
     </Card>
   )
@@ -734,6 +856,30 @@ const ComparePhilosophies = () => {
   const [selectedCategories, setSelectedCategories] = useState([])
   const [filteredParameters, setFilteredParameters] = useState([])
   const [loading, setLoading] = useState(true)
+  const [selectedVideo, setSelectedVideo] = useState(null)
+  const { isOpen: isVideoOpen, onOpen: onVideoOpen, onClose: onVideoClose } = useDisclosure()
+
+  // Video mapping
+  const videoMap = {
+    'ma': maVideo,
+    'ka': kaVideo,
+    'ika': ikaVideo,
+    'fa': faVideo
+  }
+
+  const handleVideoClick = (philosophyId) => {
+    const philosophy = philosophies.find(p => p.id === philosophyId)
+    if (philosophy && videoMap[philosophyId]) {
+      setSelectedVideo({
+        alignmentType: {
+          name: philosophy.name,
+          color: getPhilosophyColor(philosophy.id)
+        },
+        videoSrc: videoMap[philosophyId]
+      })
+      onVideoOpen()
+    }
+  }
 
   const isMobile = useBreakpointValue({ base: true, md: false })
   const isTablet = useBreakpointValue({ base: false, md: true, lg: false })
@@ -863,6 +1009,9 @@ const ComparePhilosophies = () => {
                     <Tab fontWeight="medium">
                       Clinical Takeaways
                     </Tab>
+                    <Tab fontWeight="medium">
+                      Execute with VELYS™
+                    </Tab>
                   </TabList>
 
                   <TabPanels>
@@ -921,6 +1070,29 @@ const ComparePhilosophies = () => {
                         ))}
                       </SimpleGrid>
                     </TabPanel>
+
+                    {/* VELYS Tab */}
+                    <TabPanel px={0} py={6}>
+                      <VStack spacing={4} align="stretch" mb={6}>
+                        <Text fontSize="lg" color="gray.700" textAlign="center">
+                          Watch step-by-step execution guides for each alignment philosophy using the VELYS™ Robotic-Assisted Solution
+                        </Text>
+                      </VStack>
+
+                      <SimpleGrid
+                        columns={getGridColumns()}
+                        spacing={6}
+                        minChildWidth={{ base: "300px", lg: "250px" }}
+                      >
+                        {selectedPhilosophiesData.map((philosophy) => (
+                          <VelysExecutionCard
+                            key={philosophy.id}
+                            philosophy={philosophy}
+                            onVideoClick={handleVideoClick}
+                          />
+                        ))}
+                      </SimpleGrid>
+                    </TabPanel>
                   </TabPanels>
                 </Tabs>
               )}
@@ -940,6 +1112,16 @@ const ComparePhilosophies = () => {
           </Flex>
         </VStack>
       </Container>
+
+      {/* Video Modal */}
+      {selectedVideo && (
+        <VideoModal
+          isOpen={isVideoOpen}
+          onClose={onVideoClose}
+          alignmentType={selectedVideo.alignmentType}
+          videoSrc={selectedVideo.videoSrc}
+        />
+      )}
     </Box>
   )
 }

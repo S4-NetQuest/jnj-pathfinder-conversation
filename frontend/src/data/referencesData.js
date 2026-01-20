@@ -1,564 +1,459 @@
 // Complete References Dataset - All 31 Papers
 export const referencesData = {
   metadata: {
-    totalPapers: 30,
+    totalPapers: 27,
     lastUpdated: new Date().toISOString(),
   },
   papers: [
     {
       id: "ma_1",
       referenceNumber: 1,
-      filename: "Papers-for-KA-summary_Fang-et-al-How-important-is-coronal-alignment.pdf",
+      filename: "Fang-et-al-How-important-is-coronal-alignment.pdf",
       category: "MA",
       subcategory: "Technical Considerations",
-      authors: ["Fang", "Ritter", "Davis"],
+      authors: ["Fang DM", "Ritter MA", "Davis KE", "et al."],
       year: 2009,
       studyType: "Retrospective Cohort",
       technology: "Conventional",
       followUp: "Medium-term",
       outcomes: ["Radiographic", "Survivorship"],
       title: "Coronal Alignment in Total Knee Arthroplasty: Just How Important is It?",
-      summary: "Examines the importance of coronal alignment in total knee arthroplasty and its impact on implant survivorship.",
-      url: "/reference-papers/Papers-for-KA-summary_Fang-et-al-How-important-is-coronal-alignment.pdf"
+      summary: "Retrospective review evaluating the relationship between postoperative coronal alignment and revision patterns in primary total knee arthroplasty. Published 2009.",
+      url: "/reference-papers/Fang-et-al-How-important-is-coronal-alignment.pdf"
 
     },
     {
-
       id: "ma_2",
       referenceNumber: 2,
-      filename: "Papers-for-KA-summary_Parratte-et-al-15-year-follow-up-of-Mayo-series-on-alignment.pdf",
+      filename: "Parratte-et-al-15-year-follow-up-of-Mayo-series-on-alignment.pdf",
       category: "MA",
       subcategory: "Long-term Follow-up",
-      authors: ["Parratte", "Pagnano", "Trousdale", "Berry"],
+      authors: ["Parratte S", "Pagano MW", "Trousdale RT", "Berry DJ", "et al."],
       year: 2010,
       studyType: "Retrospective Cohort",
       technology: "Conventional",
       followUp: "Long-term",
       outcomes: ["Survivorship", "Complications"],
       title: "Effect of Postoperative Mechanical Axis Alignment on the Fifteen-Year Survival of Modern, Cemented Total Knee Replacements",
-      summary: "Extended 15-year follow-up examining the relationship between postoperative mechanical axis alignment and implant survivorship.",
-      url: "/reference-papers/Papers-for-KA-summary_Parratte-et-al-15-year-follow-up-of-Mayo-series-on-alignment.pdf"
+      summary: "Retrospective analysis of cemented primary total knee arthroplasties evaluating postoperative mechanical axis alignment and implant survivorship at 15 years. Published 2010.",
+      url: "/reference-papers/Parratte-et-al-15-year-follow-up-of-Mayo-series-on-alignment.pdf"
 
     },
     {
-
       id: "ma_3",
       referenceNumber: 3,
-      filename: "Papers-for-KA-summary_Abdel-et-al-20-year-follow-up-of-MAYO-series-on-alignment.pdf",
+      filename: "Abdel-et-al-20-year-follow-up-of-MAYO-series-on-alignment.pdf",
       category: "MA",
       subcategory: "Long-term Follow-up",
-      authors: ["Abdel", "Oussedik", "Parratte", "Lustig"],
+      authors: ["Abdel MP", "Ollivier M", "Parratte S", "Trousdale RT", "Berry DJ", "Pagnano MW"],
       year: 2018,
       studyType: "Retrospective Cohort",
       technology: "Conventional",
       followUp: "Long-term",
       outcomes: ["Survivorship", "Clinical Scores"],
-      title: "Coronal Alignment in Total Knee Arthroplasty: Historical Review, Contemporary Analysis, and Future Direction",
-      summary: "Comprehensive historical review and contemporary analysis of coronal alignment in TKA with future directions.",
-      url: "/reference-papers/Papers-for-KA-summary_Abdel-et-al-20-year-follow-up-of-MAYO-series-on-alignment.pdf"
+      title: "Effect of Postoperative Mechanical Axis Alignment on Survival and Functional Outcomes of Modern Total Knee Arthroplasties with Cement: A Concise Follow-up at 20 Years",
+      summary: "Long-term follow-up study evaluating implant survivorship and functional outcomes in cemented primary total knee arthroplasty stratified by postoperative mechanical axis alignment, with assessment extending to 20 years. Published 2018.",
+      url: "/reference-papers/Abdel-et-al-20-year-follow-up-of-MAYO-series-on-alignment.pdf"
 
     },
     {
-
       id: "ma_4",
       referenceNumber: 4,
-      filename: "Papers-for-MA-Graichen-2025-Bony-alignment-decisions-affect-patient-specific-laxity-phenotype.pdf",
+      filename: "Knee-surg-sports-traumatol-arthrosc-2025-Graichen-Bony-alignment-decisions-affect-patient‐specific-laxity-phenotype.pdf",
       category: "MA",
       subcategory: "Technical Considerations",
-      authors: ["Graichen", "García-Espona", "Hitzl", "Winkler"],
+      authors: ["Graichen H", "Avram GM", "Zambianchi F", "et al."],
       year: 2025,
       studyType: "Prospective Cohort",
       technology: "Mixed",
       followUp: "Short-term",
       outcomes: ["Radiographic", "Clinical Scores"],
-      title: "Bony Alignment Decisions Affect Patient-Specific Laxity Phenotype in Total Knee Arthroplasty",
-      summary: "Investigates how different bony alignment decisions impact patient-specific laxity patterns and phenotypes in TKA procedures.",
-      url: "/reference-papers/Papers-for-MA-Graichen-2025-Bony-alignment-decisions-affect-patient-specific-laxity-phenotype.pdf"
+      title: "Bony alignment decisions affect patient-specific laxity phenotype patterns significantly, independent of the deformity",
+      summary: "Imaging and simulation-based study examining bony alignment parameters and laxity phenotype patterns in total knee arthroplasty. Published 2025.",
+      url: "/reference-papers/Knee-surg-sports-traumatol-arthrosc-2025-Graichen-Bony-alignment-decisions-affect-patient‐specific-laxity-phenotype.pdf"
     },
     {
       id: "ika_1",
       referenceNumber: 5,
-      filename: "Papers-for-iKA-summary_Winnock-De-Grave-iKA-RA.pdf",
+      filename: "Winnock-De-Grave-iKA-RA.pdf",
       category: "iKA",
       subcategory: "Technique Studies",
-      authors: ["de Grave", "et al"],
+      authors: ["Winnock de Grave P", "et al."],
       year: 2022,
       studyType: "Prospective Cohort",
       technology: "Navigation",
       followUp: "Short-term",
       outcomes: ["Radiographic", "Clinical Scores"],
-      title: "Robotic-Assisted Inverse Kinematic Alignment in Total Knee Arthroplasty: Surgical Technique and Early Outcomes",
-      summary: "Describes the robotic-assisted inverse kinematic alignment technique with early clinical and radiographic outcomes.",
-      url: "/reference-papers/Papers-for-iKA-summary_Winnock-De-Grave-iKA-RA.pdf"
+      title: "Clinical outcomes in TKA are enhanced by both robotic assistance and patient specific alignment: a comparative trial in 120 patients",
+      summary: "Prospective comparative study evaluating clinical outcome scores following conventional adjusted mechanical alignment, robotic-assisted adjusted mechanical alignment, and robotic-assisted inverse kinematic alignment in primary total knee arthroplasty. Published 2022.",
+      url: "/reference-papers/Winnock-De-Grave-iKA-RA.pdf"
 
     },
     {
-
       id: "ika_2",
       referenceNumber: 6,
-      filename: "Papers-for-iKA-summary_Winnock-De-Grave-iKA-better-accomodates-nati.pdf",
+      filename: "Winnock-De-Grave-iKA-better-accomodates-nati.pdf",
       category: "iKA",
       subcategory: "Outcomes Studies",
-      authors: ["de Grave", "et al"],
+      authors: ["Winnock de Grave P", "LuyckX T", "Van Criekinge T", "et al."],
       year: 2023,
       studyType: "Prospective Cohort",
       technology: "Navigation",
       followUp: "Short-term",
       outcomes: ["Clinical Scores", "Gait Analysis"],
       title: "Inverse kinematic alignment accommodates native coronal knee alignment better in comparison to adjusted mechanical alignment and restricted kinematic alignment",
-      summary: "Shows how inverse kinematic alignment better accommodates patient's native anatomy and improves gait patterns compared to mechanical alignment.",
-      url: "/reference-papers/Papers-for-iKA-summary_Winnock-De-Grave-iKA-better-accomodates-nati.pdf"
+      summary: "Imaging-based observational study evaluating the distribution of native coronal knee alignment relative to predefined target zones for adjusted mechanical, restricted kinematic, and inverse kinematic alignment concepts. Published 2023.",
+      url: "/reference-papers/Winnock-De-Grave-iKA-better-accomodates-nati.pdf"
 
     },
     {
-
       id: "ika_3",
       referenceNumber: 7,
-      filename: "Papers-for-iKA-summary_WinnockDeGrave2020_Article_HigherSatisfactionA.pdf",
+      filename: "WinnockDeGrave2020_Article_HigherSatisfactionA.pdf",
       category: "iKA",
       subcategory: "Outcomes Studies",
-      authors: ["de Grave", "Batailler", "Swan", "et al"],
+      authors: ["Winnock de Grave P", "et al."],
       year: 2020,
       studyType: "Comparative Study",
       technology: "Navigation",
       followUp: "Medium-term",
       outcomes: ["Patient Satisfaction", "Clinical Scores"],
       title: "Higher satisfaction after total knee arthroplasty using restricted inverse kinematic alignment compared to adjusted mechanical alignment",
-      summary: "Demonstrates significantly higher patient satisfaction scores with restricted iKA compared to adjusted mechanical alignment.",
-      url: "/reference-papers/Papers-for-iKA-summary_WinnockDeGrave2020_Article_HigherSatisfactionA.pdf"
+      summary: "Comparative study evaluating patient-reported outcomes and satisfaction measures following robotic-assisted total knee arthroplasty performed using restricted inverse kinematic alignment versus adjusted mechanical alignment, with 12-month follow-up. Published 2020.",
+      url: "/reference-papers/WinnockDeGrave2020_Article_HigherSatisfactionA.pdf"
 
     },
     {
-
       id: "ika_4",
       referenceNumber: 8,
-      filename: "Papers-for-iKA-summary_Orsi-inverse-KA-OMNI-2023.pdf",
+      filename: "Orsi-inverse-KA-OMNI-2023.pdf",
       category: "iKA",
       subcategory: "Technique Studies",
-      authors: ["Orsi", "et al"],
+      authors: ["Orsi AD", "Wakelin E", "Plaskos C", "et al."],
       year: 2023,
       studyType: "Prospective Cohort",
       technology: "Robotic",
       followUp: "Short-term",
       outcomes: ["Clinical Scores", "Radiographic", "Patient Satisfaction"],
-      title: "Inverse Kinematic Alignment Using an Image-Free Robotic Platform: Surgical Technique and Early Results",
-      summary: "Evaluates restricted iKA approach using OMNI robotic platform for balanced outcomes while maintaining safety limits.",
-      url: "/reference-papers/Papers-for-iKA-summary_Orsi-inverse-KA-OMNI-2023.pdf"
-
+      title: "Restricted Inverse Kinematic Alignment Better Restores the Native Joint Line Orientation While Achieving Similar Balance, Laxity, and Arithmetic Hip-Knee-Ankle Angle to Gap Balancing Total Knee Arthroplasty",
+      summary: "Comparative robotic-assisted total knee arthroplasty study evaluating joint line orientation, coronal plane alignment, and intraoperative balance and laxity measures using restricted inverse kinematic alignment and gap-balancing techniques. Published 2023.",
+      url: "/reference-papers/Orsi-inverse-KA-OMNI-2023.pdf"
     },
     {
       id: "ka_21",
-      filename: "",
+      filename: "Howell-kinematic-alignment-in-total-knee-art.pdf",
       referenceNumber: 9,
       category: "KA",
       subcategory: "Unrestricted KA",
-      authors: ["Howell", "Hull"],
-      year: 2016,
+      authors: ["Howell SM", "Roth JD", "Hull ML"],
+      year: 2014,
       studyType: "Technical Review",
       technology: "PSI",
       followUp: "Mixed",
       outcomes: ["Clinical Scores", "Radiographic"],
-      title: "Kinematic alignment in total knee arthroplasty: Rationale, surgical technique, and results",
-      summary: "Foundational paper describing the kinematic alignment technique and early clinical results.",
-      url: ""
+      title: "Kinematic Alignment in Total Knee Arthroplasty: Definition, History, Principle, Surgical Technique, and Results of an Alignment Option for TKA",
+      summary: "Narrative review describing the definition, historical development, biomechanical principles, and surgical technique of kinematic alignment in total knee arthroplasty, with an overview of early clinical and biomechanical outcome literature. Published 2014.",
+      url: "/reference-papers/Howell-kinematic-alignment-in-total-knee-art.pdf"
     },
     {
-
       id: "ika_5",
-      filename: "Papers-for-iKA-summary_1561-Clatworthy-OS-Galley-04.pdf",
+      filename: "1561-Clatworthy-OS-Galley-04.pdf",
       category: "iKA",
       subcategory: "Technology-Assisted",
       authors: ["Clatworthy"],
-      year: 2024,
+      year: 2022,
       studyType: "Case Series",
       technology: "Robotic",
       followUp: "Short-term",
       outcomes: ["Clinical Scores", "Radiographic"],
-      title: "Patient-Specific TKA with Robotic-Assisted Solution",
-      summary: "Demonstrates patient-specific alignment using robotic assistance for improved outcomes and precision in component positioning.",
-      url: "/reference-papers/Papers-for-iKA-summary_1561-Clatworthy-OS-Galley-04.pdf"
+      title: "Patient-Specific TKA with the VELYS™ Robotic-Assisted Solution",
+      summary: "Technical and early clinical report describing a patient-specific total knee arthroplasty technique using the VELYS™ Robotic-Assisted Solution. Published 2022.",
+      url: "/reference-papers/1561-Clatworthy-OS-Galley-04.pdf"
 
     },
     {
-
-      id: "ika_6",
-      filename: "Papers-for-iKA-summary_Ho-et-al-VELYS-Vs--Navigation-shoter-navigation-time-2024.pdf",
+      id: "ika_8",
+      referenceNumber: 19,
+      filename: "1-s2.0-S1877056822001232-main.pdf",
       category: "iKA",
-      subcategory: "Technology-Assisted",
-      authors: ["Ho", "et al"],
-      year: 2024,
-      studyType: "Comparative Study",
-      technology: "Navigation",
+      subcategory: "Technical Considerations",
+      authors: ["Winnock de Grave P", "Kellens J", "Luyckx T", "Tampere T", "Lacaze F", "Claeys K"],
+      year: 2022,
+      studyType: "Case Series",
+      technology: "Conventional",
       followUp: "Short-term",
-      outcomes: ["Clinical Scores", "Patient Satisfaction"],
-      title: "VELYS vs Navigation: Shorter Navigation Time Study",
-      summary: "Compares VELYS robotic system with traditional navigation for efficiency and clinical outcomes in iKA procedures.",
-      url: "/reference-papers/Papers-for-iKA-summary_Ho-et-al-VELYS-Vs--Navigation-shoter-navigation-time-2024.pdf"
+      outcomes: ["Clinical Scores", "Radiographic"],
+      title: "Inverse Kinematic Alignment for Total Knee Arthroplasty",
+      summary: "This technical note describes the principles and surgical technique of inverse kinematic alignment (iKA) for total knee arthroplasty. The authors outline a patient-specific approach focused on restoring native joint line orientation and tibial alignment within defined boundaries and detail the surgical workflow used to implement the technique, including the use of robotic assistance. Published 2022.",
+      url: "/reference-papers/1-s2.0-S1877056822001232-main.pdf"
 
     },
     {
-
       id: "ika_7",
-      filename: "Papers-for-iKA-summary_Murgier-Clatworthy2020_Article_VariableRotatio.pdf",
+      filename: "Murgier-Clatworthy2020_Article_VariableRotatio.pdf",
       category: "iKA",
       subcategory: "Technique Studies",
-      authors: ["Murgier", "Clatworthy"],
+      authors: ["Murgier J", "Clatworthy M"],
       year: 2020,
       studyType: "Prospective Cohort",
       technology: "Navigation",
       followUp: "Medium-term",
       outcomes: ["Clinical Scores", "Radiographic"],
-      title: "Variable Rotation of the Femur with Patient Specific Alignment",
-      summary: "Studies the impact of variable femoral rotation in patient-specific alignment techniques and its effect on outcomes.",
-      url: "/reference-papers/Papers-for-iKA-summary_Murgier-Clatworthy2020_Article_VariableRotatio.pdf"
-
+      title: "Variable rotation of the femur does not affect outcome with patient specific alignment navigated balanced TKA",
+      summary: "Prospective cohort study examining the relationship between the femoral component rotational variability and clinical outcome measures in patient-specific, navigated balanced total knee arthroplasty, with two-year follow-up. Published 2020.",
+      url: "/reference-papers/Murgier-Clatworthy2020_Article_VariableRotatio.pdf"
     },
     {
-
-      id: "ka_2",
-      referenceNumber: 10,
-      filename: "",
-      category: "KA",
-      subcategory: "Systematic Reviews",
-      authors: ["Howell", "Shelton", "Hull"],
-      year: 2020,
-      studyType: "Systematic Review",
-      technology: "Mixed",
-      followUp: "Mixed",
-      outcomes: ["Survivorship", "Clinical Scores", "Complications"],
-      title: "Implant Survival and Function Following Kinematically Aligned TKA: A Systematic Review and Meta-Analysis",
-      summary: "Comprehensive systematic review and meta-analysis examining implant survival and functional outcomes following kinematic alignment.",
-      url: ""
-
-    },
-    {
-
-      id: "ka_3",
+      id: "ika_6",
       referenceNumber: 11,
-      filename: "Papers-for-iKA-summary_Shichman-2024-Better-restoration-of-joint-line.pdf",
-      category: "KA",
+      filename: "Shichman-2024-Better-restoration-of-joint-line.pdf",
+      category: "iKA",
       subcategory: "Technical Considerations",
-      authors: ["Shichman", "Sappey-Marinier", "Tayot", "Batailler", "Lustig"],
+      authors: ["Shichman I", "Hadad A", "Brandstetter AS", "et al."],
       year: 2024,
       studyType: "Comparative Study",
       technology: "Robotic",
       followUp: "Short-term",
       outcomes: ["Radiographic", "Clinical Scores"],
-      title: "Kinematic Alignment Better Restores Knee Joint Line Orientation Than Mechanical Alignment in Total Knee Arthroplasty",
-      summary: "Demonstrates superior joint line restoration using kinematic alignment techniques compared to mechanical alignment methods.",
-      url: "/reference-papers/Papers-for-iKA-summary_Shichman-2024-Better-restoration-of-joint-line.pdf"
-
+      title: "Better restoration of joint line obliquity in tibia first restricted kinematic alignment versus mechanical alignment TKA",
+      summary: "Retrospective imaging-based study examining joint line obliquity and joint line height parameters in total knee arthroplasty performed using different alignment techniques. Published 2024.",
+      url: "/reference-papers/Shichman-2024-Better-restoration-of-joint-line.pdf"
     },
     {
-
       id: "ka_4",
       referenceNumber: 12,
-      filename: "Papers-for-KA-summary_Dossett-el-al-Randomized-Study-KA-v-MA.pdf",
+      filename: "Dossett-el-al-Randomized-Study-KA-v-MA.pdf",
       category: "KA",
       subcategory: "Comparative Studies",
-      authors: ["Dossett", "et al"],
+      authors: ["Dossett HG", "Estrada NA", "Swartz GJ", "LeFevre GW", "Kwasman BG"],
       year: 2014,
       studyType: "RCT",
       technology: "Conventional",
       followUp: "Medium-term",
       outcomes: ["Clinical Scores", "Patient Satisfaction", "Complications"],
-      title: "A Randomized Controlled Trial of Kinematically Versus Mechanically Aligned Total Knee Arthroplasty",
-      summary: "Seminal randomized controlled trial comparing kinematic and mechanical alignment with 2-year follow-up.",
-      url: "/reference-papers/Papers-for-KA-summary_Dossett-el-al-Randomized-Study-KA-v-MA.pdf"
-
+      title: "A randomised controlled trial of kinematically and mechanically aligned total knee replacements",
+      summary: "Randomized controlled trial comparing kinematically aligned and mechanically aligned total knee arthroplasty using patient-specific guides versus conventional instrumentation, with assessment of clinical outcomes, pain scores, and range of motion at two years postoperatively. Published 2014.",
+      url: "/reference-papers/Dossett-el-al-Randomized-Study-KA-v-MA.pdf"
     },
     {
-
       id: "ka_5",
       referenceNumber: 13,
-      filename: "Papers-for-KA-summary_Calliess-et-al-Randomized-Study-PSI-KA-v-P.pdf",
+      filename: "Calliess-et-al-Randomized-Study-PSI-KA-vP.pdf",
       category: "KA",
       subcategory: "Comparative Studies",
-      authors: ["Calliess", "et al"],
-      year: 2017,
+      authors: ["Calliess T", "Bauer K", "Stukenborg-Colsman C", "Windhagen H", "Budde S", "Ettinger M"],
+      year: 2016,
       studyType: "RCT",
       technology: "PSI",
       followUp: "Short-term",
       outcomes: ["Clinical Scores", "Radiographic"],
-      title: "PSI Improves Accuracy of Kinematic Alignment in Total Knee Arthroplasty: A Randomized Controlled Trial",
-      summary: "Randomized controlled trial demonstrating that patient-specific instruments improve accuracy in achieving kinematic alignment.",
-      url: "/reference-papers/Papers-for-KA-summary_Calliess-et-al-Randomized-Study-PSI-KA-v-P.pdf"
-
+      title: "PSI kinematic versus non-PSI mechanical alignment in total knee arthroplasty: a prospective, randomized study",
+      summary: "Prospective randomized study comparing patient-specific instrument (PSI)-guided kinematic alignment with conventional mechanically aligned total knee arthroplasty, assessing clinical scores and radiographic alignment at short-term follow up. Published 2016.",
+      url: "/reference-papers/Calliess-et-al-Randomized-Study-PSI-KA-vP.pdf"
     },
     {
-
       id: "ka_6",
       referenceNumber: 14,
-      filename: "Papers-for-iKA-summary_Ho-et-al-VELYS-Vs-Navigation-shoter-navigation-time-2024.pdf",
+      filename: "Ho-et-al-VELYS-Vs-Navigation-shorter-navigation-time-2024.pdf",
       category: "KA",
       subcategory: "Technology-Assisted",
-      authors: ["Ho", "Grant", "Li", "et al"],
+      authors: ["Ho JPY", "Jagota I", "Beng B", "Twiggs JG", "Liu DWH"],
       year: 2024,
       studyType: "Comparative Study",
       technology: "Robotic",
       followUp: "Short-term",
       outcomes: ["Clinical Scores", "Patient Satisfaction"],
-      title: "VELYS Robotic-Assisted TKA Reduces Navigation Time Compared with a Conventional Computer-Assisted Technique",
-      summary: "Compares VELYS robotic system with traditional navigation, showing reduced navigation time and improved efficiency.",
-      url: "/reference-papers/Papers-for-iKA-summary_Ho-et-al-VELYS-Vs-Navigation-shoter-navigation-time-2024.pdf"
-
+      title: "Robotic-Assisted Total Knee Arthroplasty Results in Shorter Navigation Working Time With Similar Clinical Outcomes Compared to Computer-Navigated Total Knee Arthroplasty",
+      summary: "Clinical study examining perioperative workflow metrics and outcome assessments in robotic-assisted and computer navigated total knee arthroplasty. Published 2024.",
+      url: "/reference-papers/Ho-et-al-VELYS-Vs-Navigation-shorter-navigation-time-2024.pdf",
     },
     {
-
       id: "ka_7",
       referenceNumber: 15,
-      filename: "Papers-for-KA-summary_Flanagan-Cementless-ATTUNE-with-KA-2024.pdf",
+      filename: "Flanagan-Cementless-ATTUNE-with-KA-2024.pdf",
       category: "KA",
       subcategory: "Implant-Specific",
-      authors: ["Flanagan", "et al"],
+      authors: ["Flanagan S", "Stanilla T", "Schmitt D", "et al."],
       year: 2024,
       studyType: "Prospective Cohort",
       technology: "Conventional",
       followUp: "Short-term",
       outcomes: ["Survivorship", "Clinical Scores"],
-      title: "Cementless TKA Performed with Kinematic Alignment Planning Demonstrates Excellent Early Stability and Fixation",
-      summary: "Studies the viability and success of cementless ATTUNE implants with kinematic alignment technique, showing excellent early stability.",
-      url: "/reference-papers/Papers-for-KA-summary_Flanagan-Cementless-ATTUNE-with-KA-2024.pdf"
-
+      title: "The Viability and Success of Noncemented Kinematic Total Knee Arthroplasty",
+      summary: "Retrospective clinical study describing use of noncemented kinematic alignment in total knee arthroplasty, including follow-up assessments and radiographic measurements. Published 2024.",
+      url: "/reference-papers/Flanagan-Cementless-ATTUNE-with-KA-2024.pdf"
     },
     {
-
       id: "ka_8",
       referenceNumber: 16,
-      filename: "Making-a-Joint-Decision-Regarding-the-Timing-of-Su.pdf",
+      filename: "Vigdorchik-impact-of-soft-tissue-releases-on-outcomes-JoA-2022.pdf",
       category: "KA",
       subcategory: "Technical Considerations",
-      authors: ["Vigdorchik", "et al"],
+      authors: ["Vigdorchik JM", "et al."],
       year: 2022,
       studyType: "Retrospective Cohort",
       technology: "Robotic",
       followUp: "Medium-term",
       outcomes: ["Clinical Scores", "Complications", "Patient Satisfaction"],
-      title: "Impact of Soft-Tissue Releases on Robotic-Assisted Total Knee Arthroplasty Outcomes",
-      summary: "Examines how soft tissue releases affect clinical outcomes and patient satisfaction in kinematic alignment procedures.",
-      url: "/reference-papers/Making-a-Joint-Decision-Regarding-the-Timing-of-Su.pdf"
-
+      title: "Impact of Component Alignment and Soft Tissue Release on 2-Year Outcomes in Total Knee Arthroplasty",
+      summary: "Mutlicenter observational study examining relationships between component alignment parameters, intraoperative soft-tissue release, and patient-reported outcome measures over a two-year follow-up after primary total knee arthroplasty. Published 2022.",
+      urlOrig: "/reference-papers/Making-a-Joint-Decision-Regarding-the-Timing-of-Su.pdf",
+      url: "/reference-papers/Vigdorchik-impact-of-soft-tissue-releases-on-outcomes-JoA-2022.pdf"
     },
     {
-
       id: "ka_9",
       referenceNumber: 17,
-      filename: "Papers-for-KA-summary_Spitzer-et-al-Soft-tissue-release-2024.pdf",
+      filename: "Spitzer-et-al-Soft-tissue-release-2024.pdf",
       category: "KA",
       subcategory: "Technical Considerations",
-      authors: ["Spitzer", "et al"],
+      authors: ["Spitzer A", "Gorab R", "Barrett W", "et al."],
       year: 2024,
       studyType: "Prospective Cohort",
       technology: "Robotic",
       followUp: "Short-term",
       outcomes: ["Clinical Scores", "Complications"],
-      title: "Soft-Tissue Release Patterns and Component Adjustments in Robotic-Assisted Total Knee Arthroplasty",
-      summary: "Analyzes soft tissue release patterns and requirements in kinematic alignment procedures using robotic assistance.",
-      url: "/reference-papers/Papers-for-KA-summary_Spitzer-et-al-Soft-tissue-release-2024.pdf"
-
+      title: "Robotic-assisted total knee arthroplasty reduces soft-tissue releases which improves functional outcomes: A retrospective study",
+      summary: "Retrospective registry-based study evaluating the relationship between robotic assistance, soft-tissue release utilization, and postoperative assessment measures in total knee arthroplasty. Published 2024.",
+      url: "/reference-papers/Spitzer-et-al-Soft-tissue-release-2024.pdf"
     },
     {
-
       id: "ka_11",
-      filename: "Papers-for-KA-summary_Elbuluk-2022-Head-to-head-comparison-of-kinema.pdf",
+      filename: "Elbuluk-2022-Head-to-head-comparison-of-kinema.pdf",
       category: "KA",
       subcategory: "Systematic Reviews",
-      authors: ["Elbuluk", "et al"],
+      authors: ["Elbuluk AM", "et al."],
       year: 2022,
       studyType: "Systematic Review",
-      technology: "Mixed",
+      technology: "Robotic",
       followUp: "Mixed",
       outcomes: ["Clinical Scores", "Survivorship", "Complications"],
-      title: "Head-to-Head Comparison of Kinematic vs Mechanical Alignment",
-      summary: "Comprehensive systematic review and meta-analysis comparing kinematic and mechanical alignment approaches.",
-      url: "/reference-papers/Papers-for-KA-summary_Elbuluk-2022-Head-to-head-comparison-of-kinema.pdf"
-
+      title: "Head-to-Head Comparison of Kinematic Alignment Versus Mechanical Alignment for Total Knee Arthroplasty",
+      summary: "Matched cohort study comparing kinematic alignment and mechanical alignment techniques in total knee arthroplasty using the same implant system and robotic assistance, with evaluation of patient-reported outcomes through two-year follow up. Published 2022.",
+      url: "/reference-papers/Elbuluk-2022-Head-to-head-comparison-of-kinema.pdf"
     },
     {
-
       id: "ka_12",
-      filename: "Papers-for-KA-summary_Hirschmann-et-al-Patient-population-study.pdf",
+      filename: "Hirschmann-et-al-Patient-population-study.pdf",
       category: "KA",
       subcategory: "Patient Selection",
-      authors: ["Hirschmann", "et al"],
+      authors: ["Hirschmann MT", "Khan ZA", "Sava MP", "et al."],
       year: 2023,
       studyType: "Retrospective Cohort",
       technology: "Mixed",
       followUp: "Medium-term",
       outcomes: ["Clinical Scores", "Patient Satisfaction"],
-      title: "Patient Population Study for KA Selection",
-      summary: "Analyzes patient population characteristics and selection criteria for optimal kinematic alignment outcomes.",
-      url: "/reference-papers/Papers-for-KA-summary_Hirschmann-et-al-Patient-population-study.pdf"
-
+      title: "Definition of normal, neutral, deviant and aberrant coronal knee alignment for total knee arthroplasty",
+      summary: "Computed tomography-based observational study defining categories of coronal knee alignment in total knee arthroplasty using three-dimensional alignment parameters and phenotype classification. Published 2024.",
+      url: "/reference-papers/Hirschmann-et-al-Patient-population-study.pdf"
     },
     {
-
       id: "ka_13",
-      filename: "Papers-for-KA-summary_Howell-10-year-survivorship.pdf",
+      filename: "Howell-10-year-survivorship.pdf",
       category: "KA",
       subcategory: "Unrestricted KA",
-      authors: ["Howell", "et al"],
+      authors: ["Howell SM", "Shelton TJ", "Hull ML"],
       year: 2018,
       studyType: "Retrospective Cohort",
       technology: "PSI",
       followUp: "Long-term",
       outcomes: ["Survivorship", "Clinical Scores"],
-      title: "Implant Survival and Function Ten Years After KA TKA",
-      summary: "Landmark study showing 97.5% survivorship at 10 years with unrestricted kinematic alignment using PSI.",
-      url: "/reference-papers/Papers-for-KA-summary_Howell-10-year-survivorship.pdf"
-
+      title: "Implant Survival and Function Ten Years After Kinematically Aligned Total Knee Arthroplasty",
+      summary: "Retrospective cohort study assessing implant survivorship and patient-reported functional outcomes at 10 years following kinematically aligned primary total knee arthroplasty using patient-specific instrumentation, including cases with a range of preoperative limb alignments. Published 2018.",
+      url: "/reference-papers/Howell-10-year-survivorship.pdf"
     },
     {
-
       id: "ka_14",
-      filename: "Papers-for-KA-summary_Howell-et-a-16-year-follow-up.pdf",
+      referenceNumber: 10,
+      filename: "Howell-et-al-16-year-follow-up.pdf",
       category: "KA",
       subcategory: "Unrestricted KA",
-      authors: ["Howell", "et al"],
+      authors: ["Howell SM", "Akhtar M", "Nedopil AJ", "et al."],
       year: 2023,
       studyType: "Retrospective Cohort",
       technology: "PSI",
       followUp: "Long-term",
       outcomes: ["Survivorship", "Clinical Scores", "Complications"],
-      title: "Reoperation, Implant Survival, and Clinical Outcome at 16 Years",
-      summary: "Extended 16-year follow-up showing sustained excellent survivorship and low reoperation rates with unrestricted KA.",
-      url: "/reference-papers/Papers-for-KA-summary_Howell-et-a-16-year-follow-up.pdf"
-
+      title: "Reoperation, Implant Survival, and Clinical Outcome After Kinematically Aligned Total Knee Arthroplasty: A Concise Clinical Follow-Up at 16 Years",
+      summary: "Long-term retrospective follow-up study evaluating reoperation, implant survivorship, and clinical outcome measures after kinematically aligned total knee arthroplasty. Published 2023.",
+      url: "/reference-papers/Howell-et-al-16-year-follow-up.pdf"
     },
     {
-
-      id: "ka_15",
-      filename: "Papers-for-KA-summary_Howell-kinematic-alignment-in-total-knee-art.pdf",
-      category: "KA",
-      subcategory: "Unrestricted KA",
-      authors: ["Howell", "et al"],
-      year: 2014,
-      studyType: "Case Series",
-      technology: "PSI",
-      followUp: "Medium-term",
-      outcomes: ["Clinical Scores", "Radiographic"],
-      title: "Kinematic Alignment in Total Knee Arthroplasty",
-      summary: "Foundational paper describing the kinematic alignment technique and early clinical results.",
-      url: "/reference-papers/Papers-for-KA-summary_Howell-kinematic-alignment-in-total-knee-art.pdf"
-
-    },
-    {
-
       id: "ka_16",
-      filename: "Papers-for-KA-summary_Laforest-et-al-Cementless-rKA-2022.pdf",
+      filename: "Laforest-et-al-Cementless-rKA-2022.pdf",
       category: "KA",
       subcategory: "Restricted KA",
-      authors: ["Laforest", "et al"],
-      year: 2022,
+      authors: ["Laforest G", "et al."],
+      year: 2021,
       studyType: "Prospective Cohort",
       technology: "Navigation",
       followUp: "Short-term",
       outcomes: ["Survivorship", "Clinical Scores"],
-      title: "Cementless Restricted Kinematic Alignment",
-      summary: "Evaluates cementless implants with restricted kinematic alignment approach for improved safety profile.",
-      url: "/reference-papers/Papers-for-KA-summary_Laforest-et-al-Cementless-rKA-2022.pdf"
-
+      title: "Restricted kinematic alignment leads to uncompromised osseointegration of cementless total knee arthroplasty",
+      summary: "Retrospective case series evaluating revision events, patient-reported outcomes, and radiographic findings following cementless cruciate-retaining total knee arthroplasty performed using restricted kinematic alignment, with a minimum two-year follow up. Published 2021.",
+      url: "/reference-papers/Laforest-et-al-Cementless-rKA-2022.pdf"
     },
     {
-
       id: "ka_17",
-      filename: "Papers-for-KA-summary_Lee-et-al-Femoral-component-Varus-Loosening-2018.pdf",
+      filename: "Lee-et-al-Femoral-component-Varus-Loosening-2018.pdf",
       category: "KA",
       subcategory: "Complications & Safety",
-      authors: ["Lee", "et al"],
+      authors: ["Lee BS", "Cho HI", "Bin SI", "Kim JM", "Jo BK"],
       year: 2018,
       studyType: "Retrospective Cohort",
       technology: "Conventional",
       followUp: "Medium-term",
       outcomes: ["Complications", "Survivorship"],
-      title: "Femoral Component Varus Loosening Study",
-      summary: "Investigates femoral component varus loosening patterns and risk factors in kinematic alignment procedures.",
-      url: "/reference-papers/Papers-for-KA-summary_Lee-et-al-Femoral-component-Varus-Loosening-2018.pdf"
-
+      title: "Femoral Component Varus Malposition is Associated with Tibial Aseptic Loosening After TKA",
+      summary: "Retrospective long-term follow-up study evaluating the relationship between postoperative component alignment and aseptic revision after cemented total knee arthroplasty, using standing radiographs to categorize femoral and tibial alignment relative to the mechanical axis. Published 2018.",
+      url: "/reference-papers/Lee-et-al-Femoral-component-Varus-Loosening-2018.pdf"
     },
     {
-
       id: "ka_18",
-      filename: "Papers-for-KA-summary_Morcos-et-al-rKA-10-year-follow-up.pdf",
+      filename: "Morcos-et-al-rKA-10-year-follow-up.pdf",
       category: "KA",
       subcategory: "Restricted KA",
-      authors: ["Morcos", "et al"],
+      authors: ["Marcos MW", "Beckers G", "Salvi AG", "et al."],
       year: 2023,
       studyType: "Retrospective Cohort",
       technology: "Navigation",
       followUp: "Long-term",
       outcomes: ["Survivorship", "Clinical Scores", "Patient Satisfaction"],
-      title: "Restricted KA: 10-Year Follow-up Results",
-      summary: "Long-term outcomes of restricted kinematic alignment showing excellent survivorship and patient satisfaction at 10 years.",
-      url: "/reference-papers/Papers-for-KA-summary_Morcos-et-al-rKA-10-year-follow-up.pdf"
-
+      title: "Excellent results of restricted kinematic alignment total knee arthroplasty at a minimum of 10 years of follow‐up",
+      summary: "Retrospective case series reporting minimum 10-year follow-up data on implant survivorship, reoperation, radiographic findings, and patient-reported outcomes following restricted kinematic alignment total knee arthroplasty. Published 2024.",
+      url: "/reference-papers/Morcos-et-al-rKA-10-year-follow-up.pdf"
     },
     {
-
       id: "ka_20",
-      filename: "Papers-for-KA-summary_Young-et-al-KA-Vs-MA-at-5-years-2020.pdf",
+      filename: "Young-et-al-KA-Vs-MA-at-5-years-2020.pdf",
       category: "KA",
       subcategory: "Comparative Studies",
-      authors: ["Young", "et al"],
+      authors: ["Young SW", "Sullivan NPT", "Walker ML", "Holland S", "Bayan A", "Farrington B"],
       year: 2020,
       studyType: "RCT",
       technology: "Navigation",
       followUp: "Medium-term",
       outcomes: ["Clinical Scores", "Gait Analysis", "Patient Satisfaction"],
-      title: "No Difference in 5-year Clinical or Radiographic Outcomes Between KA and MA",
-      summary: "High-quality RCT comparing kinematic vs mechanical alignment with 5-year follow-up, including gait analysis.",
-      url: "/reference-papers/Papers-for-KA-summary_Young-et-al-KA-Vs-MA-at-5-years-2020.pdf"
+      title: "No Difference in 5-year Clinical or Radiographic Outcomes Between Kinematic and Mechanical Alignment in TKA: A Randomized Controlled Trial",
+      summary: "Randomized controlled trial comparing kinematic alignment and mechanical alignment techniques in primary total knee arthroplasty, with assessment of clinical, radiographic, and survivorship-related measures at five years postoperatively. Published 2020.",
+      url: "/reference-papers/Young-et-al-KA-Vs-MA-at-5-years-2020.pdf"
     },
     {
       id: "fa_1",
       referenceNumber: 18,
-      filename: "Papers-for-FA-Shatrov-Functional-Alignment-in-TKA.pdf",
+      filename: "s00167-022-06995-4.pdf",
       category: "FA",
       subcategory: "Technology-Assisted",
-      authors: ["Shatrov", "Parratte"],
-      year: 2023,
+      authors: ["Parratte S", "Van Overschelde P", "et al."],
+      year: 2022,
       studyType: "Technical Review",
       technology: "Robotic",
       followUp: "Short-term",
       outcomes: ["Clinical Scores", "Radiographic"],
-      title: "Functional Alignment in Total Knee Arthroplasty: Restoring the Anatomo-Functional Ligament Pattern Using Robotic Technology",
-      summary: "Describes the functional alignment philosophy and technique using robotic technology to restore natural ligament patterns and kinematics.",
-      url: "/reference-papers/Papers-for-FA-Shatrov-Functional-Alignment-in-TKA.pdf"
+      title: "An anatomo-functional implant positioning technique with robotic assistance for primary TKA allows the restoration of the native knee alignment and a natural functional ligament pattern, with a faster recovery at 6 months compared to an adjusted mechanical technique",
+      summary: "Retrospective comparative study evaluating ligament balancing, implant positioning, alignment parameters, and clinical scores following robotic-assisted antomic-functional implant positioning versus adjusted mechanical alignment in primary total knee arthroplasty. Published 2022.",
+      url: "/reference-papers/s00167-022-06995-4.pdf"
     },
-    {
-      id: "ika_8",
-      referenceNumber: 19,
-      filename: "",
-      category: "iKA",
-      subcategory: "Outcomes Studies",
-      authors: ["de Grave", "Batailler ", "Swan", "et al"],
-      year: 2023,
-      studyType: "Prospective Cohort",
-      technology: "Navigation",
-      followUp: "Short-term",
-      outcomes: ["Clinical Scores", "Gait Analysis"],
-      title: "Inverse kinematic alignment better accommodates patient anatomy compared with mechanical alignment in TKA",
-      summary: "Shows how inverse kinematic alignment better accommodates patient's native anatomy and improves gait patterns compared to mechanical alignment.",
-      url: "/reference-papers/Papers-for-iKA-summary_Winnock-De-Grave-iKA-better-accomodates-nati.pdf"
 
-    },
-    {
-      id: "ika_9",
-      referenceNumber: 20,
-      filename: "",
-      category: "iKA",
-      subcategory: "Outcomes Studies",
-      authors: ["de Grave", "Batailler ", "Swan", "et al"],
-      year: 2020,
-      studyType: "Prospective Cohort",
-      technology: "Navigation",
-      followUp: "Short-term",
-      outcomes: ["Clinical Scores", "Gait Analysis"],
-      title: "Early functional improvements following inverse kinematic alignment in total knee arthroplasty",
-      summary: "Different alignment concepts are described, each providing specific features with theoretical benefits or possible disadvantages.",
-      url: "/reference-papers/Papers-for-iKA-summary_Winnock-De-Grave-iKA-better-accomodates-nati.pdf"
-
-    },
   ],
   filterOptions: {
     categories: ["MA", "iKA", "KA", "FA"],

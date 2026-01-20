@@ -22,11 +22,11 @@ const choreographySteps = [
         conversationalAnchor: "I speak with your peers on a weekly basis...",
         bulletText: [
           "Surgeons are exploring patient-specific alignment approaches [7]",
-          "KA and iKA techniques are frequently described in the literature using robotic assistance [5][7][20]",
+          "KA and iKA techniques are frequently described in the literature using robotic assistance [5][7][19]",
           "Clinical studies have reported improvements in early functional outcomes [5][12]",
           "Higher patient satisfaction has been reported with alignment approaches that aim to respect native anatomy [7][10]"
         ],
-        expandedMessage: "....and what I'm hearing is a growing interest in patient-specific alignment strategies such as Kinematic Alignment (KA) and Inverse Kinematic Alignment (iKA)[7][10]. In those conversations, these approaches are often discussed alongside robotic-assisted technologies, which are used to support more precise execution.[5][7][20] Clinically, studies report improvements in early functional outcomes[5][12], and higher patient satisfaction[7][10] has been reported in cohorts treated with patient-specific alignment approaches that aim to respect native anatomy."
+        expandedMessage: "....and what I'm hearing is a growing interest in patient-specific alignment strategies such as Kinematic Alignment (KA) and Inverse Kinematic Alignment (iKA)[7][10]. In those conversations, these approaches are often discussed alongside robotic-assisted technologies, which are used to support more precise execution.[5][7][19] Clinically, studies report improvements in early functional outcomes[5][12], and higher patient satisfaction[7][10] has been reported in cohorts treated with patient-specific alignment approaches that aim to respect native anatomy."
       },
       {
         conversationalAnchor: "This can often be a difficult...",
@@ -36,7 +36,7 @@ const choreographySteps = [
           "Navigating integration challenges during adoption of new alignment strategies",
           "More predictable management of complex soft-tissue envelopes [7][9][11]"
         ],
-        expandedMessage: "....transition. Surgeons evolving their alignment strategies often face pressure to balance OR efficiency, patient satisfaction, and emerging clinical evidence. Studies evaluating kinematic and inverse kinematic alignment describe approaches that account for native joint line orientation and patient-specific anatomy,[9][11][20] and report favorable clinical outcomes and reduced need for soft-tissue releases in selected cohorts.[5][7][12] These principles may help simplify intraoperative decision-making, particularly in cases with challenging soft-tissue envelopes."
+        expandedMessage: "....transition. Surgeons evolving their alignment strategies often face pressure to balance OR efficiency, patient satisfaction, and emerging clinical evidence. Studies evaluating kinematic and inverse kinematic alignment describe approaches that account for native joint line orientation and patient-specific anatomy,[9][11][19] and report favorable clinical outcomes and reduced need for soft-tissue releases in selected cohorts.[5][7][12] These principles may help simplify intraoperative decision-making, particularly in cases with challenging soft-tissue envelopes."
       }
     ]
   },
@@ -106,9 +106,9 @@ const choreographySteps = [
           "Altered joint-line orientation can influence gait mechanics",
           "Patients may experience limitation in range of motion",
           "Persistent discomfort can affect daily activities",
-          "Dissatisfaction persists in up to 1 in 5 TKA patients [7]"
+          "Not all patients achieve satisfaction [7]"
         ],
-        expandedMessage: "...your patient outcomes...when the joint line is altered and soft tissues are imbalanced, patients may demonstrate changes in gait mechanics, limitations in range of motion, and persistent discomfort.[9][11][16][17] Despite successful implant survivorship, dissatisfaction following total knee arthroplasty persists in approximately 10-20% of patients.[17]"
+        expandedMessage: "...your patient outcomes...when the joint line is altered and soft tissues are imbalanced, patients may demonstrate changes in gait mechanics, limitations in range of motion, and persistent discomfort.[9][11][16][17] Despite acceptable implant survivorship, patient satisfaction following TKA varies, with a subset of patients failing to achieve accepted satisfaction thresholds.[17]"
       },
       {
         conversationalAnchor: "A study has shown that...",
@@ -133,12 +133,12 @@ const choreographySteps = [
       {
         conversationalAnchor: "Not to mention...",
         bulletText: [
-          "More patients research their options before surgery [20]",
-          "Younger, more active patients expect strong functional outcomes [7][19]",
+          "More patients research their options before surgery [19]",
+          "Younger, more active patients expect strong functional outcomes [6][7]",
           "Patients have higher functional demands and expectations [7][18]",
-          "Patients are less willing to accept limitations in lifestyle or mobility [19]"
+          "Patients are less willing to accept limitations in lifestyle or mobility [6]"
         ],
-        expandedMessage: "...more patients are entering surgical consultations having already researched their treatment options.[20] In parallel, a growing proportion of younger and more active patients report higher expectations for functional recovery and return to activity following TKA.[7][19] These patients are increasingly less willing to accept residual limitation in mobility or lifestyle following surgery.[10]"
+        expandedMessage: "...more patients are entering surgical consultations having already researched their treatment options.[19] In parallel, a growing proportion of younger and more active patients report higher expectations for functional recovery and return to activity following TKA.[6][7] These patients are increasingly less willing to accept residual limitation in mobility or lifestyle following surgery.[10]"
       },
       {
         conversationalAnchor: "Now, let me ask you something...",
@@ -159,18 +159,18 @@ const choreographySteps = [
       {
         conversationalAnchor: "Let me share a story with you...",
         bulletText: [
-          "Surgeon frustrated with patients saying, “my knee just doesn’t feel right.[12][20]”",
+          "Surgeon frustrated with patients saying, “my knee just doesn’t feel right.[12][19]”",
           "X-rays looked perfect but patients still complained [12]",
           "Overall knee alignment hit traditional mechanical targets [1][2][3]",
           "Technical success didn’t translate to patient satisfaction [7][10]"
         ],
-        expandedMessage: "...about a surgeon I worked with who grew frustrated seeing patients return after surgery saying their knee did not feel 'natural' or 'right,' even though their X-rays looked perfect.[12][20] Despite achieveing traditional mechanical alignment targets long considered the standard,[1][2][3] several patients still reported stiffness, altered gait, or an unnatural feel. Comparative studies have shown that technical success and implant survivorship do not always translate to patient satisfaction.[7][10]"
+        expandedMessage: "...about a surgeon I worked with who grew frustrated seeing patients return after surgery saying their knee did not feel 'natural' or 'right,' even though their X-rays looked perfect.[12][19] Despite achieveing traditional mechanical alignment targets long considered the standard,[1][2][3] several patients still reported stiffness, altered gait, or an unnatural feel. Comparative studies have shown that technical success and implant survivorship do not always translate to patient satisfaction.[7][10]"
       },
       {
         conversationalAnchor: "Unfortunately...",
         bulletText: [
           "Mechanical alignment protocols followed precisely [1][2][3]",
-          "Younger, more active patients especially affected [7][8][19]",
+          "Younger, more active patients especially affected [6][7][8]",
           "Mid-flexion instability and patella tracking issues reported [4][16][17]",
           "Difficulty returning to pre-surgery activities and sports [7][8][9]"
         ],

@@ -53,12 +53,17 @@ import ScheduleFollowupModal from '../components/ScheduleFollowupModal'
 import DownloadPDFButton from '../components/DownloadPDFButton'
 import ReviewConversationModal from '../components/ReviewConversationModal'
 import DisclaimerModal from '../components/DisclaimerModal'
+import VideoModal from '../components/VideoModal'
 import TextWithReferences from '../components/TextWithReferences'
 import ReferencesModal from '../components/ReferencesModal'
 import kaSummaryImg from '../assets/images/ka-summary.png'
 import ikaSummaryImg from '../assets/images/ika-summary.png'
 import faSummaryImg from '../assets/images/fa-summary.png'
 import maSummaryImg from '../assets/images/ma-summary.png'
+import kaVideo from '../assets/video/KA_Alignment Philosophy_M_US_ORT_DGSR_409952.mp4'
+import ikaVideo from '../assets/video/iKA_Alignment Philosophy_M_US_ORT_DGSR_409953.mp4'
+import faVideo from '../assets/video/FA_Alignment Philosophy_M_US_ORT_DGSR_409954.mp4'
+import maVideo from '../assets/video/MA_Alignment Philosophy_M_US_ORT_DGSR_409951.mp4'
 
 const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
   const { id } = useParams()
@@ -79,6 +84,7 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
   const { isOpen: isNotesOpen, onOpen: onNotesOpen, onClose: onNotesClose } = useDisclosure()
   const { isOpen: isReviewOpen, onOpen: onReviewOpen, onClose: onReviewClose } = useDisclosure()
   const { isOpen: isReferencesModalOpen, onOpen: onReferencesModalOpen, onClose: onReferencesModalClose } = useDisclosure()
+  const { isOpen: isVideoOpen, onOpen: onVideoOpen, onClose: onVideoClose } = useDisclosure()
   const [selectedReference, setSelectedReference] = useState(null)
   const [isScheduleOpen, setIsScheduleOpen] = useState(false)
   const [conversation, setConversation] = useState(null)
@@ -100,11 +106,8 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
   const [disclaimerAccepted, setDisclaimerAccepted] = useState(false)
   const [imageViewerOpen, setImageViewerOpen] = useState(false)
   const [currentImage, setCurrentImage] = useState(null)
-
   const effectiveConversationData = pdfMode ? pdfConversationData : conversation;
   const effectiveCompleted = pdfMode ? (pdfConversationData?.status === 'completed') : completed;
-
-  console.log("effectiveConversationData",effectiveConversationData)
   const isMobile = useBreakpointValue({ base: true, md: false })
   const alignmentImages = {
     'KA': kaSummaryImg,
@@ -113,6 +116,12 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
     'MA': maSummaryImg
   }
 
+  const alignmentVideos = {
+    'KA': kaVideo,
+    'iKA': ikaVideo,
+    'FA': faVideo,
+    'MA': maVideo
+  }
   // Move determineResult function outside of calculateScores so it can be reused
   const determineResult = (scores) => {
     const maxScore = Math.max(...Object.values(scores))
@@ -972,6 +981,10 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
     navigate('/references')
   }
 
+  const handleVellysVideo = () => {
+    onVideoOpen()
+  }
+
   return (
     <Container maxW="container.lg" py={8} {...containerProps}>
       <VStack spacing={6} align="stretch">
@@ -1204,6 +1217,20 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
                             citationVariant="superscript"
                           />
                         </Text>
+                          <Divider  />
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={handleVellysVideo}
+                            fontSize="xs"
+                            borderColor="#C8102E"
+                            color="#FFF"
+                            backgroundColor="#C8102E"
+                            _hover={{ bg: "#C8102E", color: "white" }}
+                            width="auto"
+                          >
+                            {isMobile ? 'How to Execute with the VELYS™' : 'How to Execute with the VELYS™ Robotic-Assisted Solution'}
+                          </Button>
                       </VStack>
                     </CardBody>
                   </Card>
@@ -1459,6 +1486,13 @@ const Conversation = ({ pdfMode = false, pdfConversationData = null }) => {
             isOpen={isReferencesModalOpen}
             onClose={onReferencesModalClose}
             referenceNumber={selectedReference}
+          />
+
+          <VideoModal
+            isOpen={isVideoOpen}
+            onClose={onVideoClose}
+            alignmentType={getRecommendedAlignment().alignment}
+            videoSrc={alignmentVideos[getRecommendedAlignment().alignment?.abbreviation]}
           />
 
         </>

@@ -62,7 +62,7 @@ const Footer = () => {
               fontWeight="400"
               minW="600px"
             >
-              Important Information: Prior to use, refer to the instructions for use supplied with the device(s) for indications, contraindications, side effects, warnings and precautions. Product(s) may not be commercially available in all markets and may not be commercialized nor promoted unless regulatory approval has been granted for all the products referenced.
+              Important Information: Prior to use, refer to the instructions for use supplied with the device(s) for indications, contraindications, side effects, warnings and precautions. Product(s) may not be commercially available in all markets and may not be commercialized nor promoted unless regulatory approval has been granted for all the products referenced. <br/>CONFIDENTIAL. FOR INTERNAL USE ONLY. NOT FOR USE WITH ANY CUSTOMER OR FOR EXTERNAL DISTRIBUTION
             </Text>
           </Flex>
 
